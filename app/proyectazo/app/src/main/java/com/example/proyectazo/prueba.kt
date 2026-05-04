@@ -69,14 +69,6 @@ fun LoginScreen(
                     modifier = Modifier.size(90.dp)
                 )
 
-                // --- Nombre de la app ---
-                Text(
-                    text = "SmartFit",
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = SmartFitBlue
-                )
-
                 Spacer(modifier = Modifier.height(20.dp))
 
                 // --- Fila: "Bienvenido a SmartFit" + "¿Sin cuenta? Regístrate" ---
