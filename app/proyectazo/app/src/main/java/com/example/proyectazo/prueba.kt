@@ -71,7 +71,6 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // --- Fila: "Bienvenido a SmartFit" + "¿Sin cuenta? Regístrate" ---
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
