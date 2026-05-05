@@ -34,9 +34,12 @@ class TokenOut(BaseModel):
 
 class MedidaCreate(BaseModel):
     id_usuario: int
-    peso_kg: Optional[float] = None
+    peso_kg: float
+    altura_cm: Optional[float] = None
+    pecho_cm: Optional[float] = None
+    pierna_cm: Optional[float] = None
     brazo_cm: Optional[float] = None
-    cintura_cm: Optional[float] = None
+    grasa_corporal_pct: Optional[float] = None
 
 class MedidaOut(MedidaCreate):
     id_medida: int
@@ -87,7 +90,6 @@ class RutinaEjercicioCreate(BaseModel):
     id_ejercicio: int
     series: int = 3
     repeticiones: int = 10
-    peso_kg: Optional[float] = None
     orden: int
 
 class RutinaEjercicioOut(RutinaEjercicioCreate):
@@ -131,6 +133,22 @@ class ComidaCreate(BaseModel):
 
 class ComidaOut(ComidaCreate):
     id_comida: int
+
+    class Config:
+        from_attributes = True
+
+# ══════════════════════════════════════════════
+#  ULTIMO ENTRENO
+# ══════════════════════════════════════════════
+
+class UltimoEntrenoBase(BaseModel):
+    id_usuario: int
+    id_ejercicio: int
+    peso_kg: float
+    repeticiones: int
+
+class UltimoEntrenoOut(UltimoEntrenoBase):
+    fecha: datetime
 
     class Config:
         from_attributes = True
