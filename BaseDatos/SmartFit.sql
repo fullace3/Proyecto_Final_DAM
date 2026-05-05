@@ -53,6 +53,7 @@ CREATE TABLE MEDIDA_CORPORAL (
     altura_cm DECIMAL(5,2),
     pecho_cm DECIMAL(5,2),
     pierna_cm DECIMAL(5,2),
+    brazo_cm DECIMAL(5,2),
     grasa_corporal_pct DECIMAL(4,2),
     FOREIGN KEY (id_usuario) REFERENCES USUARIO(id_usuario)
         ON DELETE CASCADE ON UPDATE CASCADE
