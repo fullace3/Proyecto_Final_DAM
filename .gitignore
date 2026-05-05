@@ -16,7 +16,7 @@
 *.class
 *.jar
 *.war
-
+EndPoint.txt
 *.aux
 *.log
 *.out

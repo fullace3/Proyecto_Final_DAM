@@ -1,4 +1,0 @@
-smartfit-db.clgwy0ig2hvo.us-east-1.rds.amazonaws.com
-3306
-https://smartfit-imagenes-dam.s3.amazonaws.com/imagenes_comida/
-https://smartfit-imagenes-dam.s3.amazonaws.com/imagenes_ejercicios/
