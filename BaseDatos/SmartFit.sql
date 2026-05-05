@@ -15,7 +15,6 @@ CREATE TABLE USUARIO (
 CREATE TABLE DIETA (
     id_dieta INT PRIMARY KEY AUTO_INCREMENT,
     nombre VARCHAR(100) NOT NULL,
-    descripcion TEXT,
     objetivo_calorico INT NOT NULL,
     proteinas_g DECIMAL(5,2),
     carbohidratos_g DECIMAL(5,2),
@@ -63,7 +62,6 @@ CREATE TABLE MEDIDA_CORPORAL (
 CREATE TABLE RUTINA (
     id_rutina INT PRIMARY KEY AUTO_INCREMENT,
     nombre VARCHAR(100) NOT NULL,
-    descripcion TEXT,
     id_usuario INT NOT NULL,
     FOREIGN KEY (id_usuario) REFERENCES USUARIO(id_usuario)
         ON DELETE CASCADE ON UPDATE CASCADE
@@ -74,7 +72,6 @@ CREATE TABLE EJERCICIO (
     id_ejercicio INT PRIMARY KEY AUTO_INCREMENT,
     nombre VARCHAR(255) NOT NULL,
     grupo_muscular VARCHAR(100),
-    musculo_principal VARCHAR(100),
     equipamiento VARCHAR(100),
     descripcion VARCHAR(250),
     imagen VARCHAR(255)
