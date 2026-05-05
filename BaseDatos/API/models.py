@@ -94,14 +94,13 @@ class MedidaCorporal(Base):
 
     usuario = relationship("Usuario", back_populates="medidas")
 
-class UltimoEntreno(Base):
-    __tablename__ = "ULTIMO_ENTRENO"
+class HistorialEntrenamiento(Base):
+    __tablename__ = "HISTORIAL_ENTRENAMIENTO"
 
-    id_usuario   = Column(Integer, ForeignKey("USUARIO.id_usuario", ondelete="CASCADE"), primary_key=True)
-    id_ejercicio = Column(Integer, ForeignKey("EJERCICIO.id_ejercicio", ondelete="CASCADE"), primary_key=True)
-    peso_kg      = Column(Float, nullable=False)
+    id_registro = Column(Integer, primary_key=True, index=True)
+    id_usuario = Column(Integer, ForeignKey("USUARIO.id_usuario", ondelete="CASCADE"))
+    id_ejercicio = Column(Integer, ForeignKey("EJERCICIO.id_ejercicio", ondelete="CASCADE"))
+    peso_kg = Column(Float, nullable=False)
     repeticiones = Column(Integer, nullable=False)
-    fecha        = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    usuario   = relationship("Usuario")
-    ejercicio = relationship("Ejercicio")
+    series = Column(Integer, nullable=False)
+    fecha = Column(DateTime, default=datetime.utcnow)

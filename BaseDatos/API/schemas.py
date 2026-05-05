@@ -138,16 +138,18 @@ class ComidaOut(ComidaCreate):
         from_attributes = True
 
 # ══════════════════════════════════════════════
-#  ULTIMO ENTRENO
+#  HISTORIAL DE ENTRENAMIENTO
 # ══════════════════════════════════════════════
 
-class UltimoEntrenoBase(BaseModel):
+class HistorialCreate(BaseModel):
     id_usuario: int
     id_ejercicio: int
     peso_kg: float
     repeticiones: int
+    series: int
 
-class UltimoEntrenoOut(UltimoEntrenoBase):
+class HistorialOut(HistorialCreate):
+    id_registro: int
     fecha: datetime
 
     class Config:

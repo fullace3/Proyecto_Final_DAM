@@ -332,27 +332,21 @@ def eliminar_comida(id_comida: int, db: Session = Depends(get_db)):
     db.commit()
 
 # ══════════════════════════════════════════════
-#  ULTIMO ENTRENO
+#  HISTORIAL DE ENTRENAMIENTO
 # ══════════════════════════════════════════════
 
-@router.post("/entrenamiento/actualizar", response_model=schemas.UltimoEntrenoOut, tags=["Entrenamiento"])
-def guardar_marca(datos: schemas.UltimoEntrenoBase, db: Session = Depends(get_db)):
-    # Buscamos si ya existe la marca para ese usuario y ejercicio
-    registro = db.query(models.UltimoEntreno).filter(
-        models.UltimoEntreno.id_usuario == datos.id_usuario,
-        models.UltimoEntreno.id_ejercicio == datos.id_ejercicio
-    ).first()
-
-    if registro:
-        # Sobrescritura de datos
-        registro.peso_kg = datos.peso_kg
-        registro.repeticiones = datos.repeticiones
-        registro.fecha = datetime.utcnow()
-    else:
-        # Creación por primera vez
-        registro = models.UltimoEntreno(**datos.model_dump())
-        db.add(registro)
+@router.get("/progreso/volumen/{id_usuario}", tags=["Progreso"])
+def obtener_volumen_progreso(id_usuario: int, db: Session = Depends(get_db)):
+    # Traemos todos los registros del usuario ordenados por fecha
+    logs = db.query(models.HistorialEntrenamiento)\
+             .filter(models.HistorialEntrenamiento.id_usuario == id_usuario)\
+             .order_by(models.HistorialEntrenamiento.fecha.asc()).all()
     
-    db.commit()
-    db.refresh(registro)
-    return registro
+    progreso = []
+    for log in logs:
+        volumen = log.peso_kg * log.repeticiones * log.series
+        progreso.append({
+            "fecha": log.fecha.strftime("%Y-%m-%d"),
+            "volumen": volumen
+        })
+    return progreso

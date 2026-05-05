@@ -91,15 +91,16 @@ CREATE TABLE RUTINA_EJERCICIO (
         ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-CREATE TABLE ULTIMO_ENTRENO (
+CREATE TABLE HISTORIAL_ENTRENAMIENTO (
+    id_registro INT AUTO_INCREMENT PRIMARY KEY,
     id_usuario INT NOT NULL,
     id_ejercicio INT NOT NULL,
     peso_kg FLOAT NOT NULL,
     repeticiones INT NOT NULL,
-    fecha DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (id_usuario, id_ejercicio),
-    CONSTRAINT fk_ultimo_usuario FOREIGN KEY (id_usuario) REFERENCES USUARIO(id_usuario) ON DELETE CASCADE,
-    CONSTRAINT fk_ultimo_ejercicio FOREIGN KEY (id_ejercicio) REFERENCES EJERCICIO(id_ejercicio) ON DELETE CASCADE
+    series INT NOT NULL,
+    fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_historial_usuario FOREIGN KEY (id_usuario) REFERENCES USUARIO(id_usuario) ON DELETE CASCADE,
+    CONSTRAINT fk_historial_ejercicio FOREIGN KEY (id_ejercicio) REFERENCES EJERCICIO(id_ejercicio) ON DELETE CASCADE
 );
 
 INSERT INTO COMIDA (id_comida, nombre, calorias_100g, proteinas_100g, carbohidratos_100g, grasas_100g, imagen) VALUES
