@@ -34,9 +34,12 @@ class TokenOut(BaseModel):
 
 class MedidaCreate(BaseModel):
     id_usuario: int
-    peso_kg: Optional[float] = None
+    peso_kg: float
+    altura_cm: Optional[float] = None
+    pecho_cm: Optional[float] = None
+    pierna_cm: Optional[float] = None
     brazo_cm: Optional[float] = None
-    cintura_cm: Optional[float] = None
+    grasa_corporal_pct: Optional[float] = None
 
 class MedidaOut(MedidaCreate):
     id_medida: int
@@ -87,7 +90,6 @@ class RutinaEjercicioCreate(BaseModel):
     id_ejercicio: int
     series: int = 3
     repeticiones: int = 10
-    peso_kg: Optional[float] = None
     orden: int
 
 class RutinaEjercicioOut(RutinaEjercicioCreate):

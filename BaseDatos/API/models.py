@@ -84,11 +84,12 @@ class MedidaCorporal(Base):
 
     id_medida          = Column(Integer, primary_key=True, index=True)
     id_usuario         = Column(Integer, ForeignKey("USUARIO.id_usuario", ondelete="CASCADE"))
-    fecha              = Column(DateTime, nullable=False)
+    fecha              = Column(DateTime, nullable=False, default=datetime.utcnow) 
     peso_kg            = Column(Float, nullable=False)
     altura_cm          = Column(Float)
     pecho_cm           = Column(Float)
     pierna_cm          = Column(Float)
+    brazo_cm           = Column(Float)
     grasa_corporal_pct = Column(Float)
 
     usuario = relationship("Usuario", back_populates="medidas")
