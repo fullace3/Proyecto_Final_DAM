@@ -6,7 +6,8 @@ import os
 
 
 load_dotenv()
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = "mysql+pymysql://usuario:password@localhost:3306/SmartFit.sql"
+engine = create_engine(DATABASE_URL)
 SECRET_KEY   = os.getenv("SECRET_KEY")
 
 engine         = create_engine(DATABASE_URL)
