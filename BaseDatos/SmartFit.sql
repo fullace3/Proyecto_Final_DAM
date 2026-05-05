@@ -91,6 +91,17 @@ CREATE TABLE RUTINA_EJERCICIO (
         ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+CREATE TABLE ULTIMO_ENTRENO (
+    id_usuario INT NOT NULL,
+    id_ejercicio INT NOT NULL,
+    peso_kg FLOAT NOT NULL,
+    repeticiones INT NOT NULL,
+    fecha DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_usuario, id_ejercicio),
+    CONSTRAINT fk_ultimo_usuario FOREIGN KEY (id_usuario) REFERENCES USUARIO(id_usuario) ON DELETE CASCADE,
+    CONSTRAINT fk_ultimo_ejercicio FOREIGN KEY (id_ejercicio) REFERENCES EJERCICIO(id_ejercicio) ON DELETE CASCADE
+);
+
 INSERT INTO COMIDA (id_comida, nombre, calorias_100g, proteinas_100g, carbohidratos_100g, grasas_100g, imagen) VALUES
   (1, 'Leche semidesnatada (2%)', 50.0, 3.35, 4.91, 1.9, 'leche.jpg'),
   (2, 'Tomates cherry, crudos', 27.0, 0.83, 5.51, 0.63, 'tomate.png'),

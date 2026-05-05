@@ -330,3 +330,29 @@ def eliminar_comida(id_comida: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Comida no encontrada")
     db.delete(comida)
     db.commit()
+
+# ══════════════════════════════════════════════
+#  ULTIMO ENTRENO
+# ══════════════════════════════════════════════
+
+@router.post("/entrenamiento/actualizar", response_model=schemas.UltimoEntrenoOut, tags=["Entrenamiento"])
+def guardar_marca(datos: schemas.UltimoEntrenoBase, db: Session = Depends(get_db)):
+    # Buscamos si ya existe la marca para ese usuario y ejercicio
+    registro = db.query(models.UltimoEntreno).filter(
+        models.UltimoEntreno.id_usuario == datos.id_usuario,
+        models.UltimoEntreno.id_ejercicio == datos.id_ejercicio
+    ).first()
+
+    if registro:
+        # Sobrescritura de datos
+        registro.peso_kg = datos.peso_kg
+        registro.repeticiones = datos.repeticiones
+        registro.fecha = datetime.utcnow()
+    else:
+        # Creación por primera vez
+        registro = models.UltimoEntreno(**datos.model_dump())
+        db.add(registro)
+    
+    db.commit()
+    db.refresh(registro)
+    return registro

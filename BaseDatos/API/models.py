@@ -93,3 +93,15 @@ class MedidaCorporal(Base):
     grasa_corporal_pct = Column(Float)
 
     usuario = relationship("Usuario", back_populates="medidas")
+
+class UltimoEntreno(Base):
+    __tablename__ = "ULTIMO_ENTRENO"
+
+    id_usuario   = Column(Integer, ForeignKey("USUARIO.id_usuario", ondelete="CASCADE"), primary_key=True)
+    id_ejercicio = Column(Integer, ForeignKey("EJERCICIO.id_ejercicio", ondelete="CASCADE"), primary_key=True)
+    peso_kg      = Column(Float, nullable=False)
+    repeticiones = Column(Integer, nullable=False)
+    fecha        = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    usuario   = relationship("Usuario")
+    ejercicio = relationship("Ejercicio")
