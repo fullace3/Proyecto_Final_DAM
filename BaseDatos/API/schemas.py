@@ -1,0 +1,136 @@
+from pydantic import BaseModel, EmailStr
+from typing import Optional
+from datetime import datetime
+
+# ══════════════════════════════════════════════
+#  USUARIO
+# ══════════════════════════════════════════════
+
+class UsuarioCreate(BaseModel):
+    nombre: str
+    email: EmailStr
+    password: str 
+
+class UsuarioOut(BaseModel):
+    id_usuario: int
+    nombre: str
+    email: str
+    fecha_registro: datetime
+
+    class Config:
+        from_attributes = True
+
+class LoginSchema(BaseModel):
+    email: EmailStr
+    password: str
+
+class TokenOut(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+# ══════════════════════════════════════════════
+#  MEDIDA CORPORAL
+# ══════════════════════════════════════════════
+
+class MedidaCreate(BaseModel):
+    id_usuario: int
+    peso_kg: Optional[float] = None
+    brazo_cm: Optional[float] = None
+    cintura_cm: Optional[float] = None
+
+class MedidaOut(MedidaCreate):
+    id_medida: int
+    fecha: datetime
+
+    class Config:
+        from_attributes = True
+
+# ══════════════════════════════════════════════
+#  EJERCICIO
+# ══════════════════════════════════════════════
+
+class EjercicioCreate(BaseModel):
+    nombre: str
+    grupo_muscular: Optional[str] = None
+    musculo_principal: Optional[str] = None
+    equipamiento: Optional[str] = None
+    descripcion: Optional[str] = None
+    imagen: Optional[str] = None
+
+class EjercicioOut(EjercicioCreate):
+    id_ejercicio: int
+
+    class Config:
+        from_attributes = True
+
+# ══════════════════════════════════════════════
+#  RUTINA
+# ══════════════════════════════════════════════
+
+class RutinaCreate(BaseModel):
+    nombre: str
+    descripcion: Optional[str] = None
+    id_usuario: int
+
+class RutinaOut(RutinaCreate):
+    id_rutina: int
+
+    class Config:
+        from_attributes = True
+
+# ══════════════════════════════════════════════
+#  RUTINA_EJERCICIO  (tabla intermedia)
+# ══════════════════════════════════════════════
+
+class RutinaEjercicioCreate(BaseModel):
+    id_rutina: int
+    id_ejercicio: int
+    series: int = 3
+    repeticiones: int = 10
+    peso_kg: Optional[float] = None
+    orden: int
+
+class RutinaEjercicioOut(RutinaEjercicioCreate):
+
+    class Config:
+        from_attributes = True
+
+# ══════════════════════════════════════════════
+#  DIETA
+# ══════════════════════════════════════════════
+
+class DietaCreate(BaseModel):
+    nombre: str
+    descripcion: Optional[str] = None
+    objetivo_calorico: int
+    proteinas_g: float
+    carbohidratos_g: float
+    grasas_g: float
+    fecha_inicio: datetime
+    fecha_fin: Optional[datetime] = None
+    id_usuario: int
+
+class DietaOut(DietaCreate):
+    id_dieta: int
+
+    class Config:
+        from_attributes = True
+
+# ══════════════════════════════════════════════
+#  COMIDA
+# ══════════════════════════════════════════════
+
+class ComidaCreate(BaseModel):
+    nombre: str
+    calorias_100g: int
+    proteinas_100g: int
+    carbohidratos_100g: int
+    grasas_100g: int
+    id_usuario: int
+    imagen: Optional[str] = None
+
+class ComidaOut(ComidaCreate):
+    id_comida: int
+
+    class Config:
+        from_attributes = True
