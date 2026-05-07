@@ -49,7 +49,7 @@ def login(datos: schemas.LoginSchema, db: Session = Depends(get_db)):
     if not usuario or not verificar(datos.password, usuario.password_hash):
         raise HTTPException(status_code=401, detail="Credenciales incorrectas")
     token = crear_token({"sub": str(usuario.id_usuario), "email": usuario.email})
-    return {"access_token": token}
+    return {"access_token": token, "id_usuario": usuario.id_usuario}
 
 @router.get("/usuarios/{id_usuario}", response_model=schemas.UsuarioOut, tags=["Usuarios"])
 def obtener_usuario(id_usuario: int, db: Session = Depends(get_db)):

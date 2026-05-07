@@ -27,6 +27,7 @@ class LoginSchema(BaseModel):
 class TokenOut(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    id_usuario: int
 
 # ══════════════════════════════════════════════
 #  MEDIDA CORPORAL
