@@ -25,10 +25,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.proyectazo.R
 
-// Colores del tema SmartFit
-private val SmartFitBlue = Color(0xFF2D5F8A)
-private val SmartFitLightBlue = Color(0xFFB8D4EA)
-private val BackgroundBlue = Color(0xFF3A6E9E)
 
 @Composable
 fun LoginScreen(
@@ -44,7 +40,7 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundBlue),
+            .background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center
     ) {
         // Tarjeta blanca central
@@ -79,7 +75,7 @@ fun LoginScreen(
                     Text(
                         text = buildAnnotatedString {
                             append("Bienvenido a\n")
-                            withStyle(SpanStyle(color = SmartFitBlue, fontWeight = FontWeight.SemiBold)) {
+                            withStyle(SpanStyle(color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.SemiBold)) {
                                 append("SmartFit")
                             }
                         },
@@ -100,7 +96,7 @@ fun LoginScreen(
                             Text(
                                 text = "Regístrate",
                                 fontSize = 12.sp,
-                                color = SmartFitBlue,
+                                color = MaterialTheme.colorScheme.onPrimary,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -138,7 +134,7 @@ fun LoginScreen(
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = SmartFitBlue,
+                        focusedBorderColor = MaterialTheme.colorScheme.onPrimary,
                         unfocusedBorderColor = Color.LightGray
                     )
                 )
@@ -174,7 +170,7 @@ fun LoginScreen(
                         }
                     },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = SmartFitBlue,
+                        focusedBorderColor = MaterialTheme.colorScheme.onPrimary,
                         unfocusedBorderColor = Color.LightGray
                     )
                 )
@@ -200,8 +196,8 @@ fun LoginScreen(
                         .height(50.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = SmartFitLightBlue,
-                        contentColor = SmartFitBlue
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
                     Text(
