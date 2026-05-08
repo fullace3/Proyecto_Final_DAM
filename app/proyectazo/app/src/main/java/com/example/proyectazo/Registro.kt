@@ -54,12 +54,11 @@ fun RegisterScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 28.dp, vertical = 32.dp)
+                    .padding(horizontal = 28.dp, vertical = 60.dp)
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                // --- Fila: "Bienvenido a LOREM" + "¿Ya tienes cuenta? Inicia sesión" ---
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,

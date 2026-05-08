@@ -36,7 +36,6 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
-    // Fondo azul de toda la pantalla
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -55,7 +54,7 @@ fun LoginScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 28.dp, vertical = 32.dp),
+                    .padding(horizontal = 28.dp, vertical = 60.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
@@ -96,7 +95,7 @@ fun LoginScreen(
                             Text(
                                 text = "Regístrate",
                                 fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onPrimary,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
