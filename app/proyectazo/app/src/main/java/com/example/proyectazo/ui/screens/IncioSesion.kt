@@ -61,7 +61,7 @@ fun PantallaIncioSesion(
                 Image(
                     painter = painterResource(id = R.drawable.logosinfondo),
                     contentDescription = "Logo SmartFit",
-                    modifier = Modifier.size(90.dp)
+                    modifier = Modifier.size(100.dp)
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
