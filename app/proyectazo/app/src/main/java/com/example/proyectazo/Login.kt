@@ -40,7 +40,7 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+            .background(MaterialTheme.colorScheme.primary),
         contentAlignment = Alignment.Center
     ) {
         // Tarjeta blanca central
@@ -75,7 +75,7 @@ fun LoginScreen(
                     Text(
                         text = buildAnnotatedString {
                             append("Bienvenido a\n")
-                            withStyle(SpanStyle(color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.SemiBold)) {
+                            withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)) {
                                 append("SmartFit")
                             }
                         },
@@ -110,7 +110,7 @@ fun LoginScreen(
                     text = "Iniciar sesión",
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Start
                 )
@@ -128,7 +128,7 @@ fun LoginScreen(
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    placeholder = { Text("Usuario", color = Color.LightGray) },
+                    placeholder = { Text("Usuario", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
                     singleLine = true,
@@ -144,14 +144,14 @@ fun LoginScreen(
                 Text(
                     text = "Enter your Password",
                     fontSize = 14.sp,
-                    color = Color.DarkGray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    placeholder = { Text("Contraseña", color = Color.LightGray) },
+                    placeholder = { Text("Contraseña", color =  MaterialTheme.colorScheme.onSurfaceVariant) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
                     singleLine = true,
