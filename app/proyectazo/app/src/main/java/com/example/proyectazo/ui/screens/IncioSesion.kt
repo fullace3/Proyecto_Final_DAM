@@ -27,7 +27,7 @@ import com.example.proyectazo.R
 
 
 @Composable
-fun LoginScreen(
+fun PantallaIncioSesion(
     onLoginClick: (email: String, password: String) -> Unit = { _, _ -> },
     onRegisterClick: () -> Unit = {},
     onForgotPasswordClick: () -> Unit = {}
