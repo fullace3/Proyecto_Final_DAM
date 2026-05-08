@@ -5,13 +5,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.padding // <-- Importación necesaria
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.proyectazo.ui.screens.LoginScreen
+import androidx.navigation.compose.rememberNavController
+import com.example.proyectazo.navigation.NavGraph
+import com.example.proyectazo.navigation.Screen
+import com.example.proyectazo.network.SessionManager
 import com.example.proyectazo.ui.theme.ProyectazoTheme
 
 class MainActivity : ComponentActivity() {
@@ -20,30 +21,27 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ProyectazoTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                    LoginScreen { innerPadding }
-                }
+                SmartFitApp(
+                    // Si ya tiene sesión activa, arranca en Home directamente
+                    startDestination = if (SessionManager(this).isLoggedIn())
+                        Screen.Home.route
+                    else
+                        Screen.Login.route
+                )
             }
         }
     }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+fun SmartFitApp(startDestination: String) {
+    val navController = rememberNavController()
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    ProyectazoTheme {
-        Greeting("Android")
+    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding -> // <-- Cambiamos _ por innerPadding
+        NavGraph(
+            navController = navController,
+            startDestination = startDestination,
+            modifier = Modifier.padding(innerPadding) // <-- Se lo pasamos al NavGraph
+        )
     }
 }
