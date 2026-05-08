@@ -5,7 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding // <-- Importación necesaria
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -22,7 +22,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             ProyectazoTheme {
                 SmartFitApp(
-                    // Si ya tiene sesión activa, arranca en Home directamente
                     startDestination = if (SessionManager(this).isLoggedIn())
                         Screen.Home.route
                     else
@@ -37,11 +36,11 @@ class MainActivity : ComponentActivity() {
 fun SmartFitApp(startDestination: String) {
     val navController = rememberNavController()
 
-    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding -> // <-- Cambiamos _ por innerPadding
+    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         NavGraph(
             navController = navController,
             startDestination = startDestination,
-            modifier = Modifier.padding(innerPadding) // <-- Se lo pasamos al NavGraph
+            modifier = Modifier.padding(innerPadding)
         )
     }
 }

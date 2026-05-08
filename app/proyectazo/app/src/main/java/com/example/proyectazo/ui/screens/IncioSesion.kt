@@ -45,7 +45,7 @@ fun PantallaIncioSesion(
         // Tarjeta blanca central
         Card(
             modifier = Modifier
-                .fillMaxWidth(0.88f)
+                .fillMaxWidth(0.9f)
                 .wrapContentHeight(),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -95,7 +95,7 @@ fun PantallaIncioSesion(
                             Text(
                                 text = "Regístrate",
                                 fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
