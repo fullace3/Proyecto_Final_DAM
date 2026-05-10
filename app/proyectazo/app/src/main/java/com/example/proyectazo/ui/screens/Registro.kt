@@ -21,16 +21,34 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyectazo.ui.viewmodel.RegisterUiState
+import com.example.proyectazo.ui.viewmodel.RegisterViewModel
+import com.example.proyectazo.ui.viewmodel.RegisterViewModelFactory
 
 @Composable
 fun PantallaRegistro(
-    onRegisterClick: (email: String, username: String, password: String) -> Unit = { _, _, _ -> },
+    onRegistroExitoso: () -> Unit = {},
     onLoginClick: () -> Unit = {}
 ) {
+    val viewModel: RegisterViewModel = viewModel(
+        factory = RegisterViewModelFactory()
+    )
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    var nombre by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-    var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+
+    // Cuando el registro es exitoso volvemos al login
+    LaunchedEffect(uiState) {
+        if (uiState is RegisterUiState.Success) {
+            onRegistroExitoso()
+            viewModel.resetState()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -66,14 +84,10 @@ fun PantallaRegistro(
                             withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurface)) {
                                 append("Bienvenido a ")
                             }
-                            withStyle(
-                                SpanStyle(
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            ) {
-                                append("SmartFit")
-                            }
+                            withStyle(SpanStyle(
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            )) { append("SmartFit") }
                         },
                         fontSize = 14.sp
                     )
@@ -100,7 +114,6 @@ fun PantallaRegistro(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- Título ---
                 Text(
                     text = "Regístrate",
                     fontSize = 32.sp,
@@ -112,9 +125,28 @@ fun PantallaRegistro(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // --- Campo Correo electrónico ---
+                // Campo nombre
                 Text(
-                    text = "Introduce tu correo electrónico",
+                    text = "Nombre de usuario",
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                OutlinedTextField(
+                    value = nombre,
+                    onValueChange = { nombre = it },
+                    placeholder = { Text("Nombre de usuario") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    singleLine = true
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Campo email
+                Text(
+                    text = "Correo electrónico",
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.fillMaxWidth()
@@ -123,62 +155,18 @@ fun PantallaRegistro(
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    placeholder = {
-                        Text(
-                            text = "Correo electrónico",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        )
-                    },
+                    placeholder = { Text("correo@ejemplo.com") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                        cursorColor = MaterialTheme.colorScheme.primary
-                    )
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- Campo Usuario ---
+                // Campo contraseña
                 Text(
-                    text = "Introduce tu usuario",
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                OutlinedTextField(
-                    value = username,
-                    onValueChange = { username = it },
-                    placeholder = {
-                        Text(
-                            text = "Usuario",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                        cursorColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // --- Campo Contraseña ---
-                Text(
-                    text = "Introduce una contraseña",
+                    text = "Contraseña",
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.fillMaxWidth()
@@ -187,12 +175,7 @@ fun PantallaRegistro(
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    placeholder = {
-                        Text(
-                            text = "Contraseña",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        )
-                    },
+                    placeholder = { Text("Contraseña") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
                     singleLine = true,
@@ -200,25 +183,14 @@ fun PantallaRegistro(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     trailingIcon = {
                         IconButton(onClick = { password = "" }) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Borrar contraseña",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Icon(Icons.Default.Close, contentDescription = null)
                         }
-                    },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                        cursorColor = MaterialTheme.colorScheme.primary
-                    )
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- Campo Repetir Contraseña ---
+                // Campo repetir contraseña
                 Text(
                     text = "Repite tu contraseña",
                     fontSize = 14.sp,
@@ -229,42 +201,20 @@ fun PantallaRegistro(
                 OutlinedTextField(
                     value = confirmPassword,
                     onValueChange = { confirmPassword = it },
-                    placeholder = {
-                        Text(
-                            text = "Contraseña",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        )
-                    },
+                    placeholder = { Text("Contraseña") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    // Borde rojo si las contraseñas no coinciden
                     isError = confirmPassword.isNotEmpty() && confirmPassword != password,
                     trailingIcon = {
                         IconButton(onClick = { confirmPassword = "" }) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Borrar contraseña",
-                                tint = if (confirmPassword.isNotEmpty() && confirmPassword != password)
-                                    MaterialTheme.colorScheme.error
-                                else
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Icon(Icons.Default.Close, contentDescription = null)
                         }
-                    },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                        errorBorderColor = MaterialTheme.colorScheme.error,
-                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                        cursorColor = MaterialTheme.colorScheme.primary
-                    )
+                    }
                 )
 
-                // Mensaje de error si las contraseñas no coinciden
                 if (confirmPassword.isNotEmpty() && confirmPassword != password) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -275,35 +225,43 @@ fun PantallaRegistro(
                     )
                 }
 
+                // Mensaje de error de la API
+                if (uiState is RegisterUiState.Error) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = (uiState as RegisterUiState.Error).mensaje,
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // --- Botón "Crear cuenta" ---
                 Button(
-                    onClick = {
-                        if (password == confirmPassword) {
-                            onRegisterClick(email, username, password)
-                        }
-                    },
-                    enabled = email.isNotEmpty()
-                            && username.isNotEmpty()
+                    onClick = { viewModel.registrar(nombre, email, password) },
+                    enabled = nombre.isNotEmpty()
+                            && email.isNotEmpty()
                             && password.isNotEmpty()
-                            && password == confirmPassword,
+                            && password == confirmPassword
+                            && uiState !is RegisterUiState.Loading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        disabledContainerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
-                        disabledContentColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
-                    )
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text(
-                        text = "Crear cuenta",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    if (uiState is RegisterUiState.Loading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(22.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = "Crear cuenta",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
             }
         }

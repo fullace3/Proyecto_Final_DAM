@@ -41,7 +41,7 @@ fun NavGraph(
         // ── REGISTER ─────────────────────────────────────────
         composable(Screen.Register.route) {
             PantallaRegistro(
-                onRegisterClick = { email, username, password ->
+                onRegistroExitoso = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Register.route) { inclusive = true }
                     }
