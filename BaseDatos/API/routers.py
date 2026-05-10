@@ -45,7 +45,7 @@ def registrar(datos: schemas.UsuarioCreate, db: Session = Depends(get_db)):
 
 @router.post("/usuarios/login", response_model=schemas.TokenOut, tags=["Usuarios"])
 def login(datos: schemas.LoginSchema, db: Session = Depends(get_db)):
-    usuario = db.query(models.Usuario).filter(models.Usuario.email == datos.email).first()
+    usuario = db.query(models.Usuario).filter(models.Usuario.nombre == datos.nombre).first()
     if not usuario or not verificar(datos.password, usuario.password_hash):
         raise HTTPException(status_code=401, detail="Credenciales incorrectas")
     token = crear_token({"sub": str(usuario.id_usuario), "email": usuario.email})
@@ -350,3 +350,30 @@ def obtener_volumen_progreso(id_usuario: int, db: Session = Depends(get_db)):
             "volumen": volumen
         })
     return progreso
+
+@router.get("/historial/usuario/{id_usuario}", tags=["Historial"])
+def historial_usuario(id_usuario: int, db: Session = Depends(get_db)):
+    logs = db.query(
+        models.HistorialEntrenamiento,
+        models.Ejercicio.nombre
+    ).join(
+        models.Ejercicio,
+        models.HistorialEntrenamiento.id_ejercicio == models.Ejercicio.id_ejercicio
+    ).filter(
+        models.HistorialEntrenamiento.id_usuario == id_usuario
+    ).order_by(
+        models.HistorialEntrenamiento.fecha.desc()
+    ).all()
+
+    return [
+        {
+            "id_registro":      log.HistorialEntrenamiento.id_registro,
+            "id_ejercicio":     log.HistorialEntrenamiento.id_ejercicio,
+            "nombre_ejercicio": log.nombre,
+            "peso_kg":          log.HistorialEntrenamiento.peso_kg,
+            "repeticiones":     log.HistorialEntrenamiento.repeticiones,
+            "series":           log.HistorialEntrenamiento.series,
+            "fecha":            log.HistorialEntrenamiento.fecha.isoformat()
+        }
+        for log in logs
+    ]

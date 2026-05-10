@@ -21,7 +21,7 @@ class UsuarioOut(BaseModel):
         from_attributes = True
 
 class LoginSchema(BaseModel):
-    email: EmailStr
+    nombre: str
     password: str
 
 class TokenOut(BaseModel):
