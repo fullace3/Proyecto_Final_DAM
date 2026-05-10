@@ -27,7 +27,7 @@ fun NavGraph(
         // ── LOGIN ────────────────────────────────────────────
         composable(Screen.Login.route) {
             PantallaIncioSesion(
-                onLoginClick = { email, password ->
+                onLoginExitoso = {
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }

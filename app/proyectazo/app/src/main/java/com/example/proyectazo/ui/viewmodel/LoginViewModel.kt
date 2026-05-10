@@ -69,3 +69,9 @@ class LoginViewModel(private val context: Context) : ViewModel() {
         _uiState.value = LoginUiState.Idle
     }
 }
+
+class LoginViewModelFactory(private val context: Context) : androidx.lifecycle.ViewModelProvider.Factory {
+    override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+        return LoginViewModel(context) as T
+    }
+}

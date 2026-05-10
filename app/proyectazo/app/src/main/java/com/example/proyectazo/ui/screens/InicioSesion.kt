@@ -12,29 +12,46 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyectazo.R
-
+import com.example.proyectazo.ui.viewmodel.LoginUiState
+import com.example.proyectazo.ui.viewmodel.LoginViewModel
+import com.example.proyectazo.ui.viewmodel.LoginViewModelFactory
 
 @Composable
 fun PantallaIncioSesion(
-    onLoginClick: (email: String, password: String) -> Unit = { _, _ -> },
-    onRegisterClick: () -> Unit = {},
-    onForgotPasswordClick: () -> Unit = {}
+    onLoginExitoso: () -> Unit = {},
+    onRegisterClick: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val viewModel: LoginViewModel = viewModel(
+        factory = LoginViewModelFactory(context)
+    )
+
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
+
+    // Cuando el login es exitoso navegamos
+    LaunchedEffect(uiState) {
+        if (uiState is LoginUiState.Success) {
+            onLoginExitoso()
+            viewModel.resetState()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -42,7 +59,6 @@ fun PantallaIncioSesion(
             .background(MaterialTheme.colorScheme.primary),
         contentAlignment = Alignment.Center
     ) {
-        // Tarjeta blanca central
         Card(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
@@ -74,20 +90,17 @@ fun PantallaIncioSesion(
                     Text(
                         text = buildAnnotatedString {
                             append("Bienvenido a\n")
-                            withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)) {
-                                append("SmartFit")
-                            }
+                            withStyle(SpanStyle(
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.SemiBold
+                            )) { append("SmartFit") }
                         },
                         fontSize = 16.sp,
                         color = Color.Black
                     )
 
                     Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = "¿Sin cuenta?",
-                            fontSize = 12.sp,
-                            color = Color.Gray
-                        )
+                        Text(text = "¿Sin cuenta?", fontSize = 12.sp, color = Color.Gray)
                         TextButton(
                             onClick = onRegisterClick,
                             contentPadding = PaddingValues(0.dp)
@@ -104,7 +117,6 @@ fun PantallaIncioSesion(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- Título "Iniciar sesión" ---
                 Text(
                     text = "Iniciar sesión",
                     fontSize = 28.sp,
@@ -116,9 +128,9 @@ fun PantallaIncioSesion(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // --- Campo Usuario/Email ---
+                // Campo email
                 Text(
-                    text = "Introduce tu usuario",
+                    text = "Correo electrónico",
                     fontSize = 14.sp,
                     color = Color.DarkGray,
                     modifier = Modifier.fillMaxWidth()
@@ -127,37 +139,31 @@ fun PantallaIncioSesion(
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    placeholder = { Text("Usuario", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                    placeholder = { Text("correo@ejemplo.com") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.onPrimary,
-                        unfocusedBorderColor = Color.LightGray
-                    )
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // Campo contraseña
                 Text(
-                    text = "Enter your Password",
+                    text = "Contraseña",
                     fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = Color.DarkGray,
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    placeholder = { Text("Contraseña", color =  MaterialTheme.colorScheme.onSurfaceVariant) },
+                    placeholder = { Text("Contraseña") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
                     singleLine = true,
-                    visualTransformation = if (passwordVisible)
-                        VisualTransformation.None
-                    else
-                        PasswordVisualTransformation(),
+                    visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     trailingIcon = {
                         IconButton(onClick = { password = "" }) {
@@ -167,43 +173,44 @@ fun PantallaIncioSesion(
                                 tint = Color.Gray
                             )
                         }
-                    },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.onPrimary,
-                        unfocusedBorderColor = Color.LightGray
-                    )
+                    }
                 )
 
-                // --- "Olvidaste la contraseña" alineado a la derecha ---
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-                    TextButton(onClick = onForgotPasswordClick) {
-                        Text(
-                            text = "Olvidaste la contraseña",
-                            fontSize = 12.sp,
-                            color = Color.Gray
-                        )
-                    }
+                // Mensaje de error si lo hay
+                if (uiState is LoginUiState.Error) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = (uiState as LoginUiState.Error).mensaje,
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 13.sp,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-                // --- Botón "Iniciar sesión" ---
+                // Botón — muestra spinner si está cargando
                 Button(
-                    onClick = { onLoginClick(email, password) },
+                    onClick = { viewModel.login(email, password) },
+                    enabled = uiState !is LoginUiState.Loading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    )
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text(
-                        text = "Iniciar sesión",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    if (uiState is LoginUiState.Loading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(22.dp),
+                            strokeWidth = 2.dp,
+                            color = Color.White
+                        )
+                    } else {
+                        Text(
+                            text = "Iniciar sesión",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
             }
         }
