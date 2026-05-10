@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.proyectazo.navigation.Screen
 import com.example.proyectazo.ui.screens.PantallaIncioSesion
+import com.example.proyectazo.ui.screens.PantallaInicio
 import com.example.proyectazo.ui.screens.PantallaRegistro
 
 @Composable
@@ -53,11 +54,7 @@ fun NavGraph(
 
         // ── HOME ──────────────────────────────────────────────
         composable(Screen.Home.route) {
-            PlaceholderScreen(nombre = "Home") {
-                navController.navigate(Screen.Login.route) {
-                    popUpTo(Screen.Home.route) { inclusive = true }
-                }
-            }
+            PantallaInicio(usuario = "usuario")
         }
 
         // ── RUTINAS ───────────────────────────────────────────

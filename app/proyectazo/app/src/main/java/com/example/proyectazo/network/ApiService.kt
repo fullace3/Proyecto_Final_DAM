@@ -56,4 +56,11 @@ interface ApiService {
     suspend fun añadirEjercicioARutina(
         @Body datos: RutinaEjercicioRequest
     ): Response<RutinaEjercicioResponse>
+
+    @GET("historial/usuario/{id}")
+    suspend fun getHistorial(@Path("id") userId: Int): Response<List<HistorialDetalleResponse>>
+
+    @GET("dietas/usuario/{id}/actual")
+    suspend fun getDietaActual(@Path("id") userId: Int): Response<DietaResponse>
+
 }
