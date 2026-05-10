@@ -25,40 +25,29 @@ class LoginViewModel(private val context: Context) : ViewModel() {
 
     private val sessionManager = SessionManager(context)
 
-    fun login(email: String, password: String) {
+    fun login(nombre: String, password: String) {
 
-        // Validación básica antes de llamar a la API
-        if (email.isBlank() || password.isBlank()) {
+        if (nombre.isBlank() || password.isBlank()) {
             _uiState.value = LoginUiState.Error("Rellena todos los campos")
             return
         }
 
         viewModelScope.launch {
             _uiState.value = LoginUiState.Loading
-
             try {
-                val respuesta = RetrofitClient.instance.login(LoginRequest(email, password))
+                val respuesta = RetrofitClient.instance.login(LoginRequest(nombre, password))
 
                 if (respuesta.isSuccessful && respuesta.body() != null) {
-                    val token = respuesta.body()!!.access_token
-
-                    // Con el token, pedimos los datos del usuario para obtener su ID
-                    // Tu API de login solo devuelve el token, así que decodificamos el ID
-                    // desde el propio token o hacemos una segunda llamada
-                    // Por simplicidad guardamos lo que tenemos y navegamos
-                    sessionManager.guardarSesion(token, respuesta.body()!!.id_usuario)
-
-                    // Llamamos a /usuarios con el email para obtener el ID real
-                    // Como no tienes ese endpoint directo, usaremos el token JWT
-                    // El ID está en el payload del token que genera tu FastAPI
+                    sessionManager.guardarSesion(
+                        respuesta.body()!!.access_token,
+                        respuesta.body()!!.id_usuario
+                    )
                     _uiState.value = LoginUiState.Success
-
                 } else if (respuesta.code() == 401) {
-                    _uiState.value = LoginUiState.Error("Email o contraseña incorrectos")
+                    _uiState.value = LoginUiState.Error("Usuario o contraseña incorrectos")
                 } else {
                     _uiState.value = LoginUiState.Error("Error del servidor: ${respuesta.code()}")
                 }
-
             } catch (e: Exception) {
                 _uiState.value = LoginUiState.Error("Sin conexión con el servidor")
             }

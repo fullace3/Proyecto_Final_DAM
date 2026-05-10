@@ -2,7 +2,7 @@ package com.example.proyectazo.network
 
 // ── USUARIO ───────────────────────────────────
 data class LoginRequest(
-    val email: String,
+    val nombre: String,
     val password: String
 )
 

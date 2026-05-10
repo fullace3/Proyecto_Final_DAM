@@ -42,7 +42,7 @@ fun PantallaIncioSesion(
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    var email by remember { mutableStateOf("") }
+    var nombre by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
     // Cuando el login es exitoso navegamos
@@ -137,13 +137,13 @@ fun PantallaIncioSesion(
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    placeholder = { Text("correo@ejemplo.com") },
+                    value = nombre,
+                    onValueChange = { nombre = it },
+                    placeholder = { Text("Nombre de usuario") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text) // Text, no Email
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -191,7 +191,7 @@ fun PantallaIncioSesion(
 
                 // Botón — muestra spinner si está cargando
                 Button(
-                    onClick = { viewModel.login(email, password) },
+                    onClick = { viewModel.login(nombre, password) },
                     enabled = uiState !is LoginUiState.Loading,
                     modifier = Modifier
                         .fillMaxWidth()
