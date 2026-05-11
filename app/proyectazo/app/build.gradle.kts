@@ -74,6 +74,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
 
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.2")
+    implementation("io.coil-kt:coil-compose:2.6.0")
 
     // Tests
     testImplementation(libs.junit)

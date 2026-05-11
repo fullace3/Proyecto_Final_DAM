@@ -7,24 +7,24 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.proyectazo.navigation.Screen
 import com.example.proyectazo.ui.screens.PantallaIncioSesion
 import com.example.proyectazo.ui.screens.PantallaInicio
 import com.example.proyectazo.ui.screens.PantallaRegistro
+import com.example.proyectazo.ui.screens.PantallaRutinas
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
     startDestination: String = Screen.Login.route,
-    modifier: Modifier = Modifier // <-- 1. Añadido el parámetro modifier por defecto
+    modifier: Modifier = Modifier
 ) {
     NavHost(
         navController = navController,
         startDestination = startDestination,
-        modifier = modifier // <-- 2. Aplicado el modifier al NavHost
+        modifier = modifier
     ) {
 
-        // ── LOGIN ────────────────────────────────────────────
+        // ── LOGIN ────────────────────────────────────────────────
         composable(Screen.Login.route) {
             PantallaIncioSesion(
                 onLoginExitoso = {
@@ -38,7 +38,7 @@ fun NavGraph(
             )
         }
 
-        // ── REGISTER ─────────────────────────────────────────
+        // ── REGISTER ─────────────────────────────────────────────
         composable(Screen.Register.route) {
             PantallaRegistro(
                 onRegistroExitoso = {
@@ -52,32 +52,41 @@ fun NavGraph(
             )
         }
 
-        // ── HOME ──────────────────────────────────────────────
+        // ── HOME ──────────────────────────────────────────────────
         composable(Screen.Home.route) {
             PantallaInicio(usuario = "usuario")
         }
 
-        // ── RUTINAS ───────────────────────────────────────────
+        // ── RUTINAS ───────────────────────────────────────────────
         composable(Screen.Rutinas.route) {
-            PlaceholderScreen(nombre = "Rutinas") {}
+            PantallaRutinas(
+                onCrearRutina = {
+                    navController.navigate(Screen.CrearRutina.route)
+                }
+            )
         }
 
-        // ── DIETA ─────────────────────────────────────────────
+        // ── CREAR RUTINA ──────────────────────────────────────────
+        composable(Screen.CrearRutina.route) {
+            PlaceholderScreen(nombre = "Crear Rutina")
+        }
+
+        // ── DIETA ─────────────────────────────────────────────────
         composable(Screen.Dieta.route) {
-            PlaceholderScreen(nombre = "Dieta") {}
+            PlaceholderScreen(nombre = "Dieta")
         }
 
-        // ── PROGRESO ──────────────────────────────────────────
+        // ── PROGRESO ──────────────────────────────────────────────
         composable(Screen.Progreso.route) {
-            PlaceholderScreen(nombre = "Progreso") {}
+            PlaceholderScreen(nombre = "Progreso")
         }
 
-        // ── PERFIL ────────────────────────────────────────────
+        // ── PERFIL ────────────────────────────────────────────────
         composable(Screen.Perfil.route) {
-            PlaceholderScreen(nombre = "Perfil") {}
+            PlaceholderScreen(nombre = "Perfil")
         }
 
-        // ── DETALLE RUTINA (con argumento) ────────────────────
+        // ── DETALLE RUTINA (con argumento) ────────────────────────
         composable(
             route = Screen.DetalleRutina.route,
             arguments = listOf(
@@ -85,7 +94,7 @@ fun NavGraph(
             )
         ) { backStackEntry ->
             val rutinaId = backStackEntry.arguments?.getInt(Screen.DetalleRutina.ARG) ?: 0
-            PlaceholderScreen(nombre = "Detalle Rutina $rutinaId") {}
+            PlaceholderScreen(nombre = "Detalle Rutina $rutinaId")
         }
     }
 }
