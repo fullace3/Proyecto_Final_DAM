@@ -99,6 +99,7 @@ CREATE TABLE HISTORIAL_ENTRENAMIENTO (
     peso_kg FLOAT NOT NULL,
     repeticiones INT NOT NULL,
     series INT NOT NULL,
+    duracion_minutos INT NOT NULL DEFAULT 0,
     fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_historial_usuario FOREIGN KEY (id_usuario) REFERENCES USUARIO(id_usuario) ON DELETE CASCADE,
     CONSTRAINT fk_historial_ejercicio FOREIGN KEY (id_ejercicio) REFERENCES EJERCICIO(id_ejercicio) ON DELETE CASCADE

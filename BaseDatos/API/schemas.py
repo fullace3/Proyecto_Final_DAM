@@ -148,6 +148,7 @@ class HistorialCreate(BaseModel):
     peso_kg: float
     repeticiones: int
     series: int
+    duracion_minutos: int = 0
 
 class HistorialOut(HistorialCreate):
     id_registro: int

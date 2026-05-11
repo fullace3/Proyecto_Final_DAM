@@ -57,6 +57,9 @@ interface ApiService {
         @Body datos: RutinaEjercicioRequest
     ): Response<RutinaEjercicioResponse>
 
+    @POST("historial")
+    suspend fun registrarHistorial(@Body datos: HistorialRequest): Response<HistorialDetalleResponse>
+
     @GET("historial/usuario/{id}")
     suspend fun getHistorial(@Path("id") userId: Int): Response<List<HistorialDetalleResponse>>
 

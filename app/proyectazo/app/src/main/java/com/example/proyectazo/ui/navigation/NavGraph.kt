@@ -2,6 +2,7 @@ package com.example.proyectazo.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -11,6 +12,7 @@ import com.example.proyectazo.ui.screens.PantallaIncioSesion
 import com.example.proyectazo.ui.screens.PantallaInicio
 import com.example.proyectazo.ui.screens.PantallaRegistro
 import com.example.proyectazo.ui.screens.PantallaRutinas
+import com.tuapp.ui.screens.entrenos.CrearRutinaScreen
 
 @Composable
 fun NavGraph(
@@ -67,8 +69,11 @@ fun NavGraph(
         }
 
         // ── CREAR RUTINA ──────────────────────────────────────────
-        composable(Screen.CrearRutina.route) {
-            PlaceholderScreen(nombre = "Crear Rutina")
+        composable("crear_rutina") {
+            CrearRutinaScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onAnadirEjercicio = { navController.navigate("seleccionar_ejercicio") }
+            )
         }
 
         // ── DIETA ─────────────────────────────────────────────────

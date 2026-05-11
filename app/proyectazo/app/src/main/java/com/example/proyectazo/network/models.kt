@@ -140,6 +140,15 @@ data class ProgresoResponse(
 )
 
 // ── Historial ──────────────────────────────────
+data class HistorialRequest(
+    val id_usuario: Int,
+    val id_ejercicio: Int,
+    val peso_kg: Double,
+    val repeticiones: Int,
+    val series: Int,
+    val duracion_minutos: Int = 0
+)
+
 data class HistorialDetalleResponse(
     val id_registro: Int,
     val id_ejercicio: Int,
@@ -147,5 +156,6 @@ data class HistorialDetalleResponse(
     val peso_kg: Double,
     val repeticiones: Int,
     val series: Int,
+    val duracion_minutos: Int,
     val fecha: String   // "2025-08-17T..."
 )

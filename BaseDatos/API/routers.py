@@ -335,6 +335,14 @@ def eliminar_comida(id_comida: int, db: Session = Depends(get_db)):
 #  HISTORIAL DE ENTRENAMIENTO
 # ══════════════════════════════════════════════
 
+@router.post("/historial", response_model=schemas.HistorialOut, status_code=201, tags=["Historial"])
+def registrar_historial(datos: schemas.HistorialCreate, db: Session = Depends(get_db)):
+    registro = models.HistorialEntrenamiento(**datos.model_dump())
+    db.add(registro)
+    db.commit()
+    db.refresh(registro)
+    return registro
+
 @router.get("/progreso/volumen/{id_usuario}", tags=["Progreso"])
 def obtener_volumen_progreso(id_usuario: int, db: Session = Depends(get_db)):
     # Traemos todos los registros del usuario ordenados por fecha
@@ -373,6 +381,7 @@ def historial_usuario(id_usuario: int, db: Session = Depends(get_db)):
             "peso_kg":          log.HistorialEntrenamiento.peso_kg,
             "repeticiones":     log.HistorialEntrenamiento.repeticiones,
             "series":           log.HistorialEntrenamiento.series,
+            "duracion_minutos": log.HistorialEntrenamiento.duracion_minutos,
             "fecha":            log.HistorialEntrenamiento.fecha.isoformat()
         }
         for log in logs

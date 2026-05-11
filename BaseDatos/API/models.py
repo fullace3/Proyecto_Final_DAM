@@ -94,10 +94,11 @@ class MedidaCorporal(Base):
 class HistorialEntrenamiento(Base):
     __tablename__ = "HISTORIAL_ENTRENAMIENTO"
 
-    id_registro = Column(Integer, primary_key=True, index=True)
-    id_usuario = Column(Integer, ForeignKey("USUARIO.id_usuario", ondelete="CASCADE"))
-    id_ejercicio = Column(Integer, ForeignKey("EJERCICIO.id_ejercicio", ondelete="CASCADE"))
-    peso_kg = Column(Float, nullable=False)
-    repeticiones = Column(Integer, nullable=False)
-    series = Column(Integer, nullable=False)
-    fecha = Column(DateTime, default=datetime.utcnow)
+    id_registro      = Column(Integer, primary_key=True, index=True)
+    id_usuario       = Column(Integer, ForeignKey("USUARIO.id_usuario",   ondelete="CASCADE"))
+    id_ejercicio     = Column(Integer, ForeignKey("EJERCICIO.id_ejercicio", ondelete="CASCADE"))
+    peso_kg          = Column(Float,   nullable=False)
+    repeticiones     = Column(Integer, nullable=False)
+    series           = Column(Integer, nullable=False)
+    duracion_minutos = Column(Integer, nullable=False, default=0)
+    fecha            = Column(DateTime, default=datetime.utcnow)
