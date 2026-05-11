@@ -21,7 +21,6 @@ class Rutina(Base):
 
     id_rutina   = Column(Integer, primary_key=True, index=True)
     nombre      = Column(String(100), nullable=False)
-    descripcion = Column(String(500))
     id_usuario  = Column(Integer, ForeignKey("USUARIO.id_usuario", ondelete="CASCADE"))
 
     usuario    = relationship("Usuario", back_populates="rutinas")
@@ -33,7 +32,6 @@ class Ejercicio(Base):
     id_ejercicio      = Column(Integer, primary_key=True, index=True)
     nombre            = Column(String(255), nullable=False)
     grupo_muscular    = Column(String(100))
-    musculo_principal = Column(String(100))
     equipamiento      = Column(String(100))
     descripcion       = Column(String(250))
     imagen            = Column(String(255))
@@ -55,7 +53,6 @@ class Dieta(Base):
 
     id_dieta          = Column(Integer, primary_key=True, index=True)
     nombre            = Column(String(100), nullable=False)
-    descripcion       = Column(String(500))
     objetivo_calorico = Column(Integer, nullable=False)
     proteinas_g       = Column(Float)
     carbohidratos_g   = Column(Float)
