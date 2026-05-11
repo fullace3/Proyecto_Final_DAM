@@ -1,16 +1,16 @@
-package com.tuapp.ui.screens.entrenos
+package com.example.proyectazo.ui.screens
 
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -18,7 +18,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -40,36 +39,21 @@ data class EjercicioRutina(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CrearRutinaScreen(
+    // ↓ La lista llega desde el ViewModel/padre; por defecto vacía
+    ejercicios: List<EjercicioRutina> = emptyList(),
     onNavigateBack: () -> Unit = {},
     onGuardar: (nombre: String, ejercicios: List<EjercicioRutina>) -> Unit = { _, _ -> },
     onAnadirEjercicio: () -> Unit = {}
 ) {
-    // Estado resiliente a rotación gracias a rememberSaveable
     var nombreRutina by rememberSaveable { mutableStateOf("") }
     var editandoNombre by rememberSaveable { mutableStateOf(false) }
-
-    // Lista de ejercicios (en un ViewModel real vendría de un StateFlow)
-    val ejercicios = remember {
-        mutableStateListOf(
-            EjercicioRutina(1, "Press plano con mancuernas",
-                imagenUrl = "https://tuapi.com/ejercicios/press_plano.png"),
-            EjercicioRutina(2, "Press inclinado con barra",
-                imagenUrl = "https://tuapi.com/ejercicios/press_inclinado.png"),
-            EjercicioRutina(3, "Press militar con mancuernas",
-                imagenUrl = "https://tuapi.com/ejercicios/press_militar.png"),
-            EjercicioRutina(4, "Elevaciones laterales con mancuernas",
-                imagenUrl = "https://tuapi.com/ejercicios/elevaciones.png"),
-            EjercicioRutina(5, "Face pull en polea",
-                imagenUrl = "https://tuapi.com/ejercicios/face_pull.png"),
-        )
-    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = "Creacion rutina",
+                        text = "Crear rutina",
                         style = MaterialTheme.typography.titleMedium
                     )
                 },
@@ -108,13 +92,20 @@ fun CrearRutinaScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // ── Lista de ejercicios ──────────────────────────────────────
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                items(ejercicios, key = { it.id }) { ejercicio ->
-                    EjercicioItem(ejercicio = ejercicio)
+            // ── Lista de ejercicios asignados ────────────────────────────
+            if (ejercicios.isEmpty()) {
+                // Estado vacío: ocupa el espacio de la lista
+                ListaVacia(
+                    modifier = Modifier.weight(1f)
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    items(ejercicios, key = { it.id }) { ejercicio ->
+                        EjercicioItem(ejercicio = ejercicio)
+                    }
                 }
             }
 
@@ -132,13 +123,13 @@ fun CrearRutinaScreen(
                 )
             ) {
                 Icon(
-                    imageVector = Icons.Default.Edit, // reemplaza por Icons.Default.Add
+                    imageVector = Icons.Default.Add,
                     contentDescription = null,
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text = "+ Añadir ejercicio",
+                    text = "Añadir ejercicio",
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
@@ -148,6 +139,7 @@ fun CrearRutinaScreen(
             // ── Botón guardar ────────────────────────────────────────────
             Button(
                 onClick = { onGuardar(nombreRutina, ejercicios) },
+                enabled = nombreRutina.isNotBlank() && ejercicios.isNotEmpty(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
@@ -176,6 +168,36 @@ fun CrearRutinaScreen(
 
 // ─── Subcomponentes ──────────────────────────────────────────────────────────
 
+/** Placeholder cuando la rutina todavía no tiene ejercicios asignados. */
+@Composable
+private fun ListaVacia(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            imageVector = Icons.Default.FitnessCenter,
+            contentDescription = null,
+            modifier = Modifier.size(56.dp),
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = "Sin ejercicios aún",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Pulsa \"Añadir ejercicio\" para\nconstruir tu rutina",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
 @Composable
 private fun NombreRutinaHeader(
     nombre: String,
@@ -189,7 +211,6 @@ private fun NombreRutinaHeader(
         modifier = Modifier.fillMaxWidth()
     ) {
         if (editando) {
-            // Campo de texto en edición
             BasicTextField(
                 value = nombre,
                 onValueChange = onNombreChange,
@@ -234,11 +255,10 @@ private fun EjercicioItem(ejercicio: EjercicioRutina) {
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Imagen del ejercicio (usa Coil)
         AsyncImage(
             model = ejercicio.imagenUrl,
             contentDescription = ejercicio.nombre,
-            contentScale = ContentScale.Crop,      // ← ContentScale.Crop obligatorio en la rúbrica
+            contentScale = ContentScale.Crop,
             modifier = Modifier
                 .size(64.dp)
                 .clip(RoundedCornerShape(8.dp))
@@ -247,7 +267,6 @@ private fun EjercicioItem(ejercicio: EjercicioRutina) {
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        // Nombre + series/reps
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = ejercicio.nombre,
@@ -257,7 +276,7 @@ private fun EjercicioItem(ejercicio: EjercicioRutina) {
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = "${ejercicio.series} series x ${ejercicio.repeticiones} repeticiones",
+                text = "${ejercicio.series} series × ${ejercicio.repeticiones} repeticiones",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
