@@ -159,3 +159,12 @@ data class HistorialDetalleResponse(
     val duracion_minutos: Int,
     val fecha: String   // "2025-08-17T..."
 )
+
+// ── UI MODELS ─────────────────────────────────
+data class EjercicioRutina(
+    val id: Int,
+    val nombre: String,
+    val series: Int = 3,
+    val repeticiones: Int = 10,
+    val imagenUrl: String = ""
+)

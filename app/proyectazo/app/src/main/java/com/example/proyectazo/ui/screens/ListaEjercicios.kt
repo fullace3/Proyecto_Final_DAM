@@ -21,10 +21,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.proyectazo.network.EjercicioResponse
-// FIX: correct package is ui.viewmodel, not just viewmodel
 import com.example.proyectazo.ui.viewmodel.AñadirEjercicioUiState
 
-enum class FiltroTipo { MUSCULO, EQUIPAMIENTO }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

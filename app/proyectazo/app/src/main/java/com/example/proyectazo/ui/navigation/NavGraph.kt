@@ -9,17 +9,17 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.proyectazo.ui.screens.AñadirEjercicioScreen
+import com.example.proyectazo.ui.screens.CrearRutinaScreen
 import com.example.proyectazo.ui.screens.PantallaIncioSesion
 import com.example.proyectazo.ui.screens.PantallaInicio
 import com.example.proyectazo.ui.screens.PantallaRegistro
 import com.example.proyectazo.ui.screens.PantallaRutinas
-// FIX: use the correct package — adjust the sub-path if CrearRutinaScreen lives elsewhere
-import com.example.proyectazo.ui.screens.CrearRutinaScreen
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
     startDestination: String = Screen.Login.route,
+    userId: Int = 0,        // pasa aquí el id del usuario logueado desde MainActivity
     modifier: Modifier = Modifier
 ) {
     NavHost(
@@ -50,9 +50,7 @@ fun NavGraph(
                         popUpTo(Screen.Register.route) { inclusive = true }
                     }
                 },
-                onLoginClick = {
-                    navController.popBackStack()
-                }
+                onLoginClick = { navController.popBackStack() }
             )
         }
 
@@ -64,18 +62,16 @@ fun NavGraph(
         // ── RUTINAS ───────────────────────────────────────────────
         composable(Screen.Rutinas.route) {
             PantallaRutinas(
-                onCrearRutina = {
-                    navController.navigate(Screen.CrearRutina.route)
-                }
+                onCrearRutina = { navController.navigate(Screen.CrearRutina.route) }
             )
         }
 
         // ── CREAR RUTINA ──────────────────────────────────────────
-        // NOTE: CrearRutinaScreen must pass the real rutinaId once the rutina is created.
-        // Replace 0 with the actual id returned by your API: navigate("seleccionar_ejercicio/$rutinaId")
         composable("crear_rutina") {
             CrearRutinaScreen(
+                userId = userId,
                 onNavigateBack = { navController.popBackStack() },
+                // Cuando la rutina se crea en la API, onAnadirEjercicio recibe el id real
                 onAnadirEjercicio = { rutinaId ->
                     navController.navigate("seleccionar_ejercicio/$rutinaId")
                 }
@@ -83,7 +79,6 @@ fun NavGraph(
         }
 
         // ── SELECCIONAR EJERCICIO ─────────────────────────────────
-        // FIX: new route wired to AñadirEjercicioScreen with rutinaId argument
         composable(
             route = "seleccionar_ejercicio/{rutinaId}",
             arguments = listOf(
@@ -115,7 +110,7 @@ fun NavGraph(
             PlaceholderScreen(nombre = "Perfil")
         }
 
-        // ── DETALLE RUTINA (con argumento) ────────────────────────
+        // ── DETALLE RUTINA ────────────────────────────────────────
         composable(
             route = Screen.DetalleRutina.route,
             arguments = listOf(
@@ -128,7 +123,6 @@ fun NavGraph(
     }
 }
 
-// ── Placeholder temporal ──────────────────────────────────────────
 @Composable
 fun PlaceholderScreen(nombre: String) {
     Text(text = nombre)

@@ -73,7 +73,6 @@ class EjercicioOut(EjercicioCreate):
 
 class RutinaCreate(BaseModel):
     nombre: str
-    descripcion: Optional[str] = None
     id_usuario: int
 
 class RutinaOut(RutinaCreate):

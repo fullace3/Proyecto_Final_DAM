@@ -22,47 +22,50 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-
-// ─── Modelo de datos ────────────────────────────────────────────────────────
-
-data class EjercicioRutina(
-    val id: Int,
-    val nombre: String,
-    val series: Int = 3,
-    val repeticiones: Int = 10,
-    val imagenUrl: String = ""
-)
-
-// ─── Screen ─────────────────────────────────────────────────────────────────
+import com.example.proyectazo.network.EjercicioRutina
+import com.example.proyectazo.network.RetrofitClient
+import com.example.proyectazo.ui.viewmodel.CrearRutinaUiState
+import com.example.proyectazo.ui.viewmodel.RutinaViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CrearRutinaScreen(
-    // ↓ La lista llega desde el ViewModel/padre; por defecto vacía
+    userId: Int,                                  // id del usuario logueado
     ejercicios: List<EjercicioRutina> = emptyList(),
     onNavigateBack: () -> Unit = {},
-    onGuardar: (nombre: String, ejercicios: List<EjercicioRutina>) -> Unit = { _, _ -> },
-    onAnadirEjercicio: () -> Unit = {}
+    onAnadirEjercicio: (rutinaId: Int) -> Unit = {}  // ahora recibe el id real
 ) {
+    val viewModel: RutinaViewModel = viewModel(
+        factory = RutinaViewModel.Factory(
+            apiService = RetrofitClient.instance,
+            userId = userId
+        )
+    )
+    val uiState by viewModel.uiState.collectAsState()
+
     var nombreRutina by rememberSaveable { mutableStateOf("") }
     var editandoNombre by rememberSaveable { mutableStateOf(false) }
+
+    // Cuando la rutina se crea con éxito, navegamos con el id real
+    LaunchedEffect(uiState) {
+        if (uiState is CrearRutinaUiState.RutinaCreada) {
+            val rutinaId = (uiState as CrearRutinaUiState.RutinaCreada).rutinaId
+            viewModel.resetState()
+            onAnadirEjercicio(rutinaId)
+        }
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = "Crear rutina",
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    Text("Crear rutina", style = MaterialTheme.typography.titleMedium)
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBackIosNew,
-                            contentDescription = "Volver"
-                        )
+                        Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Volver")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -71,7 +74,6 @@ fun CrearRutinaScreen(
             )
         }
     ) { innerPadding ->
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -79,10 +81,8 @@ fun CrearRutinaScreen(
                 .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(Modifier.height(8.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // ── Nombre editable ──────────────────────────────────────────
             NombreRutinaHeader(
                 nombre = nombreRutina,
                 editando = editandoNombre,
@@ -90,14 +90,20 @@ fun CrearRutinaScreen(
                 onToggleEdicion = { editandoNombre = !editandoNombre }
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // ── Lista de ejercicios asignados ────────────────────────────
-            if (ejercicios.isEmpty()) {
-                // Estado vacío: ocupa el espacio de la lista
-                ListaVacia(
-                    modifier = Modifier.weight(1f)
+            // Mensaje de error bajo el nombre
+            if (uiState is CrearRutinaUiState.Error) {
+                Text(
+                    text = (uiState as CrearRutinaUiState.Error).mensaje,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 4.dp)
                 )
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            if (ejercicios.isEmpty()) {
+                ListaVacia(modifier = Modifier.weight(1f))
             } else {
                 LazyColumn(
                     modifier = Modifier.weight(1f),
@@ -109,66 +115,55 @@ fun CrearRutinaScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(Modifier.height(12.dp))
 
-            // ── Botón añadir ejercicio ───────────────────────────────────
+            // ── Botón añadir ejercicio ── crea la rutina primero ────────
             OutlinedButton(
-                onClick = onAnadirEjercicio,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
+                onClick = { viewModel.crearRutina(nombreRutina) },
+                enabled = uiState !is CrearRutinaUiState.Loading,
+                modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
                 )
             ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = "Añadir ejercicio",
-                    style = MaterialTheme.typography.bodyLarge
-                )
+                if (uiState is CrearRutinaUiState.Loading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Añadir ejercicio", style = MaterialTheme.typography.bodyLarge)
+                }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(Modifier.height(12.dp))
 
-            // ── Botón guardar ────────────────────────────────────────────
+            // ── Botón guardar ── solo visible si ya hay ejercicios ───────
             Button(
-                onClick = { onGuardar(nombreRutina, ejercicios) },
-                enabled = nombreRutina.isNotBlank() && ejercicios.isNotEmpty(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+                onClick = onNavigateBack,
+                enabled = ejercicios.isNotEmpty() && nombreRutina.isNotBlank(),
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                shape = RoundedCornerShape(12.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Save,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
+                Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text = "Guardar entrenamiento",
+                    "Guardar entrenamiento",
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
         }
     }
 }
 
-// ─── Subcomponentes ──────────────────────────────────────────────────────────
+// ─── Subcomponentes (sin cambios) ────────────────────────────────────────────
 
-/** Placeholder cuando la rutina todavía no tiene ejercicios asignados. */
 @Composable
 private fun ListaVacia(modifier: Modifier = Modifier) {
     Column(
@@ -177,18 +172,18 @@ private fun ListaVacia(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Icon(
-            imageVector = Icons.Default.FitnessCenter,
+            Icons.Default.FitnessCenter,
             contentDescription = null,
             modifier = Modifier.size(56.dp),
             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)
         )
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(Modifier.height(12.dp))
         Text(
-            text = "Sin ejercicios aún",
+            "Sin ejercicios aún",
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
         )
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(Modifier.height(4.dp))
         Text(
             text = "Pulsa \"Añadir ejercicio\" para\nconstruir tu rutina",
             style = MaterialTheme.typography.bodySmall,
@@ -233,12 +228,10 @@ private fun NombreRutinaHeader(
                     MaterialTheme.colorScheme.onSurface
             )
         }
-
-        Spacer(modifier = Modifier.width(6.dp))
-
+        Spacer(Modifier.width(6.dp))
         IconButton(onClick = onToggleEdicion) {
             Icon(
-                imageVector = Icons.Default.Edit,
+                Icons.Default.Edit,
                 contentDescription = "Editar nombre",
                 tint = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(20.dp)
@@ -250,9 +243,7 @@ private fun NombreRutinaHeader(
 @Composable
 private fun EjercicioItem(ejercicio: EjercicioRutina) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncImage(
@@ -264,19 +255,17 @@ private fun EjercicioItem(ejercicio: EjercicioRutina) {
                 .clip(RoundedCornerShape(8.dp))
                 .background(MaterialTheme.colorScheme.surfaceVariant)
         )
-
-        Spacer(modifier = Modifier.width(16.dp))
-
+        Spacer(Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = ejercicio.nombre,
+                ejercicio.nombre,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(Modifier.height(2.dp))
             Text(
-                text = "${ejercicio.series} series × ${ejercicio.repeticiones} repeticiones",
+                "${ejercicio.series} series × ${ejercicio.repeticiones} repeticiones",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
