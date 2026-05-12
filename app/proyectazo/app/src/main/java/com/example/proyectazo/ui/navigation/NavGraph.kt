@@ -2,6 +2,7 @@ package com.example.proyectazo.navigation
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -19,7 +20,7 @@ import com.example.proyectazo.ui.screens.PantallaRutinas
 fun NavGraph(
     navController: NavHostController,
     startDestination: String = Screen.Login.route,
-    userId: Int = 0,        // pasa aquí el id del usuario logueado desde MainActivity
+    userId: Int = 0,
     modifier: Modifier = Modifier
 ) {
     NavHost(
@@ -68,10 +69,11 @@ fun NavGraph(
 
         // ── CREAR RUTINA ──────────────────────────────────────────
         composable("crear_rutina") {
+            val context = androidx.compose.ui.platform.LocalContext.current
+            val sessionManager = remember { com.example.proyectazo.network.SessionManager(context) }
             CrearRutinaScreen(
-                userId = userId,
+                userId = sessionManager.getUserId(),
                 onNavigateBack = { navController.popBackStack() },
-                // Cuando la rutina se crea en la API, onAnadirEjercicio recibe el id real
                 onAnadirEjercicio = { rutinaId ->
                     navController.navigate("seleccionar_ejercicio/$rutinaId")
                 }
