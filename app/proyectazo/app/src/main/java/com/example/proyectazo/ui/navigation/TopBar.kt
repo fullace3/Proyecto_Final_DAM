@@ -14,7 +14,7 @@ fun SmartFitTopBar(
     onBack: () -> Unit
 ) {
     Column {
-        TopAppBar(
+        CenterAlignedTopAppBar(
             title = {
                 Text(
                     text = titulo,
@@ -29,7 +29,7 @@ fun SmartFitTopBar(
                     )
                 }
             },
-            colors = TopAppBarDefaults.topAppBarColors(
+            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                 containerColor = MaterialTheme.colorScheme.surface
             )
         )

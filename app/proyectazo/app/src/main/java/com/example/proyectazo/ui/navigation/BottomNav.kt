@@ -9,7 +9,15 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 
-val screensWithoutNav = listOf(Screen.Login.route, Screen.Register.route)
+val screensWithoutNav = listOf(
+    Screen.Login.route,
+    Screen.Register.route,
+    "crear_rutina",
+    "seleccionar_ejercicio/{rutinaId}",
+    "editar_rutina/{rutinaId}",
+    "detalles_rutina",
+    "entrenar"
+)
 
 data class NavItem(
     val label: String,

@@ -8,7 +8,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FitnessCenter
@@ -28,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.proyectazo.network.EjercicioRutina
+import com.example.proyectazo.ui.components.SmartFitTopBar
 import com.example.proyectazo.ui.viewmodel.EditarRutinaViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,6 +42,7 @@ fun EditarRutinaScreen(
         factory = EditarRutinaViewModel.Factory(rutinaId, context)
     )
     val uiState by viewModel.uiState.collectAsState()
+
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
@@ -52,6 +53,7 @@ fun EditarRutinaScreen(
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
+
     var editandoNombre by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(uiState.guardado) {
@@ -63,20 +65,9 @@ fun EditarRutinaScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Editar rutina", style = MaterialTheme.typography.titleMedium) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Volver")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
+            SmartFitTopBar(titulo = "Editar rutina", onBack = onNavigateBack)
         }
     ) { innerPadding ->
-
         if (uiState.isLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
@@ -85,47 +76,31 @@ fun EditarRutinaScreen(
         }
 
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp),
+            modifier = Modifier.fillMaxSize().padding(innerPadding).padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(Modifier.height(8.dp))
 
-            // ── Nombre editable ──────────────────────────────────
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
+            Row(verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+                modifier = Modifier.fillMaxWidth()) {
                 if (editandoNombre) {
-                    BasicTextField(
-                        value = uiState.nombre,
-                        onValueChange = viewModel::onNombreChange,
+                    BasicTextField(value = uiState.nombre, onValueChange = viewModel::onNombreChange,
                         textStyle = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.onSurface
-                        ),
-                        modifier = Modifier.weight(1f),
-                        singleLine = true
-                    )
+                            fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurface),
+                        modifier = Modifier.weight(1f), singleLine = true)
                 } else {
-                    Text(
-                        text = uiState.nombre.ifEmpty { "Sin nombre" },
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
+                    Text(text = uiState.nombre.ifEmpty { "Sin nombre" },
+                        style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold,
                         color = if (uiState.nombre.isEmpty())
                             MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                        else MaterialTheme.colorScheme.onSurface
-                    )
+                        else MaterialTheme.colorScheme.onSurface)
                 }
                 Spacer(Modifier.width(6.dp))
                 IconButton(onClick = { editandoNombre = !editandoNombre }) {
                     Icon(Icons.Default.Edit, contentDescription = "Editar nombre",
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(20.dp))
+                        tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp))
                 }
             }
 
@@ -137,13 +112,10 @@ fun EditarRutinaScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            // ── Lista de ejercicios ──────────────────────────────
             if (uiState.ejercicios.isEmpty()) {
-                Column(
-                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                Column(modifier = Modifier.weight(1f).fillMaxWidth(),
                     verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+                    horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(Icons.Default.FitnessCenter, contentDescription = null,
                         modifier = Modifier.size(56.dp),
                         tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f))
@@ -152,15 +124,11 @@ fun EditarRutinaScreen(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
                 }
             } else {
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
+                LazyColumn(modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     items(uiState.ejercicios, key = { it.id }) { ejercicio ->
-                        EjercicioEditItem(
-                            ejercicio = ejercicio,
-                            onEliminar = { viewModel.eliminarEjercicio(ejercicio.id) }
-                        )
+                        EjercicioEditItem(ejercicio = ejercicio,
+                            onEliminar = { viewModel.eliminarEjercicio(ejercicio.id) })
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     }
                 }
@@ -168,15 +136,11 @@ fun EditarRutinaScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            // ── Botón añadir ejercicio ───────────────────────────
-            OutlinedButton(
-                onClick = { onAnadirEjercicio(rutinaId) },
+            OutlinedButton(onClick = { onAnadirEjercicio(rutinaId) },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
-                )
-            ) {
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f))) {
                 Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text("Añadir ejercicio", style = MaterialTheme.typography.bodyLarge)
@@ -184,13 +148,8 @@ fun EditarRutinaScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            // ── Botón guardar ────────────────────────────────────
-            Button(
-                onClick = viewModel::guardarCambios,
-                enabled = uiState.nombre.isNotBlank(),
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape = RoundedCornerShape(12.dp)
-            ) {
+            Button(onClick = viewModel::guardarCambios, enabled = uiState.nombre.isNotBlank(),
+                modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(12.dp)) {
                 Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text("Guardar cambios", style = MaterialTheme.typography.bodyLarge,
@@ -203,52 +162,35 @@ fun EditarRutinaScreen(
 }
 
 @Composable
-private fun EjercicioEditItem(
-    ejercicio: EjercicioRutina,
-    onEliminar: () -> Unit
-) {
+private fun EjercicioEditItem(ejercicio: EjercicioRutina, onEliminar: () -> Unit) {
     var menuVisible by remember { mutableStateOf(false) }
     var mostrarDialogo by remember { mutableStateOf(false) }
 
     if (mostrarDialogo) {
-        AlertDialog(
-            onDismissRequest = { mostrarDialogo = false },
+        AlertDialog(onDismissRequest = { mostrarDialogo = false },
             title = { Text("Eliminar ejercicio") },
-            text  = { Text("¿Quitar \"${ejercicio.nombre}\" de la rutina?") },
+            text = { Text("¿Quitar \"${ejercicio.nombre}\" de la rutina?") },
             confirmButton = {
                 TextButton(onClick = { mostrarDialogo = false; onEliminar() }) {
                     Text("Eliminar", color = MaterialTheme.colorScheme.error)
                 }
             },
-            dismissButton = {
-                TextButton(onClick = { mostrarDialogo = false }) { Text("Cancelar") }
-            }
-        )
+            dismissButton = { TextButton(onClick = { mostrarDialogo = false }) { Text("Cancelar") } })
     }
 
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        AsyncImage(
-            model = ejercicio.imagenUrl,
-            contentDescription = ejercicio.nombre,
+    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically) {
+        AsyncImage(model = ejercicio.imagenUrl, contentDescription = ejercicio.nombre,
             contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .size(56.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-        )
+            modifier = Modifier.size(56.dp).clip(RoundedCornerShape(8.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant))
         Spacer(Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(ejercicio.nombre, style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium)
+            Text(ejercicio.nombre, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
             Text("${ejercicio.series} series × ${ejercicio.repeticiones} repeticiones",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-
-        // ── Tres puntos ──────────────────────────────────────
         Box {
             IconButton(onClick = { menuVisible = true }) {
                 Icon(Icons.Default.MoreVert, contentDescription = "Opciones",
@@ -257,12 +199,8 @@ private fun EjercicioEditItem(
             DropdownMenu(expanded = menuVisible, onDismissRequest = { menuVisible = false }) {
                 DropdownMenuItem(
                     text = { Text("Eliminar de rutina", color = MaterialTheme.colorScheme.error) },
-                    leadingIcon = {
-                        Icon(Icons.Default.Delete, null,
-                            tint = MaterialTheme.colorScheme.error)
-                    },
-                    onClick = { menuVisible = false; mostrarDialogo = true }
-                )
+                    leadingIcon = { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error) },
+                    onClick = { menuVisible = false; mostrarDialogo = true })
             }
         }
     }

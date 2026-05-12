@@ -14,8 +14,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.proyectazo.ui.screens.AñadirEjercicioScreen
 import com.example.proyectazo.ui.screens.CrearRutinaScreen
+import com.example.proyectazo.ui.screens.DetalleEjercicioScreen
 import com.example.proyectazo.ui.screens.DetallesRutinaScreen
 import com.example.proyectazo.ui.screens.EditarRutinaScreen
+import com.example.proyectazo.ui.screens.EntrenarScreen
 import com.example.proyectazo.ui.screens.PantallaIncioSesion
 import com.example.proyectazo.ui.screens.PantallaInicio
 import com.example.proyectazo.ui.screens.PantallaRegistro
@@ -29,7 +31,6 @@ fun NavGraph(
     userId: Int = 0,
     modifier: Modifier = Modifier
 ) {
-    // Estado compartido para pasar la rutina seleccionada a DetallesRutinaScreen
     var rutinaSeleccionada by remember { mutableStateOf<RutinaConEjercicios?>(null) }
 
     NavHost(
@@ -46,9 +47,7 @@ fun NavGraph(
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 },
-                onRegisterClick = {
-                    navController.navigate(Screen.Register.route)
-                }
+                onRegisterClick = { navController.navigate(Screen.Register.route) }
             )
         }
 
@@ -87,7 +86,23 @@ fun NavGraph(
                     rutinaConEjercicios = rutina,
                     onBack = { navController.popBackStack() },
                     onEditar = { navController.navigate("editar_rutina/${rutina.rutina.id_rutina}") },
-                    onEmpezar = { navController.navigate(Screen.Progreso.route) }
+                    onEmpezar = {
+                        navController.navigate("entrenar")
+                    }
+                )
+            }
+        }
+
+        // ── ENTRENAR ──────────────────────────────────────────────
+        composable("entrenar") {
+            rutinaSeleccionada?.let { rutina ->
+                EntrenarScreen(
+                    rutinaConEjercicios = rutina,
+                    onTerminar = {
+                        navController.navigate(Screen.Progreso.route) {
+                            popUpTo("entrenar") { inclusive = true }
+                        }
+                    }
                 )
             }
         }
@@ -121,12 +136,7 @@ fun NavGraph(
         // ── SELECCIONAR EJERCICIO ─────────────────────────────────
         composable(
             route = "seleccionar_ejercicio/{rutinaId}",
-            arguments = listOf(
-                navArgument("rutinaId") {
-                    type = NavType.IntType
-                    defaultValue = 0
-                }
-            )
+            arguments = listOf(navArgument("rutinaId") { type = NavType.IntType; defaultValue = 0 })
         ) { backStackEntry ->
             val rutinaId = backStackEntry.arguments?.getInt("rutinaId") ?: 0
             AñadirEjercicioScreen(
@@ -136,26 +146,18 @@ fun NavGraph(
         }
 
         // ── DIETA ─────────────────────────────────────────────────
-        composable(Screen.Dieta.route) {
-            PlaceholderScreen(nombre = "Dieta")
-        }
+        composable(Screen.Dieta.route) { PlaceholderScreen(nombre = "Dieta") }
 
         // ── PROGRESO ──────────────────────────────────────────────
-        composable(Screen.Progreso.route) {
-            PlaceholderScreen(nombre = "Progreso")
-        }
+        composable(Screen.Progreso.route) { PlaceholderScreen(nombre = "Progreso") }
 
         // ── PERFIL ────────────────────────────────────────────────
-        composable(Screen.Perfil.route) {
-            PlaceholderScreen(nombre = "Perfil")
-        }
+        composable(Screen.Perfil.route) { PlaceholderScreen(nombre = "Perfil") }
 
-        // ── DETALLE RUTINA (ruta antigua, por si acaso) ───────────
+        // ── DETALLE RUTINA (ruta antigua) ─────────────────────────
         composable(
             route = Screen.DetalleRutina.route,
-            arguments = listOf(
-                navArgument(Screen.DetalleRutina.ARG) { type = NavType.IntType }
-            )
+            arguments = listOf(navArgument(Screen.DetalleRutina.ARG) { type = NavType.IntType })
         ) { backStackEntry ->
             val rutinaId = backStackEntry.arguments?.getInt(Screen.DetalleRutina.ARG) ?: 0
             PlaceholderScreen(nombre = "Detalle Rutina $rutinaId")

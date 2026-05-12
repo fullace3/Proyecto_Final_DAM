@@ -8,7 +8,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Save
@@ -26,6 +25,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.proyectazo.network.EjercicioRutina
 import com.example.proyectazo.network.RetrofitClient
+import com.example.proyectazo.ui.components.SmartFitTopBar
 import com.example.proyectazo.ui.viewmodel.CrearRutinaUiState
 import com.example.proyectazo.ui.viewmodel.RutinaViewModel
 
@@ -57,17 +57,7 @@ fun CrearRutinaScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Crear rutina", style = MaterialTheme.typography.titleMedium) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Volver")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
+            SmartFitTopBar(titulo = "Crear rutina", onBack = onNavigateBack)
         }
     ) { innerPadding ->
         Column(
@@ -80,59 +70,43 @@ fun CrearRutinaScreen(
             Spacer(Modifier.height(8.dp))
 
             // ── Nombre ───────────────────────────────────────────
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
+            Row(verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+                modifier = Modifier.fillMaxWidth()) {
                 if (editandoNombre) {
-                    BasicTextField(
-                        value = nombreRutina,
-                        onValueChange = { nombreRutina = it },
+                    BasicTextField(value = nombreRutina, onValueChange = { nombreRutina = it },
                         textStyle = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.onSurface
-                        ),
-                        modifier = Modifier.weight(1f),
-                        singleLine = true
-                    )
+                            fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurface),
+                        modifier = Modifier.weight(1f), singleLine = true)
                 } else {
-                    Text(
-                        text = nombreRutina.ifEmpty { "Añade un nombre" },
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
+                    Text(text = nombreRutina.ifEmpty { "Añade un nombre" },
+                        style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold,
                         color = if (nombreRutina.isEmpty())
                             MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                        else MaterialTheme.colorScheme.onSurface
-                    )
+                        else MaterialTheme.colorScheme.onSurface)
                 }
                 Spacer(Modifier.width(6.dp))
                 IconButton(onClick = { editandoNombre = !editandoNombre }) {
                     Icon(Icons.Default.Edit, contentDescription = "Editar nombre",
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(20.dp))
+                        tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp))
                 }
             }
 
             if (uiState is CrearRutinaUiState.Error) {
-                Text(
-                    text = (uiState as CrearRutinaUiState.Error).mensaje,
+                Text(text = (uiState as CrearRutinaUiState.Error).mensaje,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
+                    modifier = Modifier.padding(top = 4.dp))
             }
 
             Spacer(Modifier.height(8.dp))
 
             // ── Lista ejercicios ─────────────────────────────────
             if (ejercicios.isEmpty()) {
-                Column(
-                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                Column(modifier = Modifier.weight(1f).fillMaxWidth(),
                     verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+                    horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(Icons.Default.FitnessCenter, contentDescription = null,
                         modifier = Modifier.size(56.dp),
                         tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f))
@@ -149,15 +123,12 @@ fun CrearRutinaScreen(
                 LazyColumn(modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     items(ejercicios, key = { it.id }) { ejercicio ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically) {
                             AsyncImage(model = ejercicio.imagenUrl,
                                 contentDescription = ejercicio.nombre,
                                 contentScale = ContentScale.Crop,
-                                modifier = Modifier.size(64.dp)
-                                    .clip(RoundedCornerShape(8.dp))
+                                modifier = Modifier.size(64.dp).clip(RoundedCornerShape(8.dp))
                                     .background(MaterialTheme.colorScheme.surfaceVariant))
                             Spacer(Modifier.width(16.dp))
                             Column(modifier = Modifier.weight(1f)) {
@@ -174,15 +145,13 @@ fun CrearRutinaScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            // ── Botón añadir ejercicio ────────────────────────────
             OutlinedButton(
                 onClick = { viewModel.crearONavegar(nombreRutina) },
                 enabled = uiState !is CrearRutinaUiState.Loading,
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
-                )
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f))
             ) {
                 if (uiState is CrearRutinaUiState.Loading) {
                     CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
@@ -195,7 +164,6 @@ fun CrearRutinaScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            // ── Botón guardar ─────────────────────────────────────
             Button(
                 onClick = onNavigateBack,
                 enabled = ejercicios.isNotEmpty() && nombreRutina.isNotBlank(),
