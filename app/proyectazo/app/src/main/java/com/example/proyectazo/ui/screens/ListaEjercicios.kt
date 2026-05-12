@@ -1,241 +1,241 @@
-package com.example.proyectazo.ui.screens
+package com.example.proyectazo.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.proyectazo.network.EjercicioResponse
+// FIX: correct package is ui.viewmodel, not just viewmodel
+import com.example.proyectazo.ui.viewmodel.AñadirEjercicioUiState
 
-// ── Colores (ajústalos a tu Theme.kt) ────────────────────────────────────────
-private val BackgroundColor = Color(0xFF1C1C2E)
-private val SurfaceColor    = Color(0xFF2A2A3E)
-private val TextPrimary     = Color(0xFFFFFFFF)
-private val TextSecondary   = Color(0xFF9E9E9E)
-private val DividerColor    = Color(0xFF3A3A4E)
+enum class FiltroTipo { MUSCULO, EQUIPAMIENTO }
 
-// ── Modelo de datos ───────────────────────────────────────────────────────────
-data class Ejercicio(
-    val id: Int,
-    val nombre: String,
-    val series: Int = 3,
-    val repeticiones: Int = 10,
-    val musculo: String,
-    val equipamiento: String,
-    val imagenUrl: String = ""
-)
-
-// ── Datos de ejemplo ──────────────────────────────────────────────────────────
-private val ejerciciosEjemplo = listOf(
-    Ejercicio(1,  "Press plano con mancuernas",          musculo = "Pecho",     equipamiento = "Mancuernas"),
-    Ejercicio(2,  "Press inclinado con barra",            musculo = "Pecho",     equipamiento = "Barra"),
-    Ejercicio(3,  "Press militar con mancuernas",         musculo = "Hombro",    equipamiento = "Mancuernas"),
-    Ejercicio(4,  "Elevaciones laterales con mancuernas", musculo = "Hombro",    equipamiento = "Mancuernas"),
-    Ejercicio(5,  "Face pull en polea",                   musculo = "Hombro",    equipamiento = "Polea"),
-    Ejercicio(6,  "Tríceps tras nuca en polea",           musculo = "Tríceps",   equipamiento = "Polea"),
-    Ejercicio(7,  "Flexiones en diamante",                musculo = "Tríceps",   equipamiento = "Peso corporal"),
-    Ejercicio(8,  "Curl de bíceps con barra",             musculo = "Bíceps",    equipamiento = "Barra"),
-    Ejercicio(9,  "Sentadilla con barra",                 musculo = "Cuádriceps",equipamiento = "Barra"),
-    Ejercicio(10, "Peso muerto",                          musculo = "Espalda",   equipamiento = "Barra"),
-)
-
-// ── Pantalla ──────────────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ListaEjercicios(navController: NavController) {
-
-    var searchQuery  by remember { mutableStateOf("") }
-    var selectedTab  by remember { mutableStateOf(0) }
-
-    val listaFiltrada = remember(searchQuery, selectedTab) {
-        ejerciciosEjemplo
-            .filter { it.nombre.contains(searchQuery, ignoreCase = true) }
-            .let { lista ->
-                if (selectedTab == 0) lista.sortedBy { it.musculo }
-                else                  lista.sortedBy { it.equipamiento }
-            }
-    }
-
+fun ListaEjerciciosScreen(
+    uiState: AñadirEjercicioUiState,
+    onBack: () -> Unit,
+    onSearchQueryChange: (String) -> Unit,
+    onFiltroTipoChange: (FiltroTipo) -> Unit,
+    onFiltroValorChange: (String?) -> Unit,
+    onEjercicioClick: (EjercicioResponse) -> Unit
+) {
     Scaffold(
-        containerColor = BackgroundColor,
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        "Añadir ejercicio",
-                        color = TextPrimary,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 18.sp
+                        text = "Añadir ejercicio",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = onBack) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Volver",
-                            tint = TextPrimary
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Volver"
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundColor)
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
         }
-    ) { padding ->
-
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp)
+                .padding(innerPadding)
         ) {
-
-            // ── Buscador ─────────────────────────────────────────────────────
-            Buscador(query = searchQuery, onQueryChange = { searchQuery = it })
-
-            Spacer(Modifier.height(16.dp))
-
-            // ── Pestañas ─────────────────────────────────────────────────────
-            SelectorPestanas(
-                selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it }
+            // ── Barra de búsqueda ──────────────────────────────
+            OutlinedTextField(
+                value = uiState.searchQuery,
+                onValueChange = onSearchQueryChange,
+                placeholder = { Text("Buscar ejercicio") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    focusedBorderColor = MaterialTheme.colorScheme.primary
+                )
             )
 
-            Spacer(Modifier.height(8.dp))
-
-            // ── Lista ─────────────────────────────────────────────────────────
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(vertical = 4.dp)
+            // ── Tabs Musculo / Equipamiento ────────────────────
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(listaFiltrada, key = { it.id }) { ejercicio ->
-                    FilaEjercicio(
-                        ejercicio = ejercicio,
+                FiltroTipo.entries.forEach { tipo ->
+                    val selected = uiState.filtroTipo == tipo
+                    val label = if (tipo == FiltroTipo.MUSCULO) "Músculo" else "Equipamiento"
+                    FilterChip(
+                        selected = selected,
                         onClick = {
-                            // TODO: cuando tengas la pantalla de detalle cambia esto:
-                            // navController.navigate("detalle_ejercicio/${ejercicio.id}")
-                            navController.navigate("placeholder")
-                        }
+                            onFiltroTipoChange(tipo)
+                            onFiltroValorChange(null)
+                        },
+                        label = {
+                            Text(
+                                text = label,
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                            )
+                        },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp)
                     )
-                    HorizontalDivider(color = DividerColor, thickness = 0.5.dp)
+                }
+            }
+
+            // ── Sub-chips de valor (grupos musculares o equipamiento) ──
+            if (uiState.filtrosDisponibles.isNotEmpty()) {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(uiState.filtrosDisponibles) { valor ->
+                        val selected = uiState.filtroValor == valor
+                        FilterChip(
+                            selected = selected,
+                            onClick = { onFiltroValorChange(if (selected) null else valor) },
+                            label = { Text(valor) },
+                            shape = RoundedCornerShape(20.dp)
+                        )
+                    }
+                }
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(top = 4.dp))
+
+            // ── Contenido principal ───────────────────────────
+            when {
+                uiState.isLoading -> {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
+
+                uiState.error != null -> {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = uiState.error,
+                            color = MaterialTheme.colorScheme.error,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(24.dp)
+                        )
+                    }
+                }
+
+                uiState.ejerciciosFiltrados.isEmpty() -> {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = "No se encontraron ejercicios",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                else -> {
+                    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
+                        items(
+                            items = uiState.ejerciciosFiltrados,
+                            key = { it.id_ejercicio }
+                        ) { ejercicio ->
+                            EjercicioItem(
+                                ejercicio = ejercicio,
+                                onClick = { onEjercicioClick(ejercicio) }
+                            )
+                            HorizontalDivider(
+                                modifier = Modifier.padding(start = 80.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                            )
+                        }
+                    }
                 }
             }
         }
     }
 }
 
-// ── Buscador ──────────────────────────────────────────────────────────────────
 @Composable
-private fun Buscador(query: String, onQueryChange: (String) -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(SurfaceColor)
-            .padding(horizontal = 14.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        BasicTextField(
-            value = query,
-            onValueChange = onQueryChange,
-            singleLine = true,
-            textStyle = LocalTextStyle.current.copy(color = TextPrimary, fontSize = 15.sp),
-            modifier = Modifier.weight(1f),
-            decorationBox = { inner ->
-                if (query.isEmpty()) Text("Buscar ejercicio", color = TextSecondary, fontSize = 15.sp)
-                inner()
-            }
-        )
-        Icon(Icons.Default.Search, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(20.dp))
-    }
-}
-
-// ── Selector de pestañas ──────────────────────────────────────────────────────
-@Composable
-private fun SelectorPestanas(selectedTab: Int, onTabSelected: (Int) -> Unit) {
-    val tabs = listOf("Músculo", "Equipamiento")
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(SurfaceColor)
-            .padding(4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        tabs.forEachIndexed { index, label ->
-            val selected = selectedTab == index
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(if (selected) Color.White else Color.Transparent)
-                    .clickable { onTabSelected(index) }
-                    .padding(vertical = 10.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = label,
-                    color = if (selected) BackgroundColor else TextSecondary,
-                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                    fontSize = 14.sp
-                )
-            }
-        }
-    }
-}
-
-// ── Fila de ejercicio ─────────────────────────────────────────────────────────
-@Composable
-private fun FilaEjercicio(ejercicio: Ejercicio, onClick: () -> Unit) {
+private fun EjercicioItem(
+    ejercicio: EjercicioResponse,
+    onClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Imagen
-        AsyncImage(
-            model = ejercicio.imagenUrl.ifEmpty { null },
-            contentDescription = ejercicio.nombre,
-            contentScale = ContentScale.Crop,
+        // Miniatura
+        Box(
             modifier = Modifier
-                .size(56.dp)
+                .size(52.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .background(SurfaceColor)
-        )
+                .background(MaterialTheme.colorScheme.surfaceVariant),
+            contentAlignment = Alignment.Center
+        ) {
+            if (ejercicio.imagen != null) {
+                AsyncImage(
+                    model = ejercicio.imagen,
+                    contentDescription = ejercicio.nombre,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                Text(
+                    text = ejercicio.nombre.take(1).uppercase(),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
 
-        Spacer(Modifier.width(14.dp))
-
-        // Texto
+        // Nombre y subtítulo
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = ejercicio.nombre,
-                color = TextPrimary,
-                fontWeight = FontWeight.Medium,
-                fontSize = 15.sp
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                color = MaterialTheme.colorScheme.onSurface
             )
-            Spacer(Modifier.height(2.dp))
+            val subtitulo = listOfNotNull(ejercicio.grupo_muscular, ejercicio.equipamiento)
+                .joinToString(" · ")
+                .ifBlank { "3 series x 10 repeticiones" }
             Text(
-                text = "${ejercicio.series} series x ${ejercicio.repeticiones} repeticiones",
-                color = TextSecondary,
-                fontSize = 12.sp
+                text = subtitulo,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

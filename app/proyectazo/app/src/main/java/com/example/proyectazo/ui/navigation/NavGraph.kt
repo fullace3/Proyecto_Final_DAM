@@ -1,18 +1,20 @@
 package com.example.proyectazo.navigation
 
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.proyectazo.ui.screens.AñadirEjercicioScreen
 import com.example.proyectazo.ui.screens.PantallaIncioSesion
 import com.example.proyectazo.ui.screens.PantallaInicio
 import com.example.proyectazo.ui.screens.PantallaRegistro
 import com.example.proyectazo.ui.screens.PantallaRutinas
-import com.tuapp.ui.screens.entrenos.CrearRutinaScreen
+// FIX: use the correct package — adjust the sub-path if CrearRutinaScreen lives elsewhere
+import com.example.proyectazo.ui.screens.CrearRutinaScreen
 
 @Composable
 fun NavGraph(
@@ -69,10 +71,32 @@ fun NavGraph(
         }
 
         // ── CREAR RUTINA ──────────────────────────────────────────
+        // NOTE: CrearRutinaScreen must pass the real rutinaId once the rutina is created.
+        // Replace 0 with the actual id returned by your API: navigate("seleccionar_ejercicio/$rutinaId")
         composable("crear_rutina") {
             CrearRutinaScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onAnadirEjercicio = { navController.navigate("seleccionar_ejercicio") }
+                onAnadirEjercicio = { rutinaId ->
+                    navController.navigate("seleccionar_ejercicio/$rutinaId")
+                }
+            )
+        }
+
+        // ── SELECCIONAR EJERCICIO ─────────────────────────────────
+        // FIX: new route wired to AñadirEjercicioScreen with rutinaId argument
+        composable(
+            route = "seleccionar_ejercicio/{rutinaId}",
+            arguments = listOf(
+                navArgument("rutinaId") {
+                    type = NavType.IntType
+                    defaultValue = 0
+                }
+            )
+        ) { backStackEntry ->
+            val rutinaId = backStackEntry.arguments?.getInt("rutinaId") ?: 0
+            AñadirEjercicioScreen(
+                rutinaId = rutinaId,
+                onBack = { navController.popBackStack() }
             )
         }
 
@@ -102,4 +126,10 @@ fun NavGraph(
             PlaceholderScreen(nombre = "Detalle Rutina $rutinaId")
         }
     }
+}
+
+// ── Placeholder temporal ──────────────────────────────────────────
+@Composable
+fun PlaceholderScreen(nombre: String) {
+    Text(text = nombre)
 }
