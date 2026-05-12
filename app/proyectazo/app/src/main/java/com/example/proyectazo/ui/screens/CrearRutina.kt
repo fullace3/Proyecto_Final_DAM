@@ -32,10 +32,10 @@ import com.example.proyectazo.ui.viewmodel.RutinaViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CrearRutinaScreen(
-    userId: Int,                                  // id del usuario logueado
+    userId: Int,
     ejercicios: List<EjercicioRutina> = emptyList(),
     onNavigateBack: () -> Unit = {},
-    onAnadirEjercicio: (rutinaId: Int) -> Unit = {}  // ahora recibe el id real
+    onAnadirEjercicio: (rutinaId: Int) -> Unit = {}
 ) {
     val viewModel: RutinaViewModel = viewModel(
         factory = RutinaViewModel.Factory(
@@ -44,11 +44,9 @@ fun CrearRutinaScreen(
         )
     )
     val uiState by viewModel.uiState.collectAsState()
-
     var nombreRutina by rememberSaveable { mutableStateOf("") }
     var editandoNombre by rememberSaveable { mutableStateOf(false) }
 
-    // Cuando la rutina se crea con éxito, navegamos con el id real
     LaunchedEffect(uiState) {
         if (uiState is CrearRutinaUiState.RutinaCreada) {
             val rutinaId = (uiState as CrearRutinaUiState.RutinaCreada).rutinaId
@@ -60,9 +58,7 @@ fun CrearRutinaScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text("Crear rutina", style = MaterialTheme.typography.titleMedium)
-                },
+                title = { Text("Crear rutina", style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Volver")
@@ -83,14 +79,42 @@ fun CrearRutinaScreen(
         ) {
             Spacer(Modifier.height(8.dp))
 
-            NombreRutinaHeader(
-                nombre = nombreRutina,
-                editando = editandoNombre,
-                onNombreChange = { nombreRutina = it },
-                onToggleEdicion = { editandoNombre = !editandoNombre }
-            )
+            // ── Nombre ───────────────────────────────────────────
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (editandoNombre) {
+                    BasicTextField(
+                        value = nombreRutina,
+                        onValueChange = { nombreRutina = it },
+                        textStyle = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurface
+                        ),
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
+                } else {
+                    Text(
+                        text = nombreRutina.ifEmpty { "Añade un nombre" },
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = if (nombreRutina.isEmpty())
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        else MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                Spacer(Modifier.width(6.dp))
+                IconButton(onClick = { editandoNombre = !editandoNombre }) {
+                    Icon(Icons.Default.Edit, contentDescription = "Editar nombre",
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(20.dp))
+                }
+            }
 
-            // Mensaje de error bajo el nombre
             if (uiState is CrearRutinaUiState.Error) {
                 Text(
                     text = (uiState as CrearRutinaUiState.Error).mensaje,
@@ -102,24 +126,57 @@ fun CrearRutinaScreen(
 
             Spacer(Modifier.height(8.dp))
 
+            // ── Lista ejercicios ─────────────────────────────────
             if (ejercicios.isEmpty()) {
-                ListaVacia(modifier = Modifier.weight(1f))
-            } else {
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                Column(
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    Icon(Icons.Default.FitnessCenter, contentDescription = null,
+                        modifier = Modifier.size(56.dp),
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f))
+                    Spacer(Modifier.height(12.dp))
+                    Text("Sin ejercicios aún", style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
+                    Spacer(Modifier.height(4.dp))
+                    Text(text = "Pulsa \"Añadir ejercicio\" para\nconstruir tu rutina",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                        textAlign = TextAlign.Center)
+                }
+            } else {
+                LazyColumn(modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     items(ejercicios, key = { it.id }) { ejercicio ->
-                        EjercicioItem(ejercicio = ejercicio)
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            AsyncImage(model = ejercicio.imagenUrl,
+                                contentDescription = ejercicio.nombre,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.size(64.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant))
+                            Spacer(Modifier.width(16.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(ejercicio.nombre, style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium)
+                                Text("${ejercicio.series} series × ${ejercicio.repeticiones} rep",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
                     }
                 }
             }
 
             Spacer(Modifier.height(12.dp))
 
-            // ── Botón añadir ejercicio ── crea la rutina primero ────────
+            // ── Botón añadir ejercicio ────────────────────────────
             OutlinedButton(
-                onClick = { viewModel.crearRutina(nombreRutina) },
+                onClick = { viewModel.crearONavegar(nombreRutina) },
                 enabled = uiState !is CrearRutinaUiState.Loading,
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(12.dp),
@@ -128,10 +185,7 @@ fun CrearRutinaScreen(
                 )
             ) {
                 if (uiState is CrearRutinaUiState.Loading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp
-                    )
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                 } else {
                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
@@ -141,7 +195,7 @@ fun CrearRutinaScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            // ── Botón guardar ── solo visible si ya hay ejercicios ───────
+            // ── Botón guardar ─────────────────────────────────────
             Button(
                 onClick = onNavigateBack,
                 enabled = ejercicios.isNotEmpty() && nombreRutina.isNotBlank(),
@@ -150,125 +204,11 @@ fun CrearRutinaScreen(
             ) {
                 Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
-                Text(
-                    "Guardar entrenamiento",
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold
-                )
+                Text("Guardar entrenamiento", style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold)
             }
 
             Spacer(Modifier.height(16.dp))
-        }
-    }
-}
-
-// ─── Subcomponentes (sin cambios) ────────────────────────────────────────────
-
-@Composable
-private fun ListaVacia(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Icon(
-            Icons.Default.FitnessCenter,
-            contentDescription = null,
-            modifier = Modifier.size(56.dp),
-            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)
-        )
-        Spacer(Modifier.height(12.dp))
-        Text(
-            "Sin ejercicios aún",
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-        )
-        Spacer(Modifier.height(4.dp))
-        Text(
-            text = "Pulsa \"Añadir ejercicio\" para\nconstruir tu rutina",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
-            textAlign = TextAlign.Center
-        )
-    }
-}
-
-@Composable
-private fun NombreRutinaHeader(
-    nombre: String,
-    editando: Boolean,
-    onNombreChange: (String) -> Unit,
-    onToggleEdicion: () -> Unit
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        if (editando) {
-            BasicTextField(
-                value = nombre,
-                onValueChange = onNombreChange,
-                textStyle = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurface
-                ),
-                modifier = Modifier.weight(1f),
-                singleLine = true
-            )
-        } else {
-            Text(
-                text = nombre.ifEmpty { "Añade un nombre" },
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = if (nombre.isEmpty())
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                else
-                    MaterialTheme.colorScheme.onSurface
-            )
-        }
-        Spacer(Modifier.width(6.dp))
-        IconButton(onClick = onToggleEdicion) {
-            Icon(
-                Icons.Default.Edit,
-                contentDescription = "Editar nombre",
-                tint = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.size(20.dp)
-            )
-        }
-    }
-}
-
-@Composable
-private fun EjercicioItem(ejercicio: EjercicioRutina) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        AsyncImage(
-            model = ejercicio.imagenUrl,
-            contentDescription = ejercicio.nombre,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .size(64.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-        )
-        Spacer(Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                ejercicio.nombre,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                "${ejercicio.series} series × ${ejercicio.repeticiones} repeticiones",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }

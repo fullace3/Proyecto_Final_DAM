@@ -2,7 +2,10 @@ package com.example.proyectazo.navigation
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -11,11 +14,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.proyectazo.ui.screens.AñadirEjercicioScreen
 import com.example.proyectazo.ui.screens.CrearRutinaScreen
+import com.example.proyectazo.ui.screens.DetallesRutinaScreen
 import com.example.proyectazo.ui.screens.EditarRutinaScreen
 import com.example.proyectazo.ui.screens.PantallaIncioSesion
 import com.example.proyectazo.ui.screens.PantallaInicio
 import com.example.proyectazo.ui.screens.PantallaRegistro
 import com.example.proyectazo.ui.screens.PantallaRutinas
+import com.example.proyectazo.ui.viewmodel.RutinaConEjercicios
 
 @Composable
 fun NavGraph(
@@ -24,6 +29,9 @@ fun NavGraph(
     userId: Int = 0,
     modifier: Modifier = Modifier
 ) {
+    // Estado compartido para pasar la rutina seleccionada a DetallesRutinaScreen
+    var rutinaSeleccionada by remember { mutableStateOf<RutinaConEjercicios?>(null) }
+
     NavHost(
         navController = navController,
         startDestination = startDestination,
@@ -65,8 +73,23 @@ fun NavGraph(
         composable(Screen.Rutinas.route) {
             PantallaRutinas(
                 onCrearRutina = { navController.navigate(Screen.CrearRutina.route) },
-                onEditarRutina = { rutinaId -> navController.navigate("editar_rutina/$rutinaId") }
+                onVerDetalles = { rutina ->
+                    rutinaSeleccionada = rutina
+                    navController.navigate("detalles_rutina")
+                }
             )
+        }
+
+        // ── DETALLES RUTINA ───────────────────────────────────────
+        composable("detalles_rutina") {
+            rutinaSeleccionada?.let { rutina ->
+                DetallesRutinaScreen(
+                    rutinaConEjercicios = rutina,
+                    onBack = { navController.popBackStack() },
+                    onEditar = { navController.navigate("editar_rutina/${rutina.rutina.id_rutina}") },
+                    onEmpezar = { navController.navigate(Screen.Progreso.route) }
+                )
+            }
         }
 
         // ── CREAR RUTINA ──────────────────────────────────────────
@@ -90,7 +113,8 @@ fun NavGraph(
             val rutinaId = backStackEntry.arguments?.getInt("rutinaId") ?: 0
             EditarRutinaScreen(
                 rutinaId = rutinaId,
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onAnadirEjercicio = { id -> navController.navigate("seleccionar_ejercicio/$id") }
             )
         }
 
@@ -126,7 +150,7 @@ fun NavGraph(
             PlaceholderScreen(nombre = "Perfil")
         }
 
-        // ── DETALLE RUTINA ────────────────────────────────────────
+        // ── DETALLE RUTINA (ruta antigua, por si acaso) ───────────
         composable(
             route = Screen.DetalleRutina.route,
             arguments = listOf(

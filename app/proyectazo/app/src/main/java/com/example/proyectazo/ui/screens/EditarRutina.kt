@@ -7,9 +7,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,13 +34,24 @@ import com.example.proyectazo.ui.viewmodel.EditarRutinaViewModel
 @Composable
 fun EditarRutinaScreen(
     rutinaId: Int,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onAnadirEjercicio: (rutinaId: Int) -> Unit = {}
 ) {
     val context = LocalContext.current
     val viewModel: EditarRutinaViewModel = viewModel(
         factory = EditarRutinaViewModel.Factory(rutinaId, context)
     )
     val uiState by viewModel.uiState.collectAsState()
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                viewModel.cargarRutina()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
     var editandoNombre by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(uiState.guardado) {
@@ -110,7 +124,8 @@ fun EditarRutinaScreen(
                 Spacer(Modifier.width(6.dp))
                 IconButton(onClick = { editandoNombre = !editandoNombre }) {
                     Icon(Icons.Default.Edit, contentDescription = "Editar nombre",
-                        tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp))
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(20.dp))
                 }
             }
 
@@ -142,9 +157,29 @@ fun EditarRutinaScreen(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     items(uiState.ejercicios, key = { it.id }) { ejercicio ->
-                        EjercicioEditItem(ejercicio)
+                        EjercicioEditItem(
+                            ejercicio = ejercicio,
+                            onEliminar = { viewModel.eliminarEjercicio(ejercicio.id) }
+                        )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     }
                 }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            // ── Botón añadir ejercicio ───────────────────────────
+            OutlinedButton(
+                onClick = { onAnadirEjercicio(rutinaId) },
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
+                )
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Añadir ejercicio", style = MaterialTheme.typography.bodyLarge)
             }
 
             Spacer(Modifier.height(12.dp))
@@ -168,7 +203,29 @@ fun EditarRutinaScreen(
 }
 
 @Composable
-private fun EjercicioEditItem(ejercicio: EjercicioRutina) {
+private fun EjercicioEditItem(
+    ejercicio: EjercicioRutina,
+    onEliminar: () -> Unit
+) {
+    var menuVisible by remember { mutableStateOf(false) }
+    var mostrarDialogo by remember { mutableStateOf(false) }
+
+    if (mostrarDialogo) {
+        AlertDialog(
+            onDismissRequest = { mostrarDialogo = false },
+            title = { Text("Eliminar ejercicio") },
+            text  = { Text("¿Quitar \"${ejercicio.nombre}\" de la rutina?") },
+            confirmButton = {
+                TextButton(onClick = { mostrarDialogo = false; onEliminar() }) {
+                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { mostrarDialogo = false }) { Text("Cancelar") }
+            }
+        )
+    }
+
     Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -189,6 +246,24 @@ private fun EjercicioEditItem(ejercicio: EjercicioRutina) {
             Text("${ejercicio.series} series × ${ejercicio.repeticiones} repeticiones",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+
+        // ── Tres puntos ──────────────────────────────────────
+        Box {
+            IconButton(onClick = { menuVisible = true }) {
+                Icon(Icons.Default.MoreVert, contentDescription = "Opciones",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            DropdownMenu(expanded = menuVisible, onDismissRequest = { menuVisible = false }) {
+                DropdownMenuItem(
+                    text = { Text("Eliminar de rutina", color = MaterialTheme.colorScheme.error) },
+                    leadingIcon = {
+                        Icon(Icons.Default.Delete, null,
+                            tint = MaterialTheme.colorScheme.error)
+                    },
+                    onClick = { menuVisible = false; mostrarDialogo = true }
+                )
+            }
         }
     }
 }

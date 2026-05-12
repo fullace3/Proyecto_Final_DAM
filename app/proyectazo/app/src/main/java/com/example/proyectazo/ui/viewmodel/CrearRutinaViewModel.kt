@@ -8,12 +8,12 @@ import com.example.proyectazo.network.RutinaRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 sealed class CrearRutinaUiState {
     object Idle    : CrearRutinaUiState()
     object Loading : CrearRutinaUiState()
-    // Lleva el id_rutina devuelto por la API para poder navegar
     data class RutinaCreada(val rutinaId: Int) : CrearRutinaUiState()
     data class Error(val mensaje: String) : CrearRutinaUiState()
 }
@@ -26,15 +26,22 @@ class RutinaViewModel(
     private val _uiState = MutableStateFlow<CrearRutinaUiState>(CrearRutinaUiState.Idle)
     val uiState: StateFlow<CrearRutinaUiState> = _uiState.asStateFlow()
 
-    /**
-     * Crea la rutina en la API y emite [CrearRutinaUiState.RutinaCreada] con el id real.
-     * Se llama al pulsar "Añadir ejercicio" para tener el id antes de navegar.
-     */
-    fun crearRutina(nombre: String) {
+    // Guardamos el rutinaId una vez creada para no volver a crearla
+    private var rutinaIdCreada: Int? = null
+
+    fun crearONavegar(nombre: String) {
+        // Si ya existe la rutina, navegar directamente sin crear otra
+        val idExistente = rutinaIdCreada
+        if (idExistente != null) {
+            _uiState.value = CrearRutinaUiState.RutinaCreada(idExistente)
+            return
+        }
+
         if (nombre.isBlank()) {
             _uiState.value = CrearRutinaUiState.Error("Escribe un nombre antes de añadir ejercicios")
             return
         }
+
         viewModelScope.launch {
             _uiState.value = CrearRutinaUiState.Loading
             try {
@@ -44,6 +51,7 @@ class RutinaViewModel(
                 if (response.isSuccessful) {
                     val rutinaId = response.body()?.id_rutina
                         ?: throw Exception("La API no devolvió id_rutina")
+                    rutinaIdCreada = rutinaId
                     _uiState.value = CrearRutinaUiState.RutinaCreada(rutinaId)
                 } else {
                     _uiState.value = CrearRutinaUiState.Error("Error ${response.code()}")
@@ -56,7 +64,6 @@ class RutinaViewModel(
 
     fun resetState() { _uiState.value = CrearRutinaUiState.Idle }
 
-    // ── Factory ─────────────────────────────────────────────────────
     class Factory(
         private val apiService: ApiService,
         private val userId: Int

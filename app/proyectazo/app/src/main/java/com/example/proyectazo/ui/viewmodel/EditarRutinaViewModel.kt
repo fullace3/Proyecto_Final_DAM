@@ -35,15 +35,13 @@ class EditarRutinaViewModel(
 
     init { cargarRutina() }
 
-    private fun cargarRutina() {
+    fun cargarRutina() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
-                // Cargar nombre de la rutina
                 val rutinasResp = api.getRutinas(userId)
                 val rutina = rutinasResp.body()?.find { it.id_rutina == rutinaId }
 
-                // Cargar ejercicios de la rutina
                 val relResp = api.getEjerciciosDeRutina(rutinaId)
                 val ejerciciosResp = api.getEjercicios()
                 val ejerciciosMap = ejerciciosResp.body()?.associateBy { it.id_ejercicio } ?: emptyMap()
@@ -63,11 +61,7 @@ class EditarRutinaViewModel(
                     } ?: emptyList()
 
                 _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        nombre = rutina?.nombre ?: "",
-                        ejercicios = ejercicios
-                    )
+                    it.copy(isLoading = false, nombre = rutina?.nombre ?: "", ejercicios = ejercicios)
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = "Error al cargar la rutina") }
@@ -77,6 +71,20 @@ class EditarRutinaViewModel(
 
     fun onNombreChange(nombre: String) {
         _uiState.update { it.copy(nombre = nombre) }
+    }
+
+    fun eliminarEjercicio(ejercicioId: Int) {
+        viewModelScope.launch {
+            try {
+                api.quitarEjercicioDeRutina(rutinaId, ejercicioId)
+                // Quitar de la lista local sin recargar
+                _uiState.update { state ->
+                    state.copy(ejercicios = state.ejercicios.filter { it.id != ejercicioId })
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = "Error al eliminar el ejercicio") }
+            }
+        }
     }
 
     fun guardarCambios() {
