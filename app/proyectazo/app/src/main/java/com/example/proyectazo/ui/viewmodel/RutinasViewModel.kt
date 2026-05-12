@@ -97,6 +97,20 @@ class RutinasViewModel(context: Context) : ViewModel() {
             }
         }
     }
+    fun eliminarRutina(rutinaId: Int) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.instance.borrarRutina(rutinaId)
+                if (response.isSuccessful) {
+                    cargarRutinas()  // recargar la lista
+                } else {
+                    _uiState.value = RutinasUiState.Error("Error al eliminar la rutina")
+                }
+            } catch (e: Exception) {
+                _uiState.value = RutinasUiState.Error("Sin conexión con el servidor")
+            }
+        }
+    }
 
     // ── Factory ───────────────────────────────────────────────
 
