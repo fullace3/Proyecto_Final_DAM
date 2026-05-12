@@ -46,7 +46,8 @@ private const val MAX_PREVIEW_IMAGES = 4
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaRutinas(
-    onCrearRutina: () -> Unit
+    onCrearRutina: () -> Unit,
+    onEditarRutina: (rutinaId: Int) -> Unit
 ) {
     val context = LocalContext.current
     val viewModel: RutinasViewModel = viewModel(
