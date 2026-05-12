@@ -29,13 +29,15 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val sessionManager = SessionManager(this)
         setContent {
             ProyectazoTheme {
                 SmartFitApp(
-                    startDestination = if (SessionManager(this).isLoggedIn())
+                    startDestination = if (sessionManager.isLoggedIn())
                         Screen.Home.route
                     else
-                        Screen.Login.route
+                        Screen.Login.route,
+                    userId = sessionManager.getUserId()
                 )
             }
         }
@@ -43,7 +45,10 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun SmartFitApp(startDestination: String) {
+fun SmartFitApp(
+    startDestination: String,
+    userId: Int = -1
+) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -64,6 +69,7 @@ fun SmartFitApp(startDestination: String) {
         NavGraph(
             navController = navController,
             startDestination = startDestination,
+            userId = userId,
             modifier = Modifier.padding(innerPadding)
         )
     }
