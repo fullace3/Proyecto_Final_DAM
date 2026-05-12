@@ -57,6 +57,13 @@ interface ApiService {
         @Body datos: RutinaEjercicioRequest
     ): Response<RutinaEjercicioResponse>
 
+    @DELETE("rutinas/{rutinaId}/ejercicios/{ejercicioId}")
+    suspend fun quitarEjercicioDeRutina(
+        @Path("rutinaId") rutinaId: Int,
+        @Path("ejercicioId") ejercicioId: Int
+    ): Response<Unit>
+
+    // ── HISTORIAL EJJERCICIOS ──────────────────────
     @POST("historial")
     suspend fun registrarHistorial(@Body datos: HistorialRequest): Response<HistorialDetalleResponse>
 
