@@ -13,12 +13,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.proyectazo.ui.screens.AñadirEjercicioScreen
+import com.example.proyectazo.ui.screens.AñadirRegistroScreen
 import com.example.proyectazo.ui.screens.CrearRutinaScreen
 import com.example.proyectazo.ui.screens.DetalleEjercicioScreen
 import com.example.proyectazo.ui.screens.DetallesRutinaScreen
 import com.example.proyectazo.ui.screens.EditarRutinaScreen
 import com.example.proyectazo.ui.screens.EntrenarScreen
 import com.example.proyectazo.ui.screens.FinalizarEntrenamientoScreen
+import com.example.proyectazo.ui.screens.EditarPerfilScreen
+import com.example.proyectazo.ui.screens.PantallaPerfil
 import com.example.proyectazo.ui.screens.PantallaProgreso
 import com.example.proyectazo.ui.screens.ResultadoEntrenamiento
 import com.example.proyectazo.ui.screens.PantallaIncioSesion
@@ -90,9 +93,7 @@ fun NavGraph(
                     rutinaConEjercicios = rutina,
                     onBack = { navController.popBackStack() },
                     onEditar = { navController.navigate("editar_rutina/${rutina.rutina.id_rutina}") },
-                    onEmpezar = {
-                        navController.navigate("entrenar")
-                    }
+                    onEmpezar = { navController.navigate("entrenar") }
                 )
             }
         }
@@ -112,7 +113,7 @@ fun NavGraph(
             }
         }
 
-        // ── FINALIZAR ENTRENAMIENTO ───────────────────────────
+        // ── FINALIZAR ENTRENAMIENTO ───────────────────────────────
         composable("finalizar_entrenamiento") {
             resultadoEntrenamiento?.let { resultado ->
                 FinalizarEntrenamientoScreen(
@@ -173,10 +174,35 @@ fun NavGraph(
         composable(Screen.Dieta.route) { PlaceholderScreen(nombre = "Dieta") }
 
         // ── PROGRESO ──────────────────────────────────────────────
-        composable(Screen.Progreso.route) { PantallaProgreso() }
+        composable(Screen.Progreso.route) {
+            PantallaProgreso(
+                onAñadirRegistro = { navController.navigate("añadir_registro") }
+            )
+        }
+
+        // ── AÑADIR REGISTRO ───────────────────────────────────────
+        composable("añadir_registro") {
+            AñadirRegistroScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
 
         // ── PERFIL ────────────────────────────────────────────────
-        composable(Screen.Perfil.route) { PlaceholderScreen(nombre = "Perfil") }
+        composable(Screen.Perfil.route) {
+            PantallaPerfil(
+                onEditarPerfil = { navController.navigate("editar_perfil") },
+                onCerrarSesion = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // ── EDITAR PERFIL ──────────────────────────────────────────
+        composable("editar_perfil") {
+            EditarPerfilScreen(onBack = { navController.popBackStack() })
+        }
 
         // ── DETALLE RUTINA (ruta antigua) ─────────────────────────
         composable(

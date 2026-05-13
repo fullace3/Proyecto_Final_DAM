@@ -63,14 +63,21 @@ interface ApiService {
         @Path("ejercicioId") ejercicioId: Int
     ): Response<Unit>
 
-    // ── HISTORIAL EJJERCICIOS ──────────────────────
+    // ── HISTORIAL ─────────────────────────────
     @POST("historial")
     suspend fun registrarHistorial(@Body datos: HistorialRequest): Response<HistorialDetalleResponse>
 
     @GET("historial/usuario/{id}")
     suspend fun getHistorial(@Path("id") userId: Int): Response<List<HistorialDetalleResponse>>
 
+    // ── DIETA ─────────────────────────────────
     @GET("dietas/usuario/{id}/actual")
     suspend fun getDietaActual(@Path("id") userId: Int): Response<DietaResponse>
 
+    // ── MEDIDAS CORPORALES ────────────────────
+    @POST("medidas")
+    suspend fun registrarMedida(@Body datos: MedidaRequest): Response<MedidaResponse>
+
+    @GET("medidas/usuario/{id}")
+    suspend fun getMedidas(@Path("id") userId: Int): Response<List<MedidaResponse>>
 }
