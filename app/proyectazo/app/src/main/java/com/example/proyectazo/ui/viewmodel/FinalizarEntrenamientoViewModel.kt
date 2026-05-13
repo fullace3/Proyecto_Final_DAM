@@ -46,6 +46,7 @@ class FinalizarEntrenamientoViewModel(private val context: Context) : ViewModel(
                             HistorialRequest(
                                 id_usuario = userId,
                                 id_ejercicio = ejercicioRes.id,
+                                id_rutina = resultado.rutinaId,
                                 peso_kg = pesoPromedio,
                                 repeticiones = repsPromedio,
                                 series = seriesCompletadas.size,

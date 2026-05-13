@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.proyectazo.network.DietaResponse
 import com.example.proyectazo.network.HistorialDetalleResponse
 import com.example.proyectazo.network.RetrofitClient
+import com.example.proyectazo.network.RutinaResponse
 import com.example.proyectazo.network.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,7 +25,9 @@ sealed class EntrenoDelDia {
     data class ConEntreno(
         val ejercicios: List<HistorialDetalleResponse>,
         val series: Int,
-        val duracionEstimadaMin: Int   // 5 min por serie como estimación
+        val duracionEstimadaMin: Int,
+        val rutinaId: Int,
+        val rutinaNombre: String?
     ) : EntrenoDelDia()
     data class Error(val mensaje: String) : EntrenoDelDia()
 }
@@ -49,8 +52,8 @@ class InicioViewModel(context: Context) : ViewModel() {
     private val session = SessionManager(context)
     private val userId get() = session.getUserId()
 
-    // Todo el historial cargado una sola vez
     private var historialCompleto: List<HistorialDetalleResponse> = emptyList()
+    private var rutinas: List<RutinaResponse> = emptyList()
 
     // Día actualmente seleccionado en el DatePicker
     private val _diaSeleccionado = MutableStateFlow(LocalDate.now())
@@ -76,9 +79,11 @@ class InicioViewModel(context: Context) : ViewModel() {
     private fun cargarHistorial() {
         viewModelScope.launch {
             try {
-                val respuesta = RetrofitClient.instance.getHistorial(userId)
-                if (respuesta.isSuccessful && respuesta.body() != null) {
-                    historialCompleto = respuesta.body()!!
+                val histResp = RetrofitClient.instance.getHistorial(userId)
+                val rutResp  = RetrofitClient.instance.getRutinas(userId)
+                if (histResp.isSuccessful && histResp.body() != null) {
+                    historialCompleto = histResp.body()!!
+                    rutinas = if (rutResp.isSuccessful) rutResp.body() ?: emptyList() else emptyList()
                     filtrarEntrenoPorDia(_diaSeleccionado.value)
                 } else {
                     _entrenoDelDia.value = EntrenoDelDia.Error("No se pudo cargar el historial")
@@ -123,15 +128,21 @@ class InicioViewModel(context: Context) : ViewModel() {
         val ejerciciosDelDia = historialCompleto.filter { registro ->
             registro.fecha.take(10) == dia.format(formatter)
         }
+        val rutinaId = ejerciciosDelDia.firstOrNull()?.id_rutina
+        android.util.Log.d("DEBUG", "rutinaId=$rutinaId, rutinas=${rutinas.map { it.id_rutina to it.nombre }}")
 
         _entrenoDelDia.value = if (ejerciciosDelDia.isEmpty()) {
             EntrenoDelDia.SinEntreno
         } else {
             val totalSeries = ejerciciosDelDia.sumOf { it.series }
+            val rutinaId = ejerciciosDelDia.first().id_rutina
+            val rutinaNombre = rutinas.find { it.id_rutina == rutinaId }?.nombre
             EntrenoDelDia.ConEntreno(
                 ejercicios = ejerciciosDelDia,
                 series = totalSeries,
-                duracionEstimadaMin = ejerciciosDelDia.sumOf { it.duracion_minutos }
+                duracionEstimadaMin = ejerciciosDelDia.maxOf { it.duracion_minutos },
+                rutinaId = rutinaId,
+                rutinaNombre = rutinaNombre
             )
         }
     }

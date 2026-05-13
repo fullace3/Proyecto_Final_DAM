@@ -163,12 +163,8 @@ private fun TarjetaEntreno(dia: Int, estado: EntrenoDelDia) {
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        val nombres = estado.ejercicios
-                            .map { it.nombre_ejercicio }
-                            .distinct()
                         Text(
-                            text = nombres.take(2).joinToString(" + ") +
-                                    if (nombres.size > 2) " +${nombres.size - 2} más" else "",
+                            text = estado.rutinaNombre ?: "Entrenamiento completado",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface

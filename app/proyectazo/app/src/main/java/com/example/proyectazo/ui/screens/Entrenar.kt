@@ -47,6 +47,7 @@ data class EjercicioResultado(
 
 data class ResultadoEntrenamiento(
     val rutinaNombre: String,
+    val rutinaId: Int,
     val tiempoSegundos: Int,
     val ejercicios: List<EjercicioResultado>
 )
@@ -93,6 +94,7 @@ fun EntrenarScreen(
                     mostrarDialogoTerminar = false
                     val resultado = ResultadoEntrenamiento(
                         rutinaNombre = rutinaConEjercicios.rutina.nombre,
+                        rutinaId = rutinaConEjercicios.rutina.id_rutina,
                         tiempoSegundos = tiempoEntrenamiento,
                         ejercicios = ejercicios.mapIndexed { i, ej ->
                             EjercicioResultado(

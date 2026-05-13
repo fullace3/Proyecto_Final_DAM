@@ -143,6 +143,7 @@ data class ProgresoResponse(
 data class HistorialRequest(
     val id_usuario: Int,
     val id_ejercicio: Int,
+    val id_rutina: Int,
     val peso_kg: Double,
     val repeticiones: Int,
     val series: Int,
@@ -152,6 +153,7 @@ data class HistorialRequest(
 data class HistorialDetalleResponse(
     val id_registro: Int,
     val id_ejercicio: Int,
+    val id_rutina: Int,
     val nombre_ejercicio: String,
     val peso_kg: Double,
     val repeticiones: Int,
