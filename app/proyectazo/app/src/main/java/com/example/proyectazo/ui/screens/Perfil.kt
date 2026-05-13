@@ -21,24 +21,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.repeatOnLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyectazo.ui.viewmodel.PerfilViewModel
 
 @Composable
-fun PantallaPerfil(onEditarPerfil: () -> Unit, onCerrarSesion: () -> Unit) {
+fun PantallaPerfil(
+    viewModel: PerfilViewModel,
+    onEditarPerfil: () -> Unit,
+    onPreferencias: () -> Unit,
+    onCerrarSesion: () -> Unit
+) {
     val context = LocalContext.current
-    val viewModel: PerfilViewModel = viewModel(
-        factory = PerfilViewModel.Factory(context)
-    )
     val uiState by viewModel.uiState.collectAsState()
-    val lifecycleOwner = LocalLifecycleOwner.current
     var mostrarDialogo by remember { mutableStateOf(false) }
 
     // ── Diálogo confirmación cerrar sesión ────────────────────────────────────
@@ -129,9 +126,9 @@ fun PantallaPerfil(onEditarPerfil: () -> Unit, onCerrarSesion: () -> Unit) {
                 elevation = CardDefaults.cardElevation(0.dp)
             ) {
                 Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    StatRow("Edad", "-")           // No está en el modelo aún
+                    StatRow("Edad", uiState.edad)
                     StatRow("Altura", uiState.alturaCm)
-                    StatRow("Sexo", "-")           // No está en el modelo aún
+                    StatRow("Sexo", uiState.sexo)
                     StatRow("Peso inicial", uiState.pesoInicial)
                 }
             }
@@ -165,7 +162,7 @@ fun PantallaPerfil(onEditarPerfil: () -> Unit, onCerrarSesion: () -> Unit) {
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "Volumen limpio",   // Placeholder hasta tener campo en BD
+                        uiState.objetivo,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
                         textAlign = TextAlign.Center
@@ -195,19 +192,7 @@ fun PantallaPerfil(onEditarPerfil: () -> Unit, onCerrarSesion: () -> Unit) {
                 MenuOpcion(
                     icono = Icons.Filled.Settings,
                     texto = "Preferencias",
-                    onClick = { /* TODO */ }
-                )
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                MenuOpcion(
-                    icono = Icons.Filled.Security,
-                    texto = "Seguridad",
-                    onClick = { /* TODO */ }
-                )
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                MenuOpcion(
-                    icono = Icons.AutoMirrored.Filled.HelpOutline,
-                    texto = "Soporte",
-                    onClick = { /* TODO */ }
+                    onClick = onPreferencias
                 )
             }
         }

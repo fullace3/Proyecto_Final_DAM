@@ -118,7 +118,9 @@ data class MedidaRequest(
     val pecho_cm: Double? = null,
     val pierna_cm: Double? = null,
     val brazo_cm: Double? = null,
-    val grasa_corporal_pct: Double? = null
+    val grasa_corporal_pct: Double? = null,
+    val edad: Int? = null,
+    val sexo: String? = null
 )
 
 data class MedidaResponse(
@@ -130,7 +132,9 @@ data class MedidaResponse(
     val pecho_cm: Double?,
     val pierna_cm: Double?,
     val brazo_cm: Double?,
-    val grasa_corporal_pct: Double?
+    val grasa_corporal_pct: Double?,
+    val edad: Int?,
+    val sexo: String?
 )
 
 // ── PROGRESO ──────────────────────────────────

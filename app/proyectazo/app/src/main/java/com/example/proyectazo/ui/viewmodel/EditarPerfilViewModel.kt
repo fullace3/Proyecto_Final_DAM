@@ -34,7 +34,7 @@ data class EditarPerfilUiState(
     val guardarEstado: EditarGuardarEstado = EditarGuardarEstado.Idle
 )
 
-class EditarPerfilViewModel(context: Context) : ViewModel() {
+class EditarPerfilViewModel(private val context: Context) : ViewModel() {
 
     private val api = RetrofitClient.instance
     private val session = SessionManager(context)
@@ -62,6 +62,8 @@ class EditarPerfilViewModel(context: Context) : ViewModel() {
                     email = usuario?.email ?: "",
                     alturaCm = ultima?.altura_cm?.let { "${it.toInt()}" } ?: "",
                     pesoKg = ultima?.peso_kg?.let { String.format("%.1f", it) } ?: "",
+                    edad = ultima?.edad?.toString() ?: "",
+                    sexo = ultima?.sexo ?: "",
                     isLoading = false
                 )
             } catch (e: Exception) {
@@ -87,15 +89,18 @@ class EditarPerfilViewModel(context: Context) : ViewModel() {
 
         viewModelScope.launch {
             try {
-                // Guardar medida con los nuevos valores de peso y altura
+                // Guardar medida con los nuevos valores
                 val peso = state.pesoKg.toDoubleOrNull()
                 val altura = state.alturaCm.toDoubleOrNull()
+                val edad = state.edad.toIntOrNull()
 
                 if (peso != null) {
                     val request = MedidaRequest(
                         id_usuario = userId,
                         peso_kg = peso,
-                        altura_cm = altura
+                        altura_cm = altura,
+                        edad = edad,
+                        sexo = state.sexo.ifEmpty { null }
                     )
                     val resp = api.registrarMedida(request)
                     if (!resp.isSuccessful) {
@@ -106,8 +111,9 @@ class EditarPerfilViewModel(context: Context) : ViewModel() {
                     }
                 }
 
-                // Nota: actualizar nombre/email requiere password en UsuarioRequest.
-                // Pendiente cuando el backend exponga un endpoint PATCH o se añada campo password.
+                // Guardar objetivo en SharedPreferences
+                val prefs = context.getSharedPreferences("smartfit_session", android.content.Context.MODE_PRIVATE)
+                prefs.edit().putString("objetivo_usuario", state.objetivo).apply()
 
                 _uiState.update { it.copy(guardarEstado = EditarGuardarEstado.Exito) }
             } catch (e: Exception) {

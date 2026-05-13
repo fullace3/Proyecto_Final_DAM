@@ -228,7 +228,6 @@ private fun GraficaBarras(datos: List<Pair<String, Double>>, filtro: Int) {
     val alturaGrafica = 160.dp
 
     Column {
-        Text("Kg", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(4.dp))
 
         Row(

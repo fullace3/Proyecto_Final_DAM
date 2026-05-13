@@ -17,7 +17,9 @@ val screensWithoutNav = listOf(
     "editar_rutina/{rutinaId}",
     "detalles_rutina",
     "entrenar",
-    "finalizar_entrenamiento"
+    "finalizar_entrenamiento",
+    "preferencias",
+    "terminos_condiciones"
 )
 
 data class NavItem(

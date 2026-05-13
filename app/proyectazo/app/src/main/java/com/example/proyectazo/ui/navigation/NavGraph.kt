@@ -21,8 +21,11 @@ import com.example.proyectazo.ui.screens.DetallesRutinaScreen
 import com.example.proyectazo.ui.screens.EditarRutinaScreen
 import com.example.proyectazo.ui.screens.EntrenarScreen
 import com.example.proyectazo.ui.screens.FinalizarEntrenamientoScreen
+import com.example.proyectazo.ui.screens.DietaScreen
 import com.example.proyectazo.ui.screens.EditarPerfilScreen
 import com.example.proyectazo.ui.screens.PantallaPerfil
+import com.example.proyectazo.ui.screens.PreferenciasScreen
+import com.example.proyectazo.ui.screens.TerminosCondicionesScreen
 import com.example.proyectazo.ui.screens.PantallaProgreso
 import com.example.proyectazo.ui.screens.ResultadoEntrenamiento
 import com.example.proyectazo.ui.screens.PantallaIncioSesion
@@ -172,7 +175,9 @@ fun NavGraph(
         }
 
         // ── DIETA ─────────────────────────────────────────────────
-        composable(Screen.Dieta.route) { PlaceholderScreen(nombre = "Dieta") }
+        composable(Screen.Dieta.route) {
+            DietaScreen()
+        }
 
         // ── PROGRESO ──────────────────────────────────────────────
         composable(Screen.Progreso.route) {
@@ -190,8 +195,17 @@ fun NavGraph(
 
         // ── PERFIL ────────────────────────────────────────────────
         composable(Screen.Perfil.route) {
+            val context = androidx.compose.ui.platform.LocalContext.current
+            val perfilEntry = remember {
+                navController.getBackStackEntry(Screen.Perfil.route)
+            }
+            val perfilViewModel: com.example.proyectazo.ui.viewmodel.PerfilViewModel =
+                viewModel(perfilEntry, factory = com.example.proyectazo.ui.viewmodel.PerfilViewModel.Factory(context))
+
             PantallaPerfil(
+                viewModel = perfilViewModel,
                 onEditarPerfil = { navController.navigate("editar_perfil") },
+                onPreferencias = { navController.navigate("preferencias") },
                 onCerrarSesion = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
@@ -201,14 +215,11 @@ fun NavGraph(
         }
 
         // ── EDITAR PERFIL ──────────────────────────────────────────
-        composable("editar_perfil") { backStackEntry -> // <-- Importante: añadimos el parámetro backStackEntry
+        composable("editar_perfil") {
             val context = androidx.compose.ui.platform.LocalContext.current
-
-            // Usamos el backStackEntry de la pantalla ACTUAL como clave para el remember
-            val perfilEntry = remember(backStackEntry) {
+            val perfilEntry = remember {
                 navController.getBackStackEntry(Screen.Perfil.route)
             }
-
             val perfilViewModel: com.example.proyectazo.ui.viewmodel.PerfilViewModel =
                 viewModel(perfilEntry, factory = com.example.proyectazo.ui.viewmodel.PerfilViewModel.Factory(context))
 
@@ -219,6 +230,24 @@ fun NavGraph(
                     navController.popBackStack()
                 }
             )
+        }
+
+        // ── PREFERENCIAS ───────────────────────────────────────────
+        composable("preferencias") {
+            PreferenciasScreen(
+                onBack = { navController.popBackStack() },
+                onTerminos = { navController.navigate("terminos_condiciones") },
+                onEliminarCuenta = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // ── TÉRMINOS Y CONDICIONES ──────────────────────────────────
+        composable("terminos_condiciones") {
+            TerminosCondicionesScreen(onBack = { navController.popBackStack() })
         }
 
         // ── DETALLE RUTINA (ruta antigua) ─────────────────────────
