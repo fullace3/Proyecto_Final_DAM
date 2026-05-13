@@ -131,7 +131,7 @@ class InicioViewModel(context: Context) : ViewModel() {
             EntrenoDelDia.ConEntreno(
                 ejercicios = ejerciciosDelDia,
                 series = totalSeries,
-                duracionEstimadaMin = totalSeries * 5   // ~5 min por serie
+                duracionEstimadaMin = ejerciciosDelDia.sumOf { it.duracion_minutos }
             )
         }
     }

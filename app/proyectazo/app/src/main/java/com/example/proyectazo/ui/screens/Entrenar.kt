@@ -12,6 +12,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -32,42 +34,50 @@ import kotlinx.coroutines.delay
 data class SerieEntrenamiento(
     val numero: Int,
     val previa: String = "-",
+    val peso: String = "",
+    val reps: String = "",
     val completada: Boolean = false
-    // peso y reps son solo estado UI local, no se guardan aquí
+)
+
+data class EjercicioResultado(
+    val id: Int,
+    val nombre: String,
+    val series: List<SerieEntrenamiento>
+)
+
+data class ResultadoEntrenamiento(
+    val rutinaNombre: String,
+    val tiempoSegundos: Int,
+    val ejercicios: List<EjercicioResultado>
 )
 
 @Composable
 fun EntrenarScreen(
     rutinaConEjercicios: RutinaConEjercicios,
-    onTerminar: () -> Unit
+    onTerminar: (ResultadoEntrenamiento) -> Unit
 ) {
     val ejercicios = rutinaConEjercicios.ejercicios
     var ejercicioActualIndex by remember { mutableStateOf(0) }
     val ejercicioActual = ejercicios.getOrNull(ejercicioActualIndex)
 
-    // Series por ejercicio — solo guarda completada, no peso/reps
     val seriesPorEjercicio = remember {
-        List(ejercicios.size) {
-            mutableStateListOf(
-                SerieEntrenamiento(1),
-                SerieEntrenamiento(2),
-                SerieEntrenamiento(3)
-            )
-        }
+        List(ejercicios.size) { mutableStateListOf(SerieEntrenamiento(1)) }
     }
     val seriesActuales = seriesPorEjercicio[ejercicioActualIndex]
 
-    // Temporizador de descanso — solo corre tras completar una serie
-    var timerActivo by remember { mutableStateOf(false) }
-    var segundos by remember { mutableStateOf(90) }  // empieza en 1:30
+    var tiempoEntrenamiento by remember { mutableStateOf(0) }
+    LaunchedEffect(Unit) {
+        while (true) { delay(1000); tiempoEntrenamiento++ }
+    }
 
-    LaunchedEffect(timerActivo) {
-        if (timerActivo) {
-            while (segundos > 0) {
-                delay(1000)
-                segundos--
-            }
-            timerActivo = false  // se oculta al llegar a 0
+    var timerActivo by remember { mutableStateOf(false) }
+    var timerPausado by remember { mutableStateOf(false) }
+    var segundos by remember { mutableStateOf(90) }
+
+    LaunchedEffect(timerActivo, timerPausado) {
+        if (timerActivo && !timerPausado) {
+            while (segundos > 0 && !timerPausado) { delay(1000); segundos-- }
+            if (segundos == 0) timerActivo = false
         }
     }
 
@@ -79,9 +89,21 @@ fun EntrenarScreen(
             title = { Text("¿Terminar entrenamiento?") },
             text  = { Text("Se guardará el progreso de las series completadas.") },
             confirmButton = {
-                Button(onClick = { mostrarDialogoTerminar = false; onTerminar() }) {
-                    Text("Terminar")
-                }
+                Button(onClick = {
+                    mostrarDialogoTerminar = false
+                    val resultado = ResultadoEntrenamiento(
+                        rutinaNombre = rutinaConEjercicios.rutina.nombre,
+                        tiempoSegundos = tiempoEntrenamiento,
+                        ejercicios = ejercicios.mapIndexed { i, ej ->
+                            EjercicioResultado(
+                                id = ej.id_ejercicio,
+                                nombre = ej.nombre,
+                                series = seriesPorEjercicio[i].toList()
+                            )
+                        }
+                    )
+                    onTerminar(resultado)
+                }) { Text("Terminar") }
             },
             dismissButton = {
                 TextButton(onClick = { mostrarDialogoTerminar = false }) { Text("Cancelar") }
@@ -91,84 +113,56 @@ fun EntrenarScreen(
 
     Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
 
-        // ── Header ────────────────────────────────────────────
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = rutinaConEjercicios.rutina.nombre,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                modifier = Modifier.weight(1f)
-            )
-            Button(
-                onClick = { mostrarDialogoTerminar = true },
+            horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(text = rutinaConEjercicios.rutina.nombre,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
+            Button(onClick = { mostrarDialogoTerminar = true },
                 shape = RoundedCornerShape(20.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-            ) {
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
                 Text("Terminar entrenamiento", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
             }
         }
 
         HorizontalDivider(color = MaterialTheme.colorScheme.tertiary, thickness = 1.dp)
 
-        // ── Miniaturas ─────────────────────────────────────────
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
+        LazyRow(contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             itemsIndexed(ejercicios) { index, ejercicio ->
                 val isActual = index == ejercicioActualIndex
-                AsyncImage(
-                    model = ejercicio.imagen,
-                    contentDescription = ejercicio.nombre,
+                AsyncImage(model = ejercicio.imagen, contentDescription = ejercicio.nombre,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(52.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .border(
-                            if (isActual) 2.dp else 0.dp,
+                    modifier = Modifier.size(52.dp).clip(RoundedCornerShape(8.dp))
+                        .border(if (isActual) 2.dp else 0.dp,
                             if (isActual) MaterialTheme.colorScheme.primary else Color.Transparent,
-                            RoundedCornerShape(8.dp)
-                        )
+                            RoundedCornerShape(8.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .clickable { ejercicioActualIndex = index }
-                )
+                        .clickable { ejercicioActualIndex = index })
             }
         }
 
         HorizontalDivider(color = MaterialTheme.colorScheme.tertiary, thickness = 1.dp)
 
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(bottom = 16.dp)
-        ) {
+        LazyColumn(modifier = Modifier.weight(1f), contentPadding = PaddingValues(bottom = 16.dp)) {
             item {
-                Text(
-                    text = ejercicioActual?.nombre ?: "",
+                Text(text = ejercicioActual?.nombre ?: "",
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)
-                )
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp))
             }
-
             item {
-                AsyncImage(
-                    model = ejercicioActual?.imagen,
-                    contentDescription = ejercicioActual?.nombre,
+                AsyncImage(model = ejercicioActual?.imagen, contentDescription = ejercicioActual?.nombre,
                     contentScale = ContentScale.Fit,
-                    modifier = Modifier
-                        .fillMaxWidth().height(200.dp).padding(horizontal = 32.dp)
+                    modifier = Modifier.fillMaxWidth().height(200.dp).padding(horizontal = 32.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                )
+                        .background(MaterialTheme.colorScheme.surfaceVariant))
                 Spacer(Modifier.height(16.dp))
             }
-
-            // ── Cabecera tabla ─────────────────────────────────
             item {
                 Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+                    Spacer(Modifier.width(28.dp))
                     Text("Serie", fontWeight = FontWeight.SemiBold, fontSize = 13.sp,
                         modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
                     Text("Previa", fontWeight = FontWeight.SemiBold, fontSize = 13.sp,
@@ -182,150 +176,104 @@ fun EntrenarScreen(
                 }
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
             }
-
-            // ── Filas — peso/reps son estado local puro ────────
             itemsIndexed(seriesActuales) { index, serie ->
-                // key incluye ejercicioActualIndex → se resetea al cambiar ejercicio
-                var peso by remember(index, ejercicioActualIndex) { mutableStateOf("") }
-                var reps by remember(index, ejercicioActualIndex) { mutableStateOf("") }
-
+                var peso by remember(index, ejercicioActualIndex) { mutableStateOf(serie.peso) }
+                var reps by remember(index, ejercicioActualIndex) { mutableStateOf(serie.reps) }
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 6.dp)
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
                         .background(
                             if (serie.completada) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                             else MaterialTheme.colorScheme.surfaceContainerHighest,
-                            RoundedCornerShape(16.dp)
-                        )
-                        .padding(horizontal = 4.dp, vertical = 2.dp),
+                            RoundedCornerShape(16.dp))
+                        .padding(horizontal = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    IconButton(onClick = {
+                        if (seriesActuales.size > 1) {
+                            seriesActuales.removeAt(index)
+                            seriesActuales.forEachIndexed { i, s -> seriesActuales[i] = s.copy(numero = i + 1) }
+                        }
+                    }, modifier = Modifier.size(24.dp)) {
+                        Icon(Icons.Default.Close, contentDescription = "Eliminar",
+                            tint = if (seriesActuales.size > 1) MaterialTheme.colorScheme.error else Color.Transparent,
+                            modifier = Modifier.size(16.dp))
+                    }
                     Text("${serie.numero}", fontWeight = FontWeight.Bold, fontSize = 14.sp,
                         modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-                    Text(serie.previa, fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    Text(serie.previa, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.weight(1.5f), textAlign = TextAlign.Center)
-                    OutlinedTextField(
-                        value = peso,
-                        onValueChange = { peso = it },  // solo local, no se guarda
-                        modifier = Modifier.weight(1.5f).height(52.dp),
-                        textStyle = LocalTextStyle.current.copy(
-                            textAlign = TextAlign.Center, fontSize = 13.sp),
+                    OutlinedTextField(value = peso, onValueChange = { peso = it; seriesActuales[index] = serie.copy(peso = it) },
+                        modifier = Modifier.weight(1.5f).height(56.dp),
+                        textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center, fontSize = 13.sp),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        shape = RoundedCornerShape(8.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant)
-                    )
+                        singleLine = true, shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant))
                     Spacer(Modifier.width(4.dp))
-                    OutlinedTextField(
-                        value = reps,
-                        onValueChange = { reps = it },  // solo local, no se guarda
-                        modifier = Modifier.weight(1.5f).height(52.dp),
-                        textStyle = LocalTextStyle.current.copy(
-                            textAlign = TextAlign.Center, fontSize = 13.sp),
+                    OutlinedTextField(value = reps, onValueChange = { reps = it; seriesActuales[index] = serie.copy(reps = it) },
+                        modifier = Modifier.weight(1.5f).height(56.dp),
+                        textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center, fontSize = 13.sp),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        shape = RoundedCornerShape(8.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant)
-                    )
+                        singleLine = true, shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant))
                     Spacer(Modifier.width(4.dp))
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .background(
-                                if (serie.completada) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.surfaceVariant
-                            )
-                            .clickable {
-                                val completada = !serie.completada
-                                seriesActuales[index] = serie.copy(completada = completada)
-                                if (completada) {
-                                    // Iniciar/resetear temporizador de descanso
-                                    segundos = 90  // resetear a 1:30
-                                    timerActivo = false
-                                    timerActivo = true
-                                }
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Box(modifier = Modifier.size(32.dp).clip(CircleShape)
+                        .background(if (serie.completada) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
+                        .clickable {
+                            val completada = !serie.completada
+                            seriesActuales[index] = serie.copy(completada = completada, peso = peso, reps = reps)
+                            if (completada) { segundos = 90; timerPausado = false; timerActivo = false; timerActivo = true }
+                        }, contentAlignment = Alignment.Center) {
                         Icon(Icons.Default.Check, contentDescription = "Completar",
-                            tint = if (serie.completada) Color.White
-                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = if (serie.completada) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp))
                     }
                 }
             }
-
-            // ── Añadir serie ───────────────────────────────────
             item {
                 Spacer(Modifier.height(8.dp))
-                OutlinedButton(
-                    onClick = {
-                        seriesActuales.add(SerieEntrenamiento(seriesActuales.size + 1))
-                    },
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(48.dp),
+                OutlinedButton(onClick = { seriesActuales.add(SerieEntrenamiento(seriesActuales.size + 1)) },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(56.dp),
                     shape = RoundedCornerShape(20.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
                         containerColor = MaterialTheme.colorScheme.secondary,
-                        contentColor = MaterialTheme.colorScheme.onSecondary
-                    ),
-                    border = null
-                ) {
+                        contentColor = MaterialTheme.colorScheme.onSecondary),
+                    border = null) {
                     Text("Añadir serie", fontWeight = FontWeight.Medium)
                 }
             }
         }
 
-        // ── Bottom bar — solo visible si el timer está activo ──
         if (timerActivo) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(MaterialTheme.colorScheme.tertiary)
-                    .padding(horizontal = 16.dp, vertical = 10.dp),
+            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+                .clip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.tertiary)
+                .padding(horizontal = 16.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+                horizontalArrangement = Arrangement.SpaceBetween) {
                 Box(modifier = Modifier.size(36.dp).clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary),
+                    .background(MaterialTheme.colorScheme.tertiaryContainer)
+                    .clickable { timerPausado = !timerPausado },
                     contentAlignment = Alignment.Center) {
-                    Icon(Icons.Default.PlayArrow, contentDescription = null,
-                        tint = Color.White, modifier = Modifier.size(20.dp))
+                    Icon(if (timerPausado) Icons.Default.PlayArrow else Icons.Default.Pause,
+                        contentDescription = null, tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                        modifier = Modifier.size(20.dp))
                 }
-
-                val min = segundos / 60
-                val seg = segundos % 60
-                Text(text = "%d:%02d".format(min, seg),
+                val min = segundos / 60; val seg = segundos % 60
+                Text("%d:%02d".format(min, seg),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onTertiary)
-
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(
-                        onClick = { segundos = minOf(segundos + 15, 599) },
-                        shape = RoundedCornerShape(20.dp),
+                    Button(onClick = { segundos = minOf(segundos + 15, 599) }, shape = RoundedCornerShape(20.dp),
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                         modifier = Modifier.height(32.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-                        )
-                    ) { Text("+15", fontSize = 12.sp, fontWeight = FontWeight.Bold) }
-                    Button(
-                        onClick = { segundos = maxOf(0, segundos - 15) },
-                        shape = RoundedCornerShape(20.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer)) {
+                        Text("+15", fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                    Button(onClick = { segundos = maxOf(0, segundos - 15) }, shape = RoundedCornerShape(20.dp),
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                         modifier = Modifier.height(32.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-                        )
-                    ) { Text("-15", fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer)) {
+                        Text("-15", fontSize = 12.sp, fontWeight = FontWeight.Bold) }
                 }
             }
         }

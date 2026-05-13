@@ -16,7 +16,8 @@ val screensWithoutNav = listOf(
     "seleccionar_ejercicio/{rutinaId}",
     "editar_rutina/{rutinaId}",
     "detalles_rutina",
-    "entrenar"
+    "entrenar",
+    "finalizar_entrenamiento"
 )
 
 data class NavItem(
@@ -30,7 +31,7 @@ val bottomNavItems = listOf(
     NavItem("Inicio",     Screen.Home.route,    Icons.Filled.Home,         Icons.Outlined.Home),
     NavItem("Ejercicios", Screen.Rutinas.route, Icons.Filled.FitnessCenter, Icons.Outlined.FitnessCenter),
     NavItem("Dieta",      Screen.Dieta.route,   Icons.Filled.Restaurant,   Icons.Outlined.Restaurant),
-    NavItem("Progreso",      Screen.Dieta.route,   Icons.Filled.BarChart,   Icons.Outlined.BarChart),
+    NavItem("Progreso", Screen.Progreso.route, Icons.Filled.BarChart, Icons.Outlined.BarChart),
     NavItem("Perfil",     Screen.Perfil.route,  Icons.Filled.Person,       Icons.Outlined.Person),
 )
 
