@@ -28,9 +28,9 @@ class PerfilViewModel(private val context: Context) : ViewModel() {
     private val _uiState = MutableStateFlow(PerfilUiState())
     val uiState: StateFlow<PerfilUiState> = _uiState
 
-    init { cargar() }
+    init { recargar() }
 
-    private fun cargar() {
+    fun recargar() {
         viewModelScope.launch {
             try {
                 val usuarioDeferred = async { api.getUsuario(userId) }
@@ -59,7 +59,7 @@ class PerfilViewModel(private val context: Context) : ViewModel() {
     }
 
     fun cerrarSesion() {
-        session.cerrarSesion()   // ← era clearSession()
+        session.cerrarSesion()
     }
 
     class Factory(private val context: Context) : ViewModelProvider.Factory {

@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -200,8 +201,24 @@ fun NavGraph(
         }
 
         // ── EDITAR PERFIL ──────────────────────────────────────────
-        composable("editar_perfil") {
-            EditarPerfilScreen(onBack = { navController.popBackStack() })
+        composable("editar_perfil") { backStackEntry -> // <-- Importante: añadimos el parámetro backStackEntry
+            val context = androidx.compose.ui.platform.LocalContext.current
+
+            // Usamos el backStackEntry de la pantalla ACTUAL como clave para el remember
+            val perfilEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(Screen.Perfil.route)
+            }
+
+            val perfilViewModel: com.example.proyectazo.ui.viewmodel.PerfilViewModel =
+                viewModel(perfilEntry, factory = com.example.proyectazo.ui.viewmodel.PerfilViewModel.Factory(context))
+
+            EditarPerfilScreen(
+                onBack = { navController.popBackStack() },
+                onGuardadoExitoso = {
+                    perfilViewModel.recargar()
+                    navController.popBackStack()
+                }
+            )
         }
 
         // ── DETALLE RUTINA (ruta antigua) ─────────────────────────

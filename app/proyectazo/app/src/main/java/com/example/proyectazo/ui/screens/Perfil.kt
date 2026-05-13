@@ -21,10 +21,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyectazo.ui.viewmodel.PerfilViewModel
 
@@ -35,6 +38,7 @@ fun PantallaPerfil(onEditarPerfil: () -> Unit, onCerrarSesion: () -> Unit) {
         factory = PerfilViewModel.Factory(context)
     )
     val uiState by viewModel.uiState.collectAsState()
+    val lifecycleOwner = LocalLifecycleOwner.current
     var mostrarDialogo by remember { mutableStateOf(false) }
 
     // ── Diálogo confirmación cerrar sesión ────────────────────────────────────

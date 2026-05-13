@@ -29,7 +29,7 @@ import com.example.proyectazo.ui.viewmodel.EditarPerfilViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditarPerfilScreen(onBack: () -> Unit) {
+fun EditarPerfilScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit) {
     val context = LocalContext.current
     val viewModel: EditarPerfilViewModel = viewModel(
         factory = EditarPerfilViewModel.Factory(context)
@@ -48,7 +48,7 @@ fun EditarPerfilScreen(onBack: () -> Unit) {
             is EditarGuardarEstado.Exito -> {
                 snackbarHostState.showSnackbar("Perfil actualizado correctamente")
                 viewModel.resetEstado()
-                onBack()
+                onGuardadoExitoso()
             }
             is EditarGuardarEstado.Error -> {
                 snackbarHostState.showSnackbar(estado.mensaje)
