@@ -9,12 +9,14 @@ from datetime import datetime
 class UsuarioCreate(BaseModel):
     nombre: str
     email: EmailStr
-    password: str 
+    password: str
+    horario_entrenamiento: Optional[str] = None
 
 class UsuarioOut(BaseModel):
     id_usuario: int
     nombre: str
     email: str
+    horario_entrenamiento: Optional[str] = None
     fecha_registro: datetime
 
     class Config:
@@ -133,7 +135,7 @@ class ComidaCreate(BaseModel):
     carbohidratos_100g: int
     grasas_100g: int
     dia: Optional[str] = None
-    id_usuario: int
+    id_usuario: Optional[int] = None
     imagen: Optional[str] = None
 
 class ComidaOut(ComidaCreate):

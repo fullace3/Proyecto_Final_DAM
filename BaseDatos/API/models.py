@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Boolean
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Boolean, Time
 from sqlalchemy.orm import relationship
 from main import Base
 from datetime import datetime
@@ -10,6 +10,7 @@ class Usuario(Base):
     nombre        = Column(String(100), nullable=False)
     email         = Column(String(100), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
+    horario_entrenamiento = Column(Time, nullable=True)
     fecha_registro = Column(DateTime, default=datetime.utcnow)
 
     rutinas = relationship("Rutina", back_populates="usuario", cascade="all, delete")

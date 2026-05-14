@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from jose import jwt
 from passlib.context import CryptContext
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 
 from main import get_db, SECRET_KEY
 import models, schemas
@@ -66,6 +66,11 @@ def actualizar_usuario(id_usuario: int, datos: schemas.UsuarioCreate, db: Sessio
     usuario.nombre        = datos.nombre
     usuario.email         = datos.email
     usuario.password_hash = hashear(datos.password)
+    if datos.horario_entrenamiento:
+        t = datetime.strptime(datos.horario_entrenamiento, "%H:%M:%S").time()
+        usuario.horario_entrenamiento = t
+    else:
+        usuario.horario_entrenamiento = None
     db.commit()
     db.refresh(usuario)
     return usuario
