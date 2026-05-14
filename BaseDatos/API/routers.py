@@ -377,6 +377,7 @@ def historial_usuario(id_usuario: int, db: Session = Depends(get_db)):
         {
             "id_registro":      log.HistorialEntrenamiento.id_registro,
             "id_ejercicio":     log.HistorialEntrenamiento.id_ejercicio,
+            "id_rutina":        log.HistorialEntrenamiento.id_rutina,
             "nombre_ejercicio": log.nombre,
             "peso_kg":          log.HistorialEntrenamiento.peso_kg,
             "repeticiones":     log.HistorialEntrenamiento.repeticiones,

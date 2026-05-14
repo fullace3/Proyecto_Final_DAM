@@ -72,6 +72,7 @@ class Comida(Base):
     proteinas_100g     = Column(Integer, nullable=False)
     carbohidratos_100g = Column(Integer, nullable=False)
     grasas_100g        = Column(Integer, nullable=False)
+    dia                = Column(String(20), nullable=True)
     id_usuario         = Column(Integer, ForeignKey("USUARIO.id_usuario", ondelete="CASCADE"), nullable=True)
     id_dieta           = Column(Integer, ForeignKey("DIETA.id_dieta",     ondelete="SET NULL"), nullable=True)
     imagen             = Column(String(255))
@@ -88,6 +89,8 @@ class MedidaCorporal(Base):
     pierna_cm          = Column(Float)
     brazo_cm           = Column(Float)
     grasa_corporal_pct = Column(Float)
+    edad               = Column(Integer, nullable=True)
+    sexo               = Column(String(50), nullable=True)
 
     usuario = relationship("Usuario", back_populates="medidas")
 
@@ -97,6 +100,7 @@ class HistorialEntrenamiento(Base):
     id_registro      = Column(Integer, primary_key=True, index=True)
     id_usuario       = Column(Integer, ForeignKey("USUARIO.id_usuario",   ondelete="CASCADE"))
     id_ejercicio     = Column(Integer, ForeignKey("EJERCICIO.id_ejercicio", ondelete="CASCADE"))
+    id_rutina        = Column(Integer, ForeignKey("RUTINA.id_rutina", ondelete="CASCADE"), nullable=False)
     peso_kg          = Column(Float,   nullable=False)
     repeticiones     = Column(Integer, nullable=False)
     series           = Column(Integer, nullable=False)

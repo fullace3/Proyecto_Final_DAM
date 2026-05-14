@@ -24,85 +24,87 @@ fun TodasLasDietasScreen(
     onCrearDieta: () -> Unit,
     onSeleccionarDieta: (Int) -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        LazyColumn(
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onCrearDieta,
+                shape = RoundedCornerShape(16.dp),
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            ) {
+                Icon(Icons.Filled.Add, contentDescription = "Crear nueva dieta")
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.background
+    ) { innerPadding ->
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 56.dp)
+                .padding(innerPadding)
+                .background(MaterialTheme.colorScheme.background)
         ) {
-            // ── Título ─────────────────────────────────────────────────────
-            item {
-                Text(
-                    "Todas las dietas",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(16.dp),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-
-            // ── Mensaje vacío si no hay dietas ─────────────────────────────
-            if (dietas.isEmpty()) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 56.dp)
+            ) {
+                // ── Título ─────────────────────────────────────────────────────
                 item {
-                    Column(
+                    Text(
+                        "Todas las dietas",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(32.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            "No hay dietas creadas",
-                            fontSize = 16.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            "Crea una nueva para empezar",
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
+                            .padding(16.dp),
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                // ── Mensaje vacío si no hay dietas ─────────────────────────────
+                if (dietas.isEmpty()) {
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                "No hay dietas creadas",
+                                fontSize = 16.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                "Crea una nueva para empezar",
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                 }
-            }
 
-            // ── Listado de dietas ──────────────────────────────────────────
-            items(dietas.size) { index ->
-                val (nombre, datos) = dietas[index]
-                val (calorias, macros) = datos
-                ItemDietaCard(
-                    nombre = nombre,
-                    calorias = calorias,
-                    macros = macros,
-                    onSelect = { onSeleccionarDieta(index + 1) }
-                )
-            }
+                // ── Listado de dietas ──────────────────────────────────────────
+                items(dietas.size) { index ->
+                    val (nombre, datos) = dietas[index]
+                    val (calorias, macros) = datos
+                    ItemDietaCard(
+                        nombre = nombre,
+                        calorias = calorias,
+                        macros = macros,
+                        onSelect = { onSeleccionarDieta(index + 1) }
+                    )
+                }
 
-            item {
-                Spacer(Modifier.height(16.dp))
+                item {
+                    Spacer(Modifier.height(16.dp))
+                }
             }
-        }
-
-        // ── FAB para crear dieta ───────────────────────────────────────────
-        FloatingActionButton(
-            onClick = onCrearDieta,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp),
-            shape = CircleShape,
-            containerColor = MaterialTheme.colorScheme.primary
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Add,
-                contentDescription = "Crear dieta",
-                tint = MaterialTheme.colorScheme.onPrimary
-            )
         }
     }
 }

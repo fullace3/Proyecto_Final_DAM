@@ -41,6 +41,8 @@ class MedidaCreate(BaseModel):
     pierna_cm: Optional[float] = None
     brazo_cm: Optional[float] = None
     grasa_corporal_pct: Optional[float] = None
+    edad: Optional[int] = None
+    sexo: Optional[str] = None
 
 class MedidaOut(MedidaCreate):
     id_medida: int
@@ -128,11 +130,13 @@ class ComidaCreate(BaseModel):
     proteinas_100g: int
     carbohidratos_100g: int
     grasas_100g: int
+    dia: Optional[str] = None
     id_usuario: int
     imagen: Optional[str] = None
 
 class ComidaOut(ComidaCreate):
     id_comida: int
+    dia: Optional[str]
 
     class Config:
         from_attributes = True
@@ -144,6 +148,7 @@ class ComidaOut(ComidaCreate):
 class HistorialCreate(BaseModel):
     id_usuario: int
     id_ejercicio: int
+    id_rutina: int
     peso_kg: float
     repeticiones: int
     series: int

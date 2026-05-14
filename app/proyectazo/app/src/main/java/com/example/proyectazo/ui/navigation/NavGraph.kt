@@ -21,7 +21,9 @@ import com.example.proyectazo.ui.screens.DetallesRutinaScreen
 import com.example.proyectazo.ui.screens.EditarRutinaScreen
 import com.example.proyectazo.ui.screens.EntrenarScreen
 import com.example.proyectazo.ui.screens.FinalizarEntrenamientoScreen
+import com.example.proyectazo.ui.screens.CrearDietaScreen
 import com.example.proyectazo.ui.screens.DietaScreen
+import com.example.proyectazo.ui.screens.TodasLasDietasScreen
 import com.example.proyectazo.ui.screens.EditarPerfilScreen
 import com.example.proyectazo.ui.screens.PantallaPerfil
 import com.example.proyectazo.ui.screens.PreferenciasScreen
@@ -176,7 +178,19 @@ fun NavGraph(
 
         // ── DIETA ─────────────────────────────────────────────────
         composable(Screen.Dieta.route) {
-            DietaScreen()
+            DietaScreen(
+                onCrearDieta = { navController.navigate("crear_dieta") }
+            )
+        }
+
+        // ── CREAR DIETA ───────────────────────────────────────────
+        composable("crear_dieta") {
+            CrearDietaScreen(
+                onBack = { navController.popBackStack() },
+                onGuardadoExitoso = {
+                    navController.popBackStack()
+                }
+            )
         }
 
         // ── PROGRESO ──────────────────────────────────────────────

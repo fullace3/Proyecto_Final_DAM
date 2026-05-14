@@ -19,6 +19,9 @@ val screensWithoutNav = listOf(
     "entrenar",
     "finalizar_entrenamiento",
     "preferencias",
+    "terminos_condiciones",
+    "crear_dieta",
+    "preferencias",
     "terminos_condiciones"
 )
 

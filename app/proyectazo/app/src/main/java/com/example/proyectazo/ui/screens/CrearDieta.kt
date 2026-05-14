@@ -1,0 +1,428 @@
+package com.example.proyectazo.ui.screens
+
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyectazo.ui.viewmodel.CrearDietaViewModel
+import com.example.proyectazo.ui.viewmodel.AlimentoItem
+
+@Composable
+fun CrearDietaScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit) {
+    val context = LocalContext.current
+    val viewModel: CrearDietaViewModel = viewModel(
+        factory = CrearDietaViewModel.Factory(context)
+    )
+    val uiState by viewModel.uiState.collectAsState()
+    var diaSeleccionado by remember { mutableStateOf("Lun") }
+    var mostrarDialogoNombre by remember { mutableStateOf(false) }
+    var nuevoNombre by remember { mutableStateOf("") }
+
+    val opcionesObjetivo = listOf(
+        "Volumen limpio", "Definición", "Pérdida de peso",
+        "Mantenimiento", "Fuerza", "Resistencia"
+    )
+
+    // ── Diálogo para editar nombre ────────────────────────────────────────
+    if (mostrarDialogoNombre) {
+        AlertDialog(
+            onDismissRequest = { mostrarDialogoNombre = false },
+            title = { Text("Nombre de la dieta") },
+            text = {
+                OutlinedTextField(
+                    value = nuevoNombre,
+                    onValueChange = { nuevoNombre = it },
+                    placeholder = { Text("Ej: Volumen limpio") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    viewModel.onNombreDietaChange(nuevoNombre)
+                    mostrarDialogoNombre = false
+                }) { Text("Guardar") }
+            },
+            dismissButton = {
+                TextButton(onClick = { mostrarDialogoNombre = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
+        // ── Header X cerrar ───────────────────────────────────────────────
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+        ) {
+            IconButton(onClick = onBack, modifier = Modifier.size(40.dp)) {
+                Icon(
+                    imageVector = Icons.Filled.Close,
+                    contentDescription = "Cerrar",
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        // ── Card principal ────────────────────────────────────────────────
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    shape = RoundedCornerShape(16.dp)
+                ),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
+            elevation = CardDefaults.cardElevation(0.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // ── Nombre centrado + editar ──────────────────────────────
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        uiState.nombreDieta.ifEmpty { "Nueva dieta" },
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(
+                        onClick = {
+                            nuevoNombre = uiState.nombreDieta
+                            mostrarDialogoNombre = true
+                        },
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = "Editar nombre",
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+
+                // ── Dropdown objetivo ─────────────────────────────────────
+                Text(
+                    "Editar objetivos",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                DropdownCampo(
+                    valor = uiState.objetivo,
+                    placeholder = "Seleccionar Objetivo",
+                    opciones = opcionesObjetivo,
+                    onSeleccion = viewModel::onObjetivoChange
+                )
+
+                Divider(modifier = Modifier.fillMaxWidth())
+
+                // ── Macros ────────────────────────────────────────────────
+                MacroRow("Proteína", "${uiState.proteinas}g")
+                MacroRow("Carbohidratos", "${uiState.carbohidratos}g")
+                MacroRow("Grasas", "${uiState.grasas}g")
+            }
+        }
+
+        Spacer(Modifier.height(24.dp))
+
+        // ── Registro semanal ──────────────────────────────────────────────
+        Text(
+            "Registro semanal",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        Spacer(Modifier.height(12.dp))
+
+        // ── Días de la semana (BOTONES con fondo) ─────────────────────────
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    shape = RoundedCornerShape(12.dp)
+                ),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
+            elevation = CardDefaults.cardElevation(0.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                val dias = listOf("Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom")
+                dias.forEach { dia ->
+                    val seleccionado = dia == diaSeleccionado
+                    Button(
+                        onClick = { diaSeleccionado = dia },
+                        modifier = Modifier.size(42.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (seleccionado)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.surfaceContainerHigh
+                        ),
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
+                        Text(
+                            dia,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (seleccionado)
+                                MaterialTheme.colorScheme.onPrimary
+                            else
+                                MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        // ── Card Desayuno ─────────────────────────────────────────────────
+        SeccionComida(
+            titulo = "Desayuno",
+            alimentos = uiState.alimentos.filter { it.dia == null || it.dia == diaSeleccionado },
+            inicialmenteExpandido = true,
+            onAgregarAlimento = { /* TODO */ }
+        )
+
+        Spacer(Modifier.height(12.dp))
+
+        // ── Card Comida ───────────────────────────────────────────────────
+        SeccionComida(
+            titulo = "Comida",
+            alimentos = uiState.alimentos.filter { it.dia == null || it.dia == diaSeleccionado },
+            inicialmenteExpandido = false,
+            onAgregarAlimento = { /* TODO */ }
+        )
+
+        Spacer(Modifier.height(12.dp))
+
+        // ── Card Cena ─────────────────────────────────────────────────────
+        SeccionComida(
+            titulo = "Cena",
+            alimentos = uiState.alimentos.filter { it.dia == null || it.dia == diaSeleccionado },
+            inicialmenteExpandido = false,
+            onAgregarAlimento = { /* TODO */ }
+        )
+
+        Spacer(Modifier.height(24.dp))
+
+        // ── Botón guardar ─────────────────────────────────────────────────
+        Button(
+            onClick = { onGuardadoExitoso() },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .height(52.dp),
+            shape = RoundedCornerShape(14.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Save,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(Modifier.width(8.dp))
+            Text("Guardar dieta", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+        }
+
+        Spacer(Modifier.height(24.dp))
+    }
+}
+
+// ── Sección colapsable de comida ──────────────────────────────────────────
+@Composable
+private fun SeccionComida(
+    titulo: String,
+    alimentos: List<AlimentoItem>,
+    inicialmenteExpandido: Boolean,
+    onAgregarAlimento: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant,
+                shape = RoundedCornerShape(12.dp)
+            ),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        var expanded by remember { mutableStateOf(inicialmenteExpandido) }
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Surface(
+                onClick = { expanded = !expanded },
+                color = MaterialTheme.colorScheme.background
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(titulo, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                    Text(if (expanded) "▲" else "▼", fontSize = 12.sp)
+                }
+            }
+            if (expanded) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    alimentos.forEach { alimento ->
+                        AlimentoItemRow(alimento)
+                    }
+                    Button(
+                        onClick = onAgregarAlimento,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(36.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                        )
+                    ) {
+                        Text("Añadir alimento", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ── Fila de macronutriente ────────────────────────────────────────────────
+@Composable
+private fun MacroRow(label: String, valor: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(label, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface)
+        Text(valor, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+    }
+}
+
+// ── Row de alimento ───────────────────────────────────────────────────────
+@Composable
+private fun AlimentoItemRow(alimento: AlimentoItem) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(alimento.nombre, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
+        Text("${alimento.calorias} Kcal", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
+    }
+}
+
+// ── Dropdown genérico ─────────────────────────────────────────────────────
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DropdownCampo(
+    valor: String,
+    placeholder: String,
+    opciones: List<String>,
+    onSeleccion: (String) -> Unit
+) {
+    var expandido by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expandido,
+        onExpandedChange = { expandido = it },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        OutlinedTextField(
+            value = valor,
+            onValueChange = {},
+            readOnly = true,
+            placeholder = { Text(placeholder, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandido) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(),
+            shape = RoundedCornerShape(10.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                focusedBorderColor = MaterialTheme.colorScheme.primary
+            )
+        )
+        ExposedDropdownMenu(
+            expanded = expandido,
+            onDismissRequest = { expandido = false }
+        ) {
+            opciones.forEach { opcion ->
+                DropdownMenuItem(
+                    text = { Text(opcion) },
+                    onClick = {
+                        onSeleccion(opcion)
+                        expandido = false
+                    }
+                )
+            }
+        }
+    }
+}
