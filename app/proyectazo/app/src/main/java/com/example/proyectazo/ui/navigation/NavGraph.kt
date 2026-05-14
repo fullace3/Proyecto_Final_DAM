@@ -24,6 +24,7 @@ import com.example.proyectazo.ui.screens.FinalizarEntrenamientoScreen
 import com.example.proyectazo.ui.screens.CrearDietaScreen
 import com.example.proyectazo.ui.screens.DietaScreen
 import com.example.proyectazo.ui.screens.ListaComidasScreen
+import com.example.proyectazo.ui.screens.DetalleComidaScreen
 import com.example.proyectazo.ui.screens.TodasLasDietasScreen
 import com.example.proyectazo.ui.screens.EditarPerfilScreen
 import com.example.proyectazo.ui.screens.PantallaPerfil
@@ -200,8 +201,23 @@ fun NavGraph(
             ListaComidasScreen(
                 onBack = { navController.popBackStack() },
                 onComidaSeleccionada = { comidaId ->
+                    navController.navigate("detalle_comida/$comidaId")
+                }
+            )
+        }
+
+        // ── DETALLE COMIDA ───────────────────────────────────────
+        composable(
+            "detalle_comida/{comidaId}",
+            arguments = listOf(navArgument("comidaId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val comidaId = backStackEntry.arguments?.getInt("comidaId") ?: 0
+            DetalleComidaScreen(
+                comidaId = comidaId,
+                onBack = { navController.popBackStack() },
+                onAñadir = { id, cantidad ->
                     // TODO: pasar comida seleccionada a CrearDietaScreen
-                    navController.popBackStack()
+                    navController.popBackStack("crear_dieta", false)
                 }
             )
         }
