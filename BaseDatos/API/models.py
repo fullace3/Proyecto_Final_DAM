@@ -64,6 +64,7 @@ class Dieta(Base):
     id_usuario        = Column(Integer, ForeignKey("USUARIO.id_usuario", ondelete="CASCADE"))
 
     usuario = relationship("Usuario", back_populates="dietas")
+    comidas_rel = relationship("DietaComida", back_populates="dieta", cascade="all, delete")
 
 class Comida(Base):
     __tablename__ = "COMIDA"
