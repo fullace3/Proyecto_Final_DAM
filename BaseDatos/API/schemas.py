@@ -125,7 +125,28 @@ class DietaOut(DietaCreate):
         from_attributes = True
 
 # ══════════════════════════════════════════════
-#  COMIDA
+#  DIETA_COMIDA (Nuevos)
+# ══════════════════════════════════════════════
+
+class DietaComidaCreate(BaseModel):
+    id_dieta: int
+    id_comida: int
+    tipo: str
+    dia: str
+
+class DietaComidaOut(BaseModel):
+    id: int
+    id_dieta: int
+    id_comida: int
+    tipo: str
+    dia: str
+    comida: Optional["ComidaOut"] = None # Para ver los detalles de la comida al listar la dieta
+
+    class Config:
+        from_attributes = True
+
+# ══════════════════════════════════════════════
+#  COMIDA (Actualizado)
 # ══════════════════════════════════════════════
 
 class ComidaCreate(BaseModel):
@@ -134,13 +155,11 @@ class ComidaCreate(BaseModel):
     proteinas_100g: int
     carbohidratos_100g: int
     grasas_100g: int
-    dia: Optional[str] = None
     id_usuario: Optional[int] = None
     imagen: Optional[str] = None
 
 class ComidaOut(ComidaCreate):
     id_comida: int
-    dia: Optional[str]
 
     class Config:
         from_attributes = True

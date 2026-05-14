@@ -1,4 +1,4 @@
-package com.example.proyectazo.ui.screens
+package com.example.proyectazo.ui.screens.Sesion
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -26,9 +26,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyectazo.R
-import com.example.proyectazo.ui.viewmodel.LoginUiState
-import com.example.proyectazo.ui.viewmodel.LoginViewModel
-import com.example.proyectazo.ui.viewmodel.LoginViewModelFactory
+import com.example.proyectazo.ui.viewmodel.Sesion.LoginUiState
+import com.example.proyectazo.ui.viewmodel.Sesion.LoginViewModel
+import com.example.proyectazo.ui.viewmodel.Sesion.LoginViewModelFactory
 
 @Composable
 fun PantallaIncioSesion(

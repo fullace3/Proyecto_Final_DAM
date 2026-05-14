@@ -1,4 +1,4 @@
-package com.example.proyectazo.ui.viewmodel
+package com.example.proyectazo.ui.viewmodel.RutinaYEjercicio
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
@@ -7,7 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.proyectazo.network.HistorialRequest
 import com.example.proyectazo.network.RetrofitClient
 import com.example.proyectazo.network.SessionManager
-import com.example.proyectazo.ui.screens.ResultadoEntrenamiento
+import com.example.proyectazo.ui.screens.RutinasYEjercicio.ResultadoEntrenamiento
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch

@@ -1,7 +1,5 @@
-package com.example.proyectazo.ui.screens
+package com.example.proyectazo.ui.screens.ProgresoYRegistros
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,7 +12,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -24,8 +21,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyectazo.network.SessionManager
 import com.example.proyectazo.ui.components.SmartFitTopBar
-import com.example.proyectazo.ui.viewmodel.AñadirRegistroViewModel
-import com.example.proyectazo.ui.viewmodel.GuardarEstado
+import com.example.proyectazo.ui.viewmodel.ProgresoYRegistro.AñadirRegistroViewModel
+import com.example.proyectazo.ui.viewmodel.ProgresoYRegistro.GuardarEstado
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -1,4 +1,4 @@
-package com.example.proyectazo.ui.screens
+package com.example.proyectazo.ui.screens.RutinasYEjercicio
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -26,8 +26,8 @@ import coil.compose.AsyncImage
 import com.example.proyectazo.network.EjercicioRutina
 import com.example.proyectazo.network.RetrofitClient
 import com.example.proyectazo.ui.components.SmartFitTopBar
-import com.example.proyectazo.ui.viewmodel.CrearRutinaUiState
-import com.example.proyectazo.ui.viewmodel.RutinaViewModel
+import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.CrearRutinaUiState
+import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.RutinaViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

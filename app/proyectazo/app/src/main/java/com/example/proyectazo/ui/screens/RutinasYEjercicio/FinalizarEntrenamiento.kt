@@ -1,4 +1,4 @@
-package com.example.proyectazo.ui.screens
+package com.example.proyectazo.ui.screens.RutinasYEjercicio
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -19,8 +19,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.proyectazo.ui.viewmodel.FinalizarEntrenamientoViewModel
-import com.example.proyectazo.ui.viewmodel.GuardarUiState
+import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.FinalizarEntrenamientoViewModel
+import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.GuardarUiState
 
 @Composable
 fun FinalizarEntrenamientoScreen(

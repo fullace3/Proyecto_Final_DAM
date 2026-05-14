@@ -1,4 +1,4 @@
-package com.example.proyectazo.ui.screens
+package com.example.proyectazo.ui.screens.RutinasYEjercicio
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

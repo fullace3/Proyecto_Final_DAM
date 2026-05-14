@@ -1,10 +1,9 @@
-package com.example.proyectazo.ui.viewmodel
+package com.example.proyectazo.ui.viewmodel.DietaYComida
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.proyectazo.network.DietaResponse
 import com.example.proyectazo.network.RetrofitClient
 import com.example.proyectazo.network.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow

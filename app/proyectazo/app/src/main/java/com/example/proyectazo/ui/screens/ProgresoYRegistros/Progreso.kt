@@ -1,7 +1,8 @@
-package com.example.proyectazo.ui.screens
+package com.example.proyectazo.ui.screens.ProgresoYRegistros
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,7 +23,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyectazo.network.SessionManager
-import com.example.proyectazo.ui.viewmodel.ProgresoViewModel
+import com.example.proyectazo.ui.viewmodel.ProgresoYRegistro.ProgresoViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -271,7 +272,7 @@ private fun GraficaBarras(datos: List<Pair<String, Double>>, filtro: Int) {
 
 @Composable
 private fun Modifier.clickableNoRipple(onClick: () -> Unit): Modifier {
-    val interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val interactionSource = remember { MutableInteractionSource() }
     return this.then(
         Modifier.clickable(indication = null, interactionSource = interactionSource, onClick = onClick)
     )

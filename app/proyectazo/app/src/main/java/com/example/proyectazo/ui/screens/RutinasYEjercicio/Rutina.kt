@@ -1,6 +1,5 @@
-package com.example.proyectazo.ui.screens
+package com.example.proyectazo.ui.screens.RutinasYEjercicio
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,9 +24,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.proyectazo.ui.viewmodel.RutinaConEjercicios
-import com.example.proyectazo.ui.viewmodel.RutinasUiState
-import com.example.proyectazo.ui.viewmodel.RutinasViewModel
+import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.RutinaConEjercicios
+import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.RutinasUiState
+import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.RutinasViewModel
 
 private const val MAX_PREVIEW_IMAGES = 4
 

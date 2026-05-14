@@ -1,4 +1,4 @@
-package com.example.proyectazo.ui.screens
+package com.example.proyectazo.ui.screens.RutinasYEjercicio
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.proyectazo.ui.components.SmartFitTopBar
-import com.example.proyectazo.ui.viewmodel.RutinaConEjercicios
+import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.RutinaConEjercicios
 
 @Composable
 fun DetallesRutinaScreen(

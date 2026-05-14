@@ -1,11 +1,11 @@
-package com.example.proyectazo.ui.screens
+package com.example.proyectazo.ui.screens.RutinasYEjercicio
 
 import androidx.compose.runtime.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyectazo.network.EjercicioResponse
 import com.example.proyectazo.network.RetrofitClient
 import com.example.proyectazo.screens.ListaEjerciciosScreen
-import com.example.proyectazo.ui.viewmodel.AñadirEjercicioViewModel
+import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.AñadirEjercicioViewModel
 
 @Composable
 fun AñadirEjercicioScreen(

@@ -1,6 +1,5 @@
-package com.example.proyectazo.ui.screens
+package com.example.proyectazo.ui.screens.DietasYComidas
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,8 +22,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.proyectazo.ui.components.SmartFitTopBar
-import com.example.proyectazo.ui.viewmodel.ComidaListItem
-import com.example.proyectazo.ui.viewmodel.ListaComidasViewModel
+import com.example.proyectazo.ui.viewmodel.DietaYComida.ComidaListItem
+import com.example.proyectazo.ui.viewmodel.DietaYComida.ListaComidasViewModel
 
 @Composable
 fun ListaComidasScreen(

@@ -1,4 +1,4 @@
-package com.example.proyectazo.ui.screens
+package com.example.proyectazo.ui.screens.Sesion
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -23,9 +23,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.proyectazo.ui.viewmodel.RegisterUiState
-import com.example.proyectazo.ui.viewmodel.RegisterViewModel
-import com.example.proyectazo.ui.viewmodel.RegisterViewModelFactory
+import com.example.proyectazo.ui.viewmodel.Sesion.RegisterUiState
+import com.example.proyectazo.ui.viewmodel.Sesion.RegisterViewModel
+import com.example.proyectazo.ui.viewmodel.Sesion.RegisterViewModelFactory
 
 @Composable
 fun PantallaRegistro(

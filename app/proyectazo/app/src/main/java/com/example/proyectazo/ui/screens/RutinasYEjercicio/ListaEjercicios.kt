@@ -29,7 +29,7 @@ import coil.compose.AsyncImage
 import com.example.proyectazo.R
 import com.example.proyectazo.network.EjercicioResponse
 import com.example.proyectazo.ui.components.SmartFitTopBar
-import com.example.proyectazo.ui.viewmodel.AñadirEjercicioUiState
+import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.AñadirEjercicioUiState
 
 enum class FiltroTipo { MUSCULO, EQUIPAMIENTO }
 

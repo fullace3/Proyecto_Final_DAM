@@ -312,6 +312,37 @@ def eliminar_dieta(id_dieta: int, db: Session = Depends(get_db)):
     db.delete(dieta)
     db.commit()
 
+# ══════════════════════════════════════════════
+#  DIETA_COMIDA (Gestión de relación N:M)
+# ══════════════════════════════════════════════
+
+@router.post("/dieta-comida/", response_model=schemas.DietaComidaOut, status_code=201, tags=["Dieta-Comida"])
+def añadir_comida_a_dieta(datos: schemas.DietaComidaCreate, db: Session = Depends(get_db)):
+    # Verificamos si existe la dieta y la comida
+    dieta = db.query(models.Dieta).filter(models.Dieta.id_dieta == datos.id_dieta).first()
+    comida = db.query(models.Comida).filter(models.Comida.id_comida == datos.id_comida).first()
+    
+    if not dieta or not comida:
+        raise HTTPException(status_code=404, detail="Dieta o Comida no encontrada")
+        
+    nueva_relacion = models.DietaComida(**datos.model_dump())
+    db.add(nueva_relacion)
+    db.commit()
+    db.refresh(nueva_relacion)
+    return nueva_relacion
+
+@router.get("/dieta-comida/dieta/{id_dieta}", response_model=list[schemas.DietaComidaOut], tags=["Dieta-Comida"])
+def obtener_comidas_de_dieta(id_dieta: int, db: Session = Depends(get_db)):
+    relaciones = db.query(models.DietaComida).filter(models.DietaComida.id_dieta == id_dieta).all()
+    return relaciones
+
+@router.delete("/dieta-comida/{id}", status_code=204, tags=["Dieta-Comida"])
+def eliminar_comida_de_dieta(id: int, db: Session = Depends(get_db)):
+    relacion = db.query(models.DietaComida).filter(models.DietaComida.id == id).first()
+    if not relacion:
+        raise HTTPException(status_code=404, detail="Relación no encontrada")
+    db.delete(relacion)
+    db.commit()
 
 # ══════════════════════════════════════════════
 #  COMIDAS

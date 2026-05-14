@@ -77,6 +77,12 @@ interface ApiService {
     @GET("dietas/usuario/{id}/activa")
     suspend fun getDietaActiva(@Path("id") userId: Int): Response<DietaResponse>
 
+    @GET("dietas/usuario/{id}")
+    suspend fun getDietasUsuario(@Path("id") userId: Int): Response<List<DietaResponse>>
+
+    @POST("dietas")
+    suspend fun crearDieta(@Body datos: DietaRequest): Response<DietaResponse>
+
     @PUT("dietas/{id}/activar")
     suspend fun activarDieta(@Path("id") dietaId: Int): Response<DietaResponse>
 

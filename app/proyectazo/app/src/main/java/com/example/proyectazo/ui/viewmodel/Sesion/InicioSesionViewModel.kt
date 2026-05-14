@@ -1,7 +1,8 @@
-package com.example.proyectazo.ui.viewmodel
+package com.example.proyectazo.ui.viewmodel.Sesion
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.proyectazo.network.LoginRequest
 import com.example.proyectazo.network.RetrofitClient
@@ -59,8 +60,8 @@ class LoginViewModel(private val context: Context) : ViewModel() {
     }
 }
 
-class LoginViewModelFactory(private val context: Context) : androidx.lifecycle.ViewModelProvider.Factory {
-    override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+class LoginViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return LoginViewModel(context) as T
     }
 }

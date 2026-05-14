@@ -1,4 +1,4 @@
-package com.example.proyectazo.ui.viewmodel
+package com.example.proyectazo.ui.viewmodel.PerfilYAjustes
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
@@ -51,7 +51,7 @@ class PerfilViewModel(private val context: Context) : ViewModel() {
                 val sexo = medidas.lastOrNull()?.sexo
 
                 // Leer objetivo desde SharedPreferences
-                val prefs = context.getSharedPreferences("smartfit_session", android.content.Context.MODE_PRIVATE)
+                val prefs = context.getSharedPreferences("smartfit_session", Context.MODE_PRIVATE)
                 val objetivo = prefs.getString("objetivo_usuario", "-") ?: "-"
 
                 _uiState.value = PerfilUiState(

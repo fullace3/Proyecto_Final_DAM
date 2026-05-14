@@ -1,4 +1,4 @@
-package com.example.proyectazo.ui.screens
+package com.example.proyectazo.ui.screens.DietasYComidas
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -19,7 +19,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.proyectazo.ui.components.SmartFitTopBar
-import com.example.proyectazo.ui.viewmodel.DetalleComidaViewModel
+import com.example.proyectazo.ui.viewmodel.DietaYComida.DetalleComidaViewModel
 
 @Composable
 fun DetalleComidaScreen(

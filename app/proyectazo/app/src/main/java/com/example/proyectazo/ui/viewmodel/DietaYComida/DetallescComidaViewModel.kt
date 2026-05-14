@@ -1,4 +1,4 @@
-package com.example.proyectazo.ui.viewmodel
+package com.example.proyectazo.ui.viewmodel.DietaYComida
 
 import android.content.Context
 import androidx.lifecycle.ViewModel

@@ -1,4 +1,4 @@
-package com.example.proyectazo.ui.viewmodel
+package com.example.proyectazo.ui.viewmodel.PerfilYAjustes
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
@@ -112,7 +112,7 @@ class EditarPerfilViewModel(private val context: Context) : ViewModel() {
                 }
 
                 // Guardar objetivo en SharedPreferences
-                val prefs = context.getSharedPreferences("smartfit_session", android.content.Context.MODE_PRIVATE)
+                val prefs = context.getSharedPreferences("smartfit_session", Context.MODE_PRIVATE)
                 prefs.edit().putString("objetivo_usuario", state.objetivo).apply()
 
                 _uiState.update { it.copy(guardarEstado = EditarGuardarEstado.Exito) }

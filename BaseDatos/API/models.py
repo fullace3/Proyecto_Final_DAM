@@ -74,10 +74,22 @@ class Comida(Base):
     proteinas_100g     = Column(Integer, nullable=False)
     carbohidratos_100g = Column(Integer, nullable=False)
     grasas_100g        = Column(Integer, nullable=False)
-    dia                = Column(String(20), nullable=True)
+    # QUITAMOS 'dia' e 'id_dieta' de aquí
     id_usuario         = Column(Integer, ForeignKey("USUARIO.id_usuario", ondelete="CASCADE"), nullable=True)
-    id_dieta           = Column(Integer, ForeignKey("DIETA.id_dieta",     ondelete="SET NULL"), nullable=True)
     imagen             = Column(String(255))
+
+    dietas_rel = relationship("DietaComida", back_populates="comida")
+
+class DietaComida(Base):
+    __tablename__ = "DIETA_COMIDA"
+    id         = Column(Integer, primary_key=True, index=True)
+    id_dieta   = Column(Integer, ForeignKey("DIETA.id_dieta", ondelete="CASCADE"))
+    id_comida  = Column(Integer, ForeignKey("COMIDA.id_comida", ondelete="CASCADE"))
+    tipo       = Column(String(50), nullable=False)
+    dia        = Column(String(20), nullable=False)
+
+    dieta  = relationship("Dieta", back_populates="comidas_rel")
+    comida = relationship("Comida", back_populates="dietas_rel")
 
 class MedidaCorporal(Base):
     __tablename__ = "MEDIDA_CORPORAL"

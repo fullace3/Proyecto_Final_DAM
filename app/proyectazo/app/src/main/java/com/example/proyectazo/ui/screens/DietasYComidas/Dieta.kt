@@ -1,9 +1,9 @@
-package com.example.proyectazo.ui.screens
+package com.example.proyectazo.ui.screens.DietasYComidas
 
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.proyectazo.ui.viewmodel.DietaViewModel
+import com.example.proyectazo.ui.viewmodel.DietaYComida.DietaViewModel
 
 @Composable
 fun DietaScreen(onCrearDieta: () -> Unit = {}) {

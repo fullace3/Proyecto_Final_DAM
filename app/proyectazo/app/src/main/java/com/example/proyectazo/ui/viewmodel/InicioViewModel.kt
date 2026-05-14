@@ -1,6 +1,7 @@
 package com.example.proyectazo.ui.viewmodel
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -129,7 +130,7 @@ class InicioViewModel(context: Context) : ViewModel() {
             registro.fecha.take(10) == dia.format(formatter)
         }
         val rutinaId = ejerciciosDelDia.firstOrNull()?.id_rutina
-        android.util.Log.d("DEBUG", "rutinaId=$rutinaId, rutinas=${rutinas.map { it.id_rutina to it.nombre }}")
+        Log.d("DEBUG", "rutinaId=$rutinaId, rutinas=${rutinas.map { it.id_rutina to it.nombre }}")
 
         _entrenoDelDia.value = if (ejerciciosDelDia.isEmpty()) {
             EntrenoDelDia.SinEntreno

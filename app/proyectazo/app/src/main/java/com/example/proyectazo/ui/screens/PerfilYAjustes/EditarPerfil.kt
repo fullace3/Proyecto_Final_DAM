@@ -1,4 +1,4 @@
-package com.example.proyectazo.ui.screens
+package com.example.proyectazo.ui.screens.PerfilYAjustes
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -19,13 +19,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyectazo.ui.components.SmartFitTopBar
-import com.example.proyectazo.ui.viewmodel.EditarGuardarEstado
-import com.example.proyectazo.ui.viewmodel.EditarPerfilViewModel
+import com.example.proyectazo.ui.viewmodel.PerfilYAjustes.EditarGuardarEstado
+import com.example.proyectazo.ui.viewmodel.PerfilYAjustes.EditarPerfilViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

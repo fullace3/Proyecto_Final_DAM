@@ -1,4 +1,4 @@
-package com.example.proyectazo.ui.screens
+package com.example.proyectazo.ui.screens.RutinasYEjercicio
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -28,7 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.example.proyectazo.ui.viewmodel.RutinaConEjercicios
+import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.RutinaConEjercicios
 import kotlinx.coroutines.delay
 
 data class SerieEntrenamiento(

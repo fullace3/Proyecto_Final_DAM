@@ -1,4 +1,4 @@
-package com.example.proyectazo.ui.screens
+package com.example.proyectazo.ui.screens.DietasYComidas
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -14,13 +14,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.proyectazo.ui.viewmodel.CrearDietaViewModel
-import com.example.proyectazo.ui.viewmodel.AlimentoItem
+import com.example.proyectazo.ui.viewmodel.DietaYComida.CrearDietaViewModel
+import com.example.proyectazo.ui.viewmodel.DietaYComida.AlimentoItem
 
 @Composable
 fun CrearDietaScreen(
@@ -119,7 +120,7 @@ fun CrearDietaScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp),
                         singleLine = true,
-                        textStyle = androidx.compose.ui.text.TextStyle(
+                        textStyle = TextStyle(
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
