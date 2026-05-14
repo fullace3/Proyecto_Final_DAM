@@ -25,7 +25,7 @@ import com.example.proyectazo.ui.viewmodel.DetalleComidaViewModel
 fun DetalleComidaScreen(
     comidaId: Int,
     onBack: () -> Unit,
-    onAñadir: (comidaId: Int, cantidadG: Int) -> Unit
+    onAñadir: (id: Int, nombre: String, calorias: Int, proteinas: Int, carbos: Int, grasas: Int) -> Unit
 ) {
     val context = LocalContext.current
     val viewModel: DetalleComidaViewModel = viewModel(
@@ -129,7 +129,16 @@ fun DetalleComidaScreen(
 
                 // ── Botón añadir ──────────────────────────────────────────
                 Button(
-                    onClick = { onAñadir(comidaId, 100) },
+                    onClick = {
+                        onAñadir(
+                            comidaId,
+                            uiState.nombre,
+                            uiState.calorias100g,
+                            uiState.proteinas100g,
+                            uiState.carbohidratos100g,
+                            uiState.grasas100g
+                        )
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)

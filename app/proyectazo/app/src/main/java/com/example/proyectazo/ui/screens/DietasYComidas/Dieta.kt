@@ -13,12 +13,10 @@ fun DietaScreen(onCrearDieta: () -> Unit = {}) {
     )
     val uiState by viewModel.uiState.collectAsState()
 
-    // Por ahora, mostrar lista vacía (sin dietas creadas)
     TodasLasDietasScreen(
-        dietas = emptyList(),
+        dietas = uiState.dietas,
+        isLoading = uiState.isLoading,
         onCrearDieta = onCrearDieta,
-        onSeleccionarDieta = { dietaId ->
-            viewModel.seleccionarDieta(dietaId)
-        }
+        onSeleccionarDieta = { dietaId -> viewModel.seleccionarDieta(dietaId) }
     )
 }

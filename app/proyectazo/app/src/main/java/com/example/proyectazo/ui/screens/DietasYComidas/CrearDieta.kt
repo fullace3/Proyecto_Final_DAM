@@ -23,7 +23,15 @@ import com.example.proyectazo.ui.viewmodel.CrearDietaViewModel
 import com.example.proyectazo.ui.viewmodel.AlimentoItem
 
 @Composable
-fun CrearDietaScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit, onAñadirAlimento: () -> Unit = {}) {
+fun CrearDietaScreen(
+    onBack: () -> Unit,
+    onGuardadoExitoso: () -> Unit,
+    onAñadirAlimento: (String) -> Unit = {},
+    comidaAñadida: Triple<Int, String, Int>? = null,
+    comidaAñadidaMacros: Triple<Int, Int, Int>? = null,
+    comidaTipo: String? = null,
+    onComidaConsumida: () -> Unit = {}
+) {
     val context = LocalContext.current
     val viewModel: CrearDietaViewModel = viewModel(
         factory = CrearDietaViewModel.Factory(context)
@@ -31,6 +39,27 @@ fun CrearDietaScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit, onAñadi
     val uiState by viewModel.uiState.collectAsState()
     var diaSeleccionado by remember { mutableStateOf("Lun") }
     var editandoNombre by remember { mutableStateOf(false) }
+
+    // Añadir comida cuando llega de DetalleComidaScreen
+    LaunchedEffect(comidaAñadida) {
+        if (comidaAñadida != null && comidaAñadidaMacros != null) {
+            val (id, nombre, calorias) = comidaAñadida
+            val (proteinas, carbos, grasas) = comidaAñadidaMacros
+            viewModel.agregarAlimento(
+                AlimentoItem(
+                    id = id,
+                    nombre = nombre,
+                    calorias = calorias,
+                    proteinas = proteinas,
+                    carbohidratos = carbos,
+                    grasas = grasas,
+                    dia = diaSeleccionado,
+                    tipo = comidaTipo ?: "Desayuno"
+                )
+            )
+            onComidaConsumida()
+        }
+    }
 
     val opcionesObjetivo = listOf(
         "Volumen limpio", "Definición", "Pérdida de peso",
@@ -216,25 +245,28 @@ fun CrearDietaScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit, onAñadi
                 // ── Desayuno ──────────────────────────────────────────────
                 SeccionComidaInline(
                     titulo = "Desayuno",
-                    alimentos = uiState.alimentos.filter { it.dia == null || it.dia == diaSeleccionado },
+                    alimentos = uiState.alimentos.filter { it.tipo == "Desayuno" && (it.dia == null || it.dia == diaSeleccionado) },
                     inicialmenteExpandido = true,
-                    onAgregarAlimento = onAñadirAlimento
+                    onAgregarAlimento = { onAñadirAlimento("Desayuno") },
+                    onEliminarAlimento = { uid -> viewModel.eliminarAlimento(uid) }
                 )
 
                 // ── Comida ────────────────────────────────────────────────
                 SeccionComidaInline(
                     titulo = "Comida",
-                    alimentos = uiState.alimentos.filter { it.dia == null || it.dia == diaSeleccionado },
+                    alimentos = uiState.alimentos.filter { it.tipo == "Comida" && (it.dia == null || it.dia == diaSeleccionado) },
                     inicialmenteExpandido = false,
-                    onAgregarAlimento = onAñadirAlimento
+                    onAgregarAlimento = { onAñadirAlimento("Comida") },
+                    onEliminarAlimento = { uid -> viewModel.eliminarAlimento(uid) }
                 )
 
                 // ── Cena ──────────────────────────────────────────────────
                 SeccionComidaInline(
                     titulo = "Cena",
-                    alimentos = uiState.alimentos.filter { it.dia == null || it.dia == diaSeleccionado },
+                    alimentos = uiState.alimentos.filter { it.tipo == "Cena" && (it.dia == null || it.dia == diaSeleccionado) },
                     inicialmenteExpandido = false,
-                    onAgregarAlimento = onAñadirAlimento
+                    onAgregarAlimento = { onAñadirAlimento("Cena") },
+                    onEliminarAlimento = { uid -> viewModel.eliminarAlimento(uid) }
                 )
             }
         }
@@ -243,20 +275,29 @@ fun CrearDietaScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit, onAñadi
 
         // ── Botón guardar ─────────────────────────────────────────────────
         Button(
-            onClick = { onGuardadoExitoso() },
+            onClick = { viewModel.guardar(onGuardadoExitoso) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
                 .height(52.dp),
-            shape = RoundedCornerShape(14.dp)
+            shape = RoundedCornerShape(14.dp),
+            enabled = !uiState.isLoading
         ) {
-            Icon(
-                imageVector = Icons.Filled.Save,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(Modifier.width(8.dp))
-            Text("Guardar dieta", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            if (uiState.isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Filled.Save,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text("Guardar dieta", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            }
         }
 
         Spacer(Modifier.height(24.dp))
@@ -269,7 +310,8 @@ private fun SeccionComidaInline(
     titulo: String,
     alimentos: List<AlimentoItem>,
     inicialmenteExpandido: Boolean,
-    onAgregarAlimento: () -> Unit
+    onAgregarAlimento: () -> Unit,
+    onEliminarAlimento: (Long) -> Unit = {}
 ) {
     var expanded by remember { mutableStateOf(inicialmenteExpandido) }
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -298,7 +340,7 @@ private fun SeccionComidaInline(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 alimentos.forEach { alimento ->
-                    AlimentoItemRow(alimento)
+                    AlimentoItemRow(alimento, onEliminar = { onEliminarAlimento(alimento.uid) })
                 }
                 Button(
                     onClick = onAgregarAlimento,
@@ -332,9 +374,9 @@ private fun MacroRow(label: String, valor: String) {
     }
 }
 
-// ── Row de alimento ───────────────────────────────────────────────────────
+// ── Row de alimento con botón eliminar ────────────────────────────────────
 @Composable
-private fun AlimentoItemRow(alimento: AlimentoItem) {
+private fun AlimentoItemRow(alimento: AlimentoItem, onEliminar: () -> Unit = {}) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -342,8 +384,29 @@ private fun AlimentoItemRow(alimento: AlimentoItem) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(alimento.nombre, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
-        Text("${alimento.calorias} Kcal", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
+        Text(
+            alimento.nombre,
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            "${alimento.calorias} Kcal",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        IconButton(
+            onClick = onEliminar,
+            modifier = Modifier.size(28.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Close,
+                contentDescription = "Eliminar",
+                modifier = Modifier.size(16.dp),
+                tint = MaterialTheme.colorScheme.error
+            )
+        }
     }
 }
 
