@@ -112,10 +112,12 @@ class DietaCreate(BaseModel):
     grasas_g: float
     fecha_inicio: datetime
     fecha_fin: Optional[datetime] = None
+    activo: bool = False
     id_usuario: int
 
 class DietaOut(DietaCreate):
     id_dieta: int
+    activo: bool
 
     class Config:
         from_attributes = True

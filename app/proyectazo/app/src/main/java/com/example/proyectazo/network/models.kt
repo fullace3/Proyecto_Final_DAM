@@ -85,7 +85,8 @@ data class DietaResponse(
     val grasas_g: Double,
     val fecha_inicio: String,
     val fecha_fin: String?,
-    val id_usuario: Int
+    val id_usuario: Int,
+    val activo: Boolean = false
 )
 
 // ── COMIDA ────────────────────────────────────
@@ -107,7 +108,8 @@ data class ComidaResponse(
     val carbohidratos_100g: Int,
     val grasas_100g: Int,
     val id_usuario: Int?,
-    val imagen: String?
+    val imagen: String?,
+    val dia: String? = null
 )
 
 // ── MEDIDAS ───────────────────────────────────

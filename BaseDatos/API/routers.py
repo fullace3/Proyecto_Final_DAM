@@ -267,6 +267,27 @@ def dieta_actual(id_usuario: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="No hay ninguna dieta registrada")
     return dieta
 
+@router.get("/dietas/usuario/{id_usuario}/activa", response_model=schemas.DietaOut, tags=["Dietas"])
+def dieta_activa(id_usuario: int, db: Session = Depends(get_db)):
+    dieta = db.query(models.Dieta)\
+              .filter(models.Dieta.id_usuario == id_usuario, models.Dieta.activo == True).first()
+    if not dieta:
+        raise HTTPException(status_code=404, detail="No hay ninguna dieta activa")
+    return dieta
+
+@router.put("/dietas/{id_dieta}/activar", response_model=schemas.DietaOut, tags=["Dietas"])
+def activar_dieta(id_dieta: int, db: Session = Depends(get_db)):
+    dieta = db.query(models.Dieta).filter(models.Dieta.id_dieta == id_dieta).first()
+    if not dieta:
+        raise HTTPException(status_code=404, detail="Dieta no encontrada")
+    db.query(models.Dieta)\
+      .filter(models.Dieta.id_usuario == dieta.id_usuario)\
+      .update({"activo": False})
+    dieta.activo = True
+    db.commit()
+    db.refresh(dieta)
+    return dieta
+
 @router.put("/dietas/{id_dieta}", response_model=schemas.DietaOut, tags=["Dietas"])
 def editar_dieta(id_dieta: int, datos: schemas.DietaCreate, db: Session = Depends(get_db)):
     dieta = db.query(models.Dieta).filter(models.Dieta.id_dieta == id_dieta).first()
@@ -298,6 +319,10 @@ def crear_comida(datos: schemas.ComidaCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(comida)
     return comida
+
+@router.get("/comidas", response_model=list[schemas.ComidaOut], tags=["Comidas"])
+def todas_comidas(db: Session = Depends(get_db)):
+    return db.query(models.Comida).order_by(models.Comida.nombre).all()
 
 @router.get("/comidas/usuario/{id_usuario}", response_model=list[schemas.ComidaOut], tags=["Comidas"])
 def comidas_usuario(id_usuario: int, db: Session = Depends(get_db)):

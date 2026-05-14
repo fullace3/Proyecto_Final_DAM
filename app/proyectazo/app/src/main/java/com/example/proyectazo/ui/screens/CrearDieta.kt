@@ -23,49 +23,19 @@ import com.example.proyectazo.ui.viewmodel.CrearDietaViewModel
 import com.example.proyectazo.ui.viewmodel.AlimentoItem
 
 @Composable
-fun CrearDietaScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit) {
+fun CrearDietaScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit, onAñadirAlimento: () -> Unit = {}) {
     val context = LocalContext.current
     val viewModel: CrearDietaViewModel = viewModel(
         factory = CrearDietaViewModel.Factory(context)
     )
     val uiState by viewModel.uiState.collectAsState()
     var diaSeleccionado by remember { mutableStateOf("Lun") }
-    var mostrarDialogoNombre by remember { mutableStateOf(false) }
-    var nuevoNombre by remember { mutableStateOf("") }
+    var editandoNombre by remember { mutableStateOf(false) }
 
     val opcionesObjetivo = listOf(
         "Volumen limpio", "Definición", "Pérdida de peso",
         "Mantenimiento", "Fuerza", "Resistencia"
     )
-
-    // ── Diálogo para editar nombre ────────────────────────────────────────
-    if (mostrarDialogoNombre) {
-        AlertDialog(
-            onDismissRequest = { mostrarDialogoNombre = false },
-            title = { Text("Nombre de la dieta") },
-            text = {
-                OutlinedTextField(
-                    value = nuevoNombre,
-                    onValueChange = { nuevoNombre = it },
-                    placeholder = { Text("Ej: Volumen limpio") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
-                    singleLine = true
-                )
-            },
-            confirmButton = {
-                Button(onClick = {
-                    viewModel.onNombreDietaChange(nuevoNombre)
-                    mostrarDialogoNombre = false
-                }) { Text("Guardar") }
-            },
-            dismissButton = {
-                TextButton(onClick = { mostrarDialogoNombre = false }) {
-                    Text("Cancelar")
-                }
-            }
-        )
-    }
 
     Column(
         modifier = Modifier
@@ -112,32 +82,45 @@ fun CrearDietaScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // ── Nombre centrado + editar ──────────────────────────────
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        uiState.nombreDieta.ifEmpty { "Nueva dieta" },
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.weight(1f)
-                    )
-                    IconButton(
-                        onClick = {
-                            nuevoNombre = uiState.nombreDieta
-                            mostrarDialogoNombre = true
-                        },
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Edit,
-                            contentDescription = "Editar nombre",
-                            modifier = Modifier.size(20.dp),
-                            tint = MaterialTheme.colorScheme.primary
+                if (editandoNombre) {
+                    OutlinedTextField(
+                        value = uiState.nombreDieta,
+                        onValueChange = { viewModel.onNombreDietaChange(it) },
+                        placeholder = { Text("Nombre de la dieta") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        singleLine = true,
+                        textStyle = androidx.compose.ui.text.TextStyle(
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
                         )
+                    )
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            uiState.nombreDieta.ifEmpty { "Nueva dieta" },
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(
+                            onClick = { editandoNombre = true },
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Edit,
+                                contentDescription = "Editar nombre",
+                                modifier = Modifier.size(20.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 }
 
@@ -180,7 +163,7 @@ fun CrearDietaScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit) {
 
         Spacer(Modifier.height(12.dp))
 
-        // ── Días de la semana (BOTONES con fondo) ─────────────────────────
+        // ── Card única: días + Desayuno + Comida + Cena ───────────────────
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -194,70 +177,67 @@ fun CrearDietaScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit) {
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
             elevation = CardDefaults.cardElevation(0.dp)
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                val dias = listOf("Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom")
-                dias.forEach { dia ->
-                    val seleccionado = dia == diaSeleccionado
-                    Button(
-                        onClick = { diaSeleccionado = dia },
-                        modifier = Modifier.size(42.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (seleccionado)
-                                MaterialTheme.colorScheme.primary
-                            else
-                                MaterialTheme.colorScheme.surfaceContainerHigh
-                        ),
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
-                        Text(
-                            dia,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = if (seleccionado)
-                                MaterialTheme.colorScheme.onPrimary
-                            else
-                                MaterialTheme.colorScheme.onSurface
-                        )
+            Column(modifier = Modifier.fillMaxWidth()) {
+                // ── Días ──────────────────────────────────────────────────
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    val dias = listOf("Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom")
+                    dias.forEach { dia ->
+                        val seleccionado = dia == diaSeleccionado
+                        Button(
+                            onClick = { diaSeleccionado = dia },
+                            modifier = Modifier.size(42.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (seleccionado)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.surfaceContainerHigh
+                            ),
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Text(
+                                dia,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (seleccionado)
+                                    MaterialTheme.colorScheme.onPrimary
+                                else
+                                    MaterialTheme.colorScheme.onSurface
+                            )
+                        }
                     }
                 }
+
+                // ── Desayuno ──────────────────────────────────────────────
+                SeccionComidaInline(
+                    titulo = "Desayuno",
+                    alimentos = uiState.alimentos.filter { it.dia == null || it.dia == diaSeleccionado },
+                    inicialmenteExpandido = true,
+                    onAgregarAlimento = onAñadirAlimento
+                )
+
+                // ── Comida ────────────────────────────────────────────────
+                SeccionComidaInline(
+                    titulo = "Comida",
+                    alimentos = uiState.alimentos.filter { it.dia == null || it.dia == diaSeleccionado },
+                    inicialmenteExpandido = false,
+                    onAgregarAlimento = onAñadirAlimento
+                )
+
+                // ── Cena ──────────────────────────────────────────────────
+                SeccionComidaInline(
+                    titulo = "Cena",
+                    alimentos = uiState.alimentos.filter { it.dia == null || it.dia == diaSeleccionado },
+                    inicialmenteExpandido = false,
+                    onAgregarAlimento = onAñadirAlimento
+                )
             }
         }
-
-        Spacer(Modifier.height(16.dp))
-
-        // ── Card Desayuno ─────────────────────────────────────────────────
-        SeccionComida(
-            titulo = "Desayuno",
-            alimentos = uiState.alimentos.filter { it.dia == null || it.dia == diaSeleccionado },
-            inicialmenteExpandido = true,
-            onAgregarAlimento = { /* TODO */ }
-        )
-
-        Spacer(Modifier.height(12.dp))
-
-        // ── Card Comida ───────────────────────────────────────────────────
-        SeccionComida(
-            titulo = "Comida",
-            alimentos = uiState.alimentos.filter { it.dia == null || it.dia == diaSeleccionado },
-            inicialmenteExpandido = false,
-            onAgregarAlimento = { /* TODO */ }
-        )
-
-        Spacer(Modifier.height(12.dp))
-
-        // ── Card Cena ─────────────────────────────────────────────────────
-        SeccionComida(
-            titulo = "Cena",
-            alimentos = uiState.alimentos.filter { it.dia == null || it.dia == diaSeleccionado },
-            inicialmenteExpandido = false,
-            onAgregarAlimento = { /* TODO */ }
-        )
 
         Spacer(Modifier.height(24.dp))
 
@@ -283,66 +263,54 @@ fun CrearDietaScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit) {
     }
 }
 
-// ── Sección colapsable de comida ──────────────────────────────────────────
+// ── Sección inline dentro de la card ──────────────────────────────────────
 @Composable
-private fun SeccionComida(
+private fun SeccionComidaInline(
     titulo: String,
     alimentos: List<AlimentoItem>,
     inicialmenteExpandido: Boolean,
     onAgregarAlimento: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outlineVariant,
-                shape = RoundedCornerShape(12.dp)
-            ),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
-        elevation = CardDefaults.cardElevation(0.dp)
-    ) {
-        var expanded by remember { mutableStateOf(inicialmenteExpandido) }
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Surface(
-                onClick = { expanded = !expanded },
-                color = MaterialTheme.colorScheme.background
+    var expanded by remember { mutableStateOf(inicialmenteExpandido) }
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Divider(color = MaterialTheme.colorScheme.outlineVariant)
+        Surface(
+            onClick = { expanded = !expanded },
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(titulo, fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                    Text(if (expanded) "▲" else "▼", fontSize = 12.sp)
-                }
+                Text(titulo, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                Text(if (expanded) "▲" else "▼", fontSize = 12.sp)
             }
-            if (expanded) {
-                Column(
+        }
+        if (expanded) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp)
+                    .padding(bottom = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                alimentos.forEach { alimento ->
+                    AlimentoItemRow(alimento)
+                }
+                Button(
+                    onClick = onAgregarAlimento,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                        .height(36.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                    )
                 ) {
-                    alimentos.forEach { alimento ->
-                        AlimentoItemRow(alimento)
-                    }
-                    Button(
-                        onClick = onAgregarAlimento,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(36.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                        )
-                    ) {
-                        Text("Añadir alimento", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
-                    }
+                    Text("Añadir alimento", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
                 }
             }
         }

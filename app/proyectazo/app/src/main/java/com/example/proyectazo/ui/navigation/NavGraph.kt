@@ -23,6 +23,7 @@ import com.example.proyectazo.ui.screens.EntrenarScreen
 import com.example.proyectazo.ui.screens.FinalizarEntrenamientoScreen
 import com.example.proyectazo.ui.screens.CrearDietaScreen
 import com.example.proyectazo.ui.screens.DietaScreen
+import com.example.proyectazo.ui.screens.ListaComidasScreen
 import com.example.proyectazo.ui.screens.TodasLasDietasScreen
 import com.example.proyectazo.ui.screens.EditarPerfilScreen
 import com.example.proyectazo.ui.screens.PantallaPerfil
@@ -188,6 +189,18 @@ fun NavGraph(
             CrearDietaScreen(
                 onBack = { navController.popBackStack() },
                 onGuardadoExitoso = {
+                    navController.popBackStack()
+                },
+                onAñadirAlimento = { navController.navigate("lista_comidas") }
+            )
+        }
+
+        // ── LISTA COMIDAS ────────────────────────────────────────
+        composable("lista_comidas") {
+            ListaComidasScreen(
+                onBack = { navController.popBackStack() },
+                onComidaSeleccionada = { comidaId ->
+                    // TODO: pasar comida seleccionada a CrearDietaScreen
                     navController.popBackStack()
                 }
             )

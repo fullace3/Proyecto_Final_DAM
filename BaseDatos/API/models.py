@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from main import Base
 from datetime import datetime
@@ -59,6 +59,7 @@ class Dieta(Base):
     grasas_g          = Column(Float)
     fecha_inicio      = Column(DateTime, nullable=False)
     fecha_fin         = Column(DateTime)
+    activo            = Column(Boolean, default=False)
     id_usuario        = Column(Integer, ForeignKey("USUARIO.id_usuario", ondelete="CASCADE"))
 
     usuario = relationship("Usuario", back_populates="dietas")
