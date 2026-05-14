@@ -342,6 +342,13 @@ def buscar_comida(id_usuario: int, nombre: str, db: Session = Depends(get_db)):
         models.Comida.nombre.ilike(f"%{nombre}%")
     ).all()
 
+@router.get("/comidas/{id_comida}", response_model=schemas.ComidaOut, tags=["Comidas"])
+def obtener_comida(id_comida: int, db: Session = Depends(get_db)):
+    comida = db.query(models.Comida).filter(models.Comida.id_comida == id_comida).first()
+    if not comida:
+        raise HTTPException(status_code=404, detail="Comida no encontrada")
+    return comida
+
 @router.put("/comidas/{id_comida}", response_model=schemas.ComidaOut, tags=["Comidas"])
 def editar_comida(id_comida: int, datos: schemas.ComidaCreate, db: Session = Depends(get_db)):
     comida = db.query(models.Comida).filter(models.Comida.id_comida == id_comida).first()
