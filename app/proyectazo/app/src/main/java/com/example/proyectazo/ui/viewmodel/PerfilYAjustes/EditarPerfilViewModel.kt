@@ -24,9 +24,7 @@ data class EditarPerfilUiState(
     val nombre: String = "",
     val email: String = "",
     // Campos de medida
-    val edad: String = "",
     val alturaCm: String = "",
-    val sexo: String = "",
     val pesoKg: String = "",
     val objetivo: String = "",
     // Estado
@@ -62,8 +60,6 @@ class EditarPerfilViewModel(private val context: Context) : ViewModel() {
                     email = usuario?.email ?: "",
                     alturaCm = ultima?.altura_cm?.let { "${it.toInt()}" } ?: "",
                     pesoKg = ultima?.peso_kg?.let { String.format("%.1f", it) } ?: "",
-                    edad = ultima?.edad?.toString() ?: "",
-                    sexo = ultima?.sexo ?: "",
                     isLoading = false
                 )
             } catch (e: Exception) {
@@ -75,9 +71,7 @@ class EditarPerfilViewModel(private val context: Context) : ViewModel() {
     // ── Setters ──────────────────────────────────────────────────────────────
     fun onNombreChange(v: String) = _uiState.update { it.copy(nombre = v) }
     fun onEmailChange(v: String) = _uiState.update { it.copy(email = v) }
-    fun onEdadChange(v: String) = _uiState.update { it.copy(edad = v) }
     fun onAlturaChange(v: String) = _uiState.update { it.copy(alturaCm = v) }
-    fun onSexoChange(v: String) = _uiState.update { it.copy(sexo = v) }
     fun onPesoChange(v: String) = _uiState.update { it.copy(pesoKg = v) }
     fun onObjetivoChange(v: String) = _uiState.update { it.copy(objetivo = v) }
     fun resetEstado() = _uiState.update { it.copy(guardarEstado = EditarGuardarEstado.Idle) }
@@ -92,15 +86,12 @@ class EditarPerfilViewModel(private val context: Context) : ViewModel() {
                 // Guardar medida con los nuevos valores
                 val peso = state.pesoKg.toDoubleOrNull()
                 val altura = state.alturaCm.toDoubleOrNull()
-                val edad = state.edad.toIntOrNull()
 
                 if (peso != null) {
                     val request = MedidaRequest(
                         id_usuario = userId,
                         peso_kg = peso,
                         altura_cm = altura,
-                        edad = edad,
-                        sexo = state.sexo.ifEmpty { null }
                     )
                     val resp = api.registrarMedida(request)
                     if (!resp.isSuccessful) {

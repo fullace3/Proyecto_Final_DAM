@@ -124,25 +124,12 @@ fun EditarPerfilScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit) {
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                CampoEdicion(
-                    valor = uiState.edad,
-                    placeholder = "Edad",
-                    keyboardType = KeyboardType.Number,
-                    onValorChange = viewModel::onEdadChange
-                )
+
                 CampoEdicion(
                     valor = uiState.alturaCm,
                     placeholder = "Altura (cm)",
                     keyboardType = KeyboardType.Decimal,
                     onValorChange = viewModel::onAlturaChange
-                )
-
-                // Dropdown sexo
-                DropdownCampo(
-                    valor = uiState.sexo,
-                    placeholder = "Seleccionar sexo",
-                    opciones = opcionesSexo,
-                    onSeleccion = viewModel::onSexoChange
                 )
 
                 CampoEdicion(

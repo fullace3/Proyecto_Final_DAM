@@ -124,9 +124,7 @@ fun PantallaPerfil(
                 elevation = CardDefaults.cardElevation(0.dp)
             ) {
                 Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    StatRow("Edad", uiState.edad)
                     StatRow("Altura", uiState.alturaCm)
-                    StatRow("Sexo", uiState.sexo)
                     StatRow("Peso inicial", uiState.pesoInicial)
                 }
             }

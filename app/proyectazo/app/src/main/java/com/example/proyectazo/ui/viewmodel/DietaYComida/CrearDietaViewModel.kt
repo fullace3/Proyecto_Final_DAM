@@ -55,6 +55,9 @@ class CrearDietaViewModel(
     private val _uiState = MutableStateFlow(CrearDietaUiState())
     val uiState: StateFlow<CrearDietaUiState> = _uiState
 
+    // Guardamos los alimentos originales para detectar cuáles se han eliminado
+    private var alimentosOriginales: List<AlimentoItem> = emptyList()
+
     init {
         if (dietaIdEditar != null) cargarDietaExistente(dietaIdEditar)
     }
@@ -68,9 +71,7 @@ class CrearDietaViewModel(
                 val dieta = dietasResp.body()?.find { it.id_dieta == dietaId }
 
                 if (dieta != null) {
-                    _uiState.update {
-                        it.copy(nombreDieta = dieta.nombre)
-                    }
+                    _uiState.update { it.copy(nombreDieta = dieta.nombre) }
                 }
 
                 // Cargar comidas de la dieta
@@ -93,6 +94,8 @@ class CrearDietaViewModel(
                             )
                         } else null
                     }
+                    // Guardamos copia de los originales para comparar al guardar
+                    alimentosOriginales = alimentos
                     _uiState.update { it.copy(alimentos = alimentos, isLoading = false) }
                 } else {
                     _uiState.update { it.copy(isLoading = false) }
@@ -116,8 +119,19 @@ class CrearDietaViewModel(
 
     fun guardar(onExitoso: () -> Unit) {
         val state = _uiState.value
-        val nombre = state.nombreDieta.ifBlank { "Nueva dieta" }
 
+        if (state.editando && state.dietaId != null) {
+            // ── MODO EDICIÓN ──────────────────────────────────────────────
+            guardarEdicion(state, state.dietaId, onExitoso)
+        } else {
+            // ── MODO CREACIÓN ─────────────────────────────────────────────
+            crearNueva(state, onExitoso)
+        }
+    }
+
+    // ── Crear dieta nueva ─────────────────────────────────────────────────
+    private fun crearNueva(state: CrearDietaUiState, onExitoso: () -> Unit) {
+        val nombre = state.nombreDieta.ifBlank { "Nueva dieta" }
         _uiState.update { it.copy(isLoading = true, error = null) }
 
         viewModelScope.launch {
@@ -135,7 +149,6 @@ class CrearDietaViewModel(
                 val resp = api.crearDieta(request)
                 if (resp.isSuccessful) {
                     val dietaCreada = resp.body()
-                    // Guardar alimentos en DIETA_COMIDA
                     if (dietaCreada != null) {
                         state.alimentos.forEach { alimento ->
                             api.añadirComidaADieta(
@@ -155,6 +168,70 @@ class CrearDietaViewModel(
                     _uiState.update { it.copy(isLoading = false, error = errorBody) }
                     android.widget.Toast.makeText(context, "Error: $errorBody", android.widget.Toast.LENGTH_LONG).show()
                 }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+                android.widget.Toast.makeText(context, "Error: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    // ── Editar dieta existente ────────────────────────────────────────────
+    private fun guardarEdicion(state: CrearDietaUiState, dietaId: Int, onExitoso: () -> Unit) {
+        val nombre = state.nombreDieta.ifBlank { "Nueva dieta" }
+        _uiState.update { it.copy(isLoading = true, error = null) }
+
+        viewModelScope.launch {
+            try {
+                // 1. Actualizar los datos básicos de la dieta
+                val request = DietaRequest(
+                    nombre = nombre,
+                    objetivo_calorico = state.calorasTotales,
+                    proteinas_g = state.proteinas.toDouble(),
+                    carbohidratos_g = state.carbohidratos.toDouble(),
+                    grasas_g = state.grasas.toDouble(),
+                    fecha_inicio = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+                    id_usuario = userId
+                )
+                val respActualizar = api.actualizarDieta(dietaId, request)
+
+                if (!respActualizar.isSuccessful) {
+                    val errorBody = respActualizar.errorBody()?.string() ?: "Error ${respActualizar.code()}"
+                    _uiState.update { it.copy(isLoading = false, error = errorBody) }
+                    android.widget.Toast.makeText(context, "Error al actualizar: $errorBody", android.widget.Toast.LENGTH_LONG).show()
+                    return@launch
+                }
+
+                // 2. Detectar alimentos eliminados (estaban antes y ya no están)
+                val uidsActuales = state.alimentos.map { it.uid }.toSet()
+                val alimentosEliminados = alimentosOriginales.filter { original ->
+                    original.uid !in uidsActuales
+                }
+                alimentosEliminados.forEach { eliminado ->
+                    if (eliminado.dietaComidaId != null) {
+                        try {
+                            api.eliminarComidaDeDieta(eliminado.dietaComidaId)
+                        } catch (_: Exception) { /* ignorar errores individuales */ }
+                    }
+                }
+
+                // 3. Añadir alimentos nuevos (los que no tienen dietaComidaId)
+                val alimentosNuevos = state.alimentos.filter { it.dietaComidaId == null }
+                alimentosNuevos.forEach { alimento ->
+                    try {
+                        api.añadirComidaADieta(
+                            DietaComidaRequest(
+                                id_dieta = dietaId,
+                                id_comida = alimento.id,
+                                tipo = alimento.tipo,
+                                dia = alimento.dia ?: "Lun"
+                            )
+                        )
+                    } catch (_: Exception) { /* ignorar errores individuales */ }
+                }
+
+                _uiState.update { it.copy(isLoading = false, guardadoExitoso = true) }
+                onExitoso()
+
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = e.message) }
                 android.widget.Toast.makeText(context, "Error: ${e.message}", android.widget.Toast.LENGTH_LONG).show()

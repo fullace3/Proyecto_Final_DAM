@@ -16,8 +16,6 @@ data class PerfilUiState(
     val email: String = "",
     val alturaCm: String = "-",
     val pesoInicial: String = "-",
-    val edad: String = "-",
-    val sexo: String = "-",
     val objetivo: String = "-",
     val isLoading: Boolean = true
 )
@@ -47,8 +45,6 @@ class PerfilViewModel(private val context: Context) : ViewModel() {
 
                 val pesoInicial = medidas.firstOrNull()?.peso_kg
                 val altura = medidas.lastOrNull()?.altura_cm
-                val edad = medidas.lastOrNull()?.edad
-                val sexo = medidas.lastOrNull()?.sexo
 
                 // Leer objetivo desde SharedPreferences
                 val prefs = context.getSharedPreferences("smartfit_session", Context.MODE_PRIVATE)
@@ -59,8 +55,6 @@ class PerfilViewModel(private val context: Context) : ViewModel() {
                     email = usuario?.email ?: "",
                     alturaCm = altura?.let { String.format("%.2f", it / 100.0) + " m" } ?: "-",
                     pesoInicial = pesoInicial?.let { String.format("%.1f", it) + " Kg" } ?: "-",
-                    edad = edad?.toString() ?: "-",
-                    sexo = sexo ?: "-",
                     objetivo = objetivo,
                     isLoading = false
                 )

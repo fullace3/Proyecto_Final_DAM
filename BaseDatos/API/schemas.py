@@ -107,7 +107,6 @@ class RutinaEjercicioOut(RutinaEjercicioCreate):
 
 class DietaCreate(BaseModel):
     nombre: str
-    descripcion: Optional[str] = None
     objetivo_calorico: int
     proteinas_g: float
     carbohidratos_g: float

@@ -83,6 +83,9 @@ interface ApiService {
     @POST("dietas")
     suspend fun crearDieta(@Body datos: DietaRequest): Response<DietaResponse>
 
+    @PUT("dietas/{id}")
+    suspend fun actualizarDieta(@Path("id") dietaId: Int, @Body datos: DietaRequest): Response<DietaResponse>
+
     @PUT("dietas/{id}/activar")
     suspend fun activarDieta(@Path("id") dietaId: Int): Response<DietaResponse>
 

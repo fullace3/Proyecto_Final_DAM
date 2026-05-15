@@ -37,6 +37,7 @@ import com.example.proyectazo.ui.screens.PantallaInicio
 import com.example.proyectazo.ui.screens.Sesion.PantallaRegistro
 import com.example.proyectazo.ui.screens.RutinasYEjercicio.PantallaRutinas
 import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.RutinaConEjercicios
+import androidx.compose.runtime.collectAsState
 
 @Composable
 fun NavGraph(
@@ -202,14 +203,20 @@ fun NavGraph(
         // ── CREAR DIETA ───────────────────────────────────────────
         composable("crear_dieta") { backStackEntry ->
             val savedState = backStackEntry.savedStateHandle
-            val comidaId = savedState.get<Int>("comida_id")
-            val comidaNombre = savedState.get<String>("comida_nombre")
-            val comidaCalorias = savedState.get<Int>("comida_calorias")
-            val comidaProteinas = savedState.get<Int>("comida_proteinas")
-            val comidaCarbos = savedState.get<Int>("comida_carbos")
-            val comidaGrasas = savedState.get<Int>("comida_grasas")
-            val comidaTipo = savedState.get<String>("comida_tipo")
-            val comidaDia = savedState.get<String>("comida_dia")
+
+            // Solución: Observar el estado de forma reactiva
+            val comidaId by savedState.getStateFlow<Int?>("comida_id", null).collectAsState()
+            val comidaNombre by savedState.getStateFlow<String?>("comida_nombre", null).collectAsState()
+            val comidaCalorias by savedState.getStateFlow<Int?>("comida_calorias", null).collectAsState()
+            val comidaProteinas by savedState.getStateFlow<Int?>("comida_proteinas", null).collectAsState()
+            val comidaCarbos by savedState.getStateFlow<Int?>("comida_carbos", null).collectAsState()
+            val comidaGrasas by savedState.getStateFlow<Int?>("comida_grasas", null).collectAsState()
+            val comidaTipo by savedState.getStateFlow<String?>("comida_tipo", null).collectAsState()
+            val comidaDia by savedState.getStateFlow<String?>("comida_dia", null).collectAsState()
+
+            // Guardamos en variables locales para permitir el "smart cast" de Kotlin
+            val currentComidaId = comidaId
+            val currentComidaNombre = comidaNombre
 
             CrearDietaScreen(
                 onBack = { navController.popBackStack() },
@@ -222,15 +229,17 @@ fun NavGraph(
                     savedState["comida_dia"] = dia
                     navController.navigate("lista_comidas")
                 },
-                comidaAñadida = if (comidaId != null && comidaNombre != null) {
-                    Triple(comidaId, comidaNombre, comidaCalorias ?: 0)
+                comidaAñadida = if (currentComidaId != null && currentComidaNombre != null) {
+                    Triple(currentComidaId, currentComidaNombre, comidaCalorias ?: 0)
                 } else null,
-                comidaAñadidaMacros = if (comidaId != null) {
+                comidaAñadidaMacros = if (currentComidaId != null) {
                     Triple(comidaProteinas ?: 0, comidaCarbos ?: 0, comidaGrasas ?: 0)
                 } else null,
                 comidaTipo = comidaTipo,
                 comidaDia = comidaDia,
                 onComidaConsumida = {
+                    savedState.remove<Int>("comida_id")
+                    savedState.remove<String>("comida_nombre")
                     savedState.remove<Int>("comida_id")
                     savedState.remove<String>("comida_nombre")
                     savedState.remove<Int>("comida_calorias")
@@ -245,27 +254,32 @@ fun NavGraph(
 
         // ── LISTA COMIDAS ────────────────────────────────────────
         composable("lista_comidas") { backStackEntry ->
-            // Si volvemos de detalle_comida con datos, reenviarlos a crear/editar dieta
             val comidaId = backStackEntry.savedStateHandle.get<Int>("comida_id")
-            if (comidaId != null) {
-                val prev = navController.previousBackStackEntry
-                prev?.savedStateHandle?.set("comida_id", comidaId)
-                prev?.savedStateHandle?.set("comida_nombre", backStackEntry.savedStateHandle.get<String>("comida_nombre"))
-                prev?.savedStateHandle?.set("comida_calorias", backStackEntry.savedStateHandle.get<Int>("comida_calorias"))
-                prev?.savedStateHandle?.set("comida_proteinas", backStackEntry.savedStateHandle.get<Int>("comida_proteinas"))
-                prev?.savedStateHandle?.set("comida_carbos", backStackEntry.savedStateHandle.get<Int>("comida_carbos"))
-                prev?.savedStateHandle?.set("comida_grasas", backStackEntry.savedStateHandle.get<Int>("comida_grasas"))
-                backStackEntry.savedStateHandle.remove<Int>("comida_id")
-                navController.popBackStack()
-                return@composable
+
+            // Solución: Envolver la alteración del estado y la navegación en un LaunchedEffect
+            LaunchedEffect(comidaId) {
+                if (comidaId != null) {
+                    val prev = navController.previousBackStackEntry
+                    prev?.savedStateHandle?.set("comida_id", comidaId)
+                    prev?.savedStateHandle?.set("comida_nombre", backStackEntry.savedStateHandle.get<String>("comida_nombre"))
+                    prev?.savedStateHandle?.set("comida_calorias", backStackEntry.savedStateHandle.get<Int>("comida_calorias"))
+                    prev?.savedStateHandle?.set("comida_proteinas", backStackEntry.savedStateHandle.get<Int>("comida_proteinas"))
+                    prev?.savedStateHandle?.set("comida_carbos", backStackEntry.savedStateHandle.get<Int>("comida_carbos"))
+                    prev?.savedStateHandle?.set("comida_grasas", backStackEntry.savedStateHandle.get<Int>("comida_grasas"))
+                    backStackEntry.savedStateHandle.remove<Int>("comida_id")
+                    navController.popBackStack()
+                }
             }
 
-            ListaComidasScreen(
-                onBack = { navController.popBackStack() },
-                onComidaSeleccionada = { id ->
-                    navController.navigate("detalle_comida/$id")
-                }
-            )
+            // Solo mostramos la pantalla si no estamos volviendo automáticamente
+            if (comidaId == null) {
+                ListaComidasScreen(
+                    onBack = { navController.popBackStack() },
+                    onComidaSeleccionada = { id ->
+                        navController.navigate("detalle_comida/$id")
+                    }
+                )
+            }
         }
 
         // ── DETALLE COMIDA ───────────────────────────────────────
@@ -298,16 +312,21 @@ fun NavGraph(
         ) { backStackEntry ->
             val dietaId = backStackEntry.arguments?.getInt("dietaId") ?: 0
             val savedState = backStackEntry.savedStateHandle
-            val comidaId = savedState.get<Int>("comida_id")
-            val comidaNombre = savedState.get<String>("comida_nombre")
-            val comidaCalorias = savedState.get<Int>("comida_calorias")
-            val comidaProteinas = savedState.get<Int>("comida_proteinas")
-            val comidaCarbos = savedState.get<Int>("comida_carbos")
-            val comidaGrasas = savedState.get<Int>("comida_grasas")
-            val comidaTipo = savedState.get<String>("comida_tipo")
-            val comidaDia = savedState.get<String>("comida_dia")
 
-            // Cargar datos de la dieta existente por dietaId
+            // Solución: Observar el estado de forma reactiva también aquí
+            val comidaId by savedState.getStateFlow<Int?>("comida_id", null).collectAsState()
+            val comidaNombre by savedState.getStateFlow<String?>("comida_nombre", null).collectAsState()
+            val comidaCalorias by savedState.getStateFlow<Int?>("comida_calorias", null).collectAsState()
+            val comidaProteinas by savedState.getStateFlow<Int?>("comida_proteinas", null).collectAsState()
+            val comidaCarbos by savedState.getStateFlow<Int?>("comida_carbos", null).collectAsState()
+            val comidaGrasas by savedState.getStateFlow<Int?>("comida_grasas", null).collectAsState()
+            val comidaTipo by savedState.getStateFlow<String?>("comida_tipo", null).collectAsState()
+            val comidaDia by savedState.getStateFlow<String?>("comida_dia", null).collectAsState()
+
+            // Guardamos en variables locales para permitir el "smart cast"
+            val currentComidaId = comidaId
+            val currentComidaNombre = comidaNombre
+
             CrearDietaScreen(
                 onBack = { navController.popBackStack() },
                 onGuardadoExitoso = {
@@ -319,23 +338,23 @@ fun NavGraph(
                     savedState["comida_dia"] = dia
                     navController.navigate("lista_comidas")
                 },
-                comidaAñadida = if (comidaId != null && comidaNombre != null) {
-                    Triple(comidaId, comidaNombre, comidaCalorias ?: 0)
+                comidaAñadida = if (currentComidaId != null && currentComidaNombre != null) {
+                    Triple(currentComidaId, currentComidaNombre, comidaCalorias ?: 0)
                 } else null,
-                comidaAñadidaMacros = if (comidaId != null) {
+                comidaAñadidaMacros = if (currentComidaId != null) {
                     Triple(comidaProteinas ?: 0, comidaCarbos ?: 0, comidaGrasas ?: 0)
                 } else null,
                 comidaTipo = comidaTipo,
                 comidaDia = comidaDia,
                 onComidaConsumida = {
-                    savedState.remove<Int>("comida_id")
-                    savedState.remove<String>("comida_nombre")
-                    savedState.remove<Int>("comida_calorias")
-                    savedState.remove<Int>("comida_proteinas")
-                    savedState.remove<Int>("comida_carbos")
-                    savedState.remove<Int>("comida_grasas")
-                    savedState.remove<String>("comida_tipo")
-                    savedState.remove<String>("comida_dia")
+                    savedState["comida_id"] = null
+                    savedState["comida_nombre"] = null
+                    savedState["comida_calorias"] = null
+                    savedState["comida_proteinas"] = null
+                    savedState["comida_carbos"] = null
+                    savedState["comida_grasas"] = null
+                    savedState["comida_tipo"] = null
+                    savedState["comida_dia"] = null
                 },
                 dietaId = dietaId
             )

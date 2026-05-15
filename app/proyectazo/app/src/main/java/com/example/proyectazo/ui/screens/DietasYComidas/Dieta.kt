@@ -44,6 +44,7 @@ fun DietaScreen(
                 viewModel.seleccionarDieta(dietaId)
                 mostrarTodas = false
             },
+            onEditarDieta = onEditarDieta,
             mostrarBack = dietaActiva != null,
             onBack = { mostrarTodas = false }
         )
