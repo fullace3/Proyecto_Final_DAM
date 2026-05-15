@@ -12,10 +12,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyectazo.ui.components.SmartFitTopBar
+import com.example.proyectazo.ui.viewmodel.PerfilYAjustes.PreferenciasViewModel
 
 @Composable
 fun PreferenciasScreen(
@@ -23,19 +27,27 @@ fun PreferenciasScreen(
     onTerminos: () -> Unit,
     onEliminarCuenta: () -> Unit
 ) {
+    val context = LocalContext.current
+    val viewModel: PreferenciasViewModel = viewModel(
+        factory = PreferenciasViewModel.Factory(context)
+    )
+    val uiState by viewModel.uiState.collectAsState()
+
     var mostrarDialogo by remember { mutableStateOf(false) }
 
-    // ── Diálogo confirmación eliminar cuenta ──────────────────────────────────
+    // ── Diálogo confirmación eliminar cuenta ──────────────────────────────
     if (mostrarDialogo) {
         AlertDialog(
             onDismissRequest = { mostrarDialogo = false },
             title = { Text("Eliminar cuenta") },
-            text = { Text("¿Estás seguro? Esta acción no se puede deshacer.") },
+            text = { Text("¿Estás seguro? Esta acción no se puede deshacer y perderás todos tus datos.") },
             confirmButton = {
-                TextButton(onClick = {
-                    mostrarDialogo = false
-                    onEliminarCuenta()
-                }) {
+                TextButton(
+                    onClick = {
+                        mostrarDialogo = false
+                        viewModel.eliminarCuenta(onEliminarCuenta)
+                    }
+                ) {
                     Text("Eliminar", color = MaterialTheme.colorScheme.error)
                 }
             },
@@ -62,7 +74,7 @@ fun PreferenciasScreen(
         ) {
             Spacer(Modifier.height(16.dp))
 
-            // ── Sección Legal ────────────────────────────────────────────────
+            // ── Sección Legal ─────────────────────────────────────────────
             Text(
                 "Legal",
                 fontSize = 14.sp,
@@ -74,75 +86,64 @@ fun PreferenciasScreen(
             Spacer(Modifier.height(12.dp))
 
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
                 elevation = CardDefaults.cardElevation(0.dp)
             ) {
-                Surface(
-                    onClick = onTerminos,
-                    color = MaterialTheme.colorScheme.surfaceContainer
-                ) {
+                Surface(onClick = onTerminos, color = MaterialTheme.colorScheme.surfaceContainer) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 16.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Filled.Description,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
+                        Icon(Icons.Filled.Description, null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
                         Spacer(Modifier.width(16.dp))
-                        Text(
-                            text = "Términos y condiciones",
-                            fontSize = 15.sp,
-                            modifier = Modifier.weight(1f),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Text("Términos y condiciones", fontSize = 15.sp, modifier = Modifier.weight(1f))
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
+            }
+
+            // ── Error ─────────────────────────────────────────────────────
+            uiState.error?.let {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    it,
+                    color = MaterialTheme.colorScheme.error,
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
             }
         }
 
         Spacer(Modifier.height(16.dp))
 
-        // ── Botón eliminar cuenta ────────────────────────────────────────────
+        // ── Botón eliminar cuenta ─────────────────────────────────────────
         Button(
             onClick = { mostrarDialogo = true },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .height(52.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(52.dp),
             shape = RoundedCornerShape(14.dp),
+            enabled = !uiState.isLoading,
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.error,
                 contentColor = MaterialTheme.colorScheme.onError
             )
         ) {
-            Text("Eliminar cuenta", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            if (uiState.isLoading) {
+                CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onError, strokeWidth = 2.dp)
+            } else {
+                Text("Eliminar cuenta", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            }
         }
 
         Spacer(Modifier.height(16.dp))
 
-        // ── Versión ──────────────────────────────────────────────────────────
         Text(
             "SmartFit v1.0.0 - 2026",
             fontSize = 12.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+            textAlign = TextAlign.Center
         )
     }
 }

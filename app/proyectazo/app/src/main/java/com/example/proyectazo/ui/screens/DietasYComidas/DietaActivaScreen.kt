@@ -29,7 +29,6 @@ import com.example.proyectazo.ui.viewmodel.DietaYComida.DietaListItem
 fun DietaActivaScreen(
     dieta: DietaListItem,
     onNueva: () -> Unit,
-    onEditar: (Int) -> Unit,
     onCambiar: () -> Unit
 ) {
     val context = LocalContext.current
@@ -82,20 +81,6 @@ fun DietaActivaScreen(
                             ) {
                                 Icon(Icons.Filled.Add, null, modifier = Modifier.size(18.dp))
                                 Text("Nuevo", fontSize = 12.sp)
-                            }
-                        }
-                        SmallFloatingActionButton(
-                            onClick = { fabExpanded = false; onEditar(dieta.id) },
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(Icons.Filled.Edit, null, modifier = Modifier.size(18.dp))
-                                Text("Editar", fontSize = 12.sp)
                             }
                         }
                         SmallFloatingActionButton(

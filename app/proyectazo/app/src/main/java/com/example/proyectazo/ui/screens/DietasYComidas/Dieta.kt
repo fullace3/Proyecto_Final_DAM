@@ -13,7 +13,6 @@ import com.example.proyectazo.ui.viewmodel.DietaYComida.DietaViewModel
 @Composable
 fun DietaScreen(
     onCrearDieta: () -> Unit = {},
-    onEditarDieta: (Int) -> Unit = {}
 ) {
     val context = LocalContext.current
     val viewModel: DietaViewModel = viewModel(
@@ -32,7 +31,6 @@ fun DietaScreen(
         DietaActivaScreen(
             dieta = dietaActiva,
             onNueva = onCrearDieta,
-            onEditar = onEditarDieta,
             onCambiar = { mostrarTodas = true }
         )
     } else {
@@ -44,7 +42,9 @@ fun DietaScreen(
                 viewModel.seleccionarDieta(dietaId)
                 mostrarTodas = false
             },
-            onEditarDieta = onEditarDieta,
+            onBorrarDieta = { dietaId ->
+                viewModel.borrarDieta(dietaId)
+            },
             mostrarBack = dietaActiva != null,
             onBack = { mostrarTodas = false }
         )

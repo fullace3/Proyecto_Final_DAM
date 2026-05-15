@@ -21,6 +21,9 @@ interface ApiService {
         @Body datos: UsuarioRequest
     ): Response<UsuarioResponse>
 
+    @DELETE("usuarios/{id}")
+    suspend fun eliminarUsuario(@Path("id") id: Int): Response<Unit>
+
     // ── EJERCICIOS ────────────────────────────
     @GET("ejercicios")
     suspend fun getEjercicios(): Response<List<EjercicioResponse>>
@@ -83,9 +86,11 @@ interface ApiService {
     @POST("dietas")
     suspend fun crearDieta(@Body datos: DietaRequest): Response<DietaResponse>
 
+    @DELETE("dietas/{id}")
+    suspend fun borrarDieta(@Path("id") dietaId: Int): Response<Unit>
+
     @PUT("dietas/{id}")
     suspend fun actualizarDieta(@Path("id") dietaId: Int, @Body datos: DietaRequest): Response<DietaResponse>
-
     @PUT("dietas/{id}/activar")
     suspend fun activarDieta(@Path("id") dietaId: Int): Response<DietaResponse>
 

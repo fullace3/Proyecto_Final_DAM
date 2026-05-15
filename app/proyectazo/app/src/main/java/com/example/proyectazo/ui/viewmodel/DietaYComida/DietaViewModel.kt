@@ -38,6 +38,7 @@ class DietaViewModel(context: Context) : ViewModel() {
 
     fun cargar() {
         viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
             try {
                 val resp = api.getDietasUsuario(userId)
                 if (resp.isSuccessful) {
@@ -67,6 +68,17 @@ class DietaViewModel(context: Context) : ViewModel() {
             try {
                 api.activarDieta(dietaId)
                 cargar()
+            } catch (_: Exception) {}
+        }
+    }
+
+    fun borrarDieta(dietaId: Int) {
+        viewModelScope.launch {
+            try {
+                val resp = api.borrarDieta(dietaId)
+                if (resp.isSuccessful) {
+                    cargar()
+                }
             } catch (_: Exception) {}
         }
     }

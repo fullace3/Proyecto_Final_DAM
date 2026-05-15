@@ -26,8 +26,7 @@ fun TodasLasDietasScreen(
     isLoading: Boolean = false,
     onCrearDieta: () -> Unit,
     onSeleccionarDieta: (Int) -> Unit,
-    onEditarDieta: (Int) -> Unit,
-    onBorrarDieta: (Int) -> Unit = {}, // Añadido con valor por defecto
+    onBorrarDieta: (Int) -> Unit = {},
     mostrarBack: Boolean = false,
     onBack: () -> Unit = {}
 ) {
@@ -106,7 +105,6 @@ fun TodasLasDietasScreen(
                     ItemDietaCard(
                         dieta = dieta,
                         onSelect = { onSeleccionarDieta(dieta.id) },
-                        onEditar = { onEditarDieta(dieta.id) },
                         onBorrar = { onBorrarDieta(dieta.id) }
                     )
                 }
@@ -121,7 +119,6 @@ fun TodasLasDietasScreen(
 private fun ItemDietaCard(
     dieta: DietaListItem,
     onSelect: () -> Unit,
-    onEditar: () -> Unit,
     onBorrar: () -> Unit
 ) {
     var menuExpandido by remember { mutableStateOf(false) }
@@ -182,14 +179,6 @@ private fun ItemDietaCard(
                         expanded = menuExpandido,
                         onDismissRequest = { menuExpandido = false }
                     ) {
-                        DropdownMenuItem(
-                            text = { Text("Editar") },
-                            onClick = {
-                                menuExpandido = false
-                                onEditar()
-                            },
-                            leadingIcon = { Icon(Icons.Filled.Edit, null, modifier = Modifier.size(18.dp)) }
-                        )
                         DropdownMenuItem(
                             text = { Text("Borrar", color = MaterialTheme.colorScheme.error) },
                             onClick = {
