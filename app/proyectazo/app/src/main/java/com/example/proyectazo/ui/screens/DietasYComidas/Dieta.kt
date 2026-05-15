@@ -1,22 +1,51 @@
 package com.example.proyectazo.ui.screens.DietasYComidas
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyectazo.ui.viewmodel.DietaYComida.DietaViewModel
 
 @Composable
-fun DietaScreen(onCrearDieta: () -> Unit = {}) {
+fun DietaScreen(
+    onCrearDieta: () -> Unit = {},
+    onEditarDieta: (Int) -> Unit = {}
+) {
     val context = LocalContext.current
     val viewModel: DietaViewModel = viewModel(
         factory = DietaViewModel.Factory(context)
     )
     val uiState by viewModel.uiState.collectAsState()
+    var mostrarTodas by remember { mutableStateOf(false) }
 
-    TodasLasDietasScreen(
-        dietas = uiState.dietas,
-        isLoading = uiState.isLoading,
-        onCrearDieta = onCrearDieta,
-        onSeleccionarDieta = { dietaId -> viewModel.seleccionarDieta(dietaId) }
-    )
+    val dietaActiva = uiState.dietas.find { it.activo }
+
+    if (uiState.isLoading) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+    } else if (dietaActiva != null && !mostrarTodas) {
+        DietaActivaScreen(
+            dieta = dietaActiva,
+            onNueva = onCrearDieta,
+            onEditar = onEditarDieta,
+            onCambiar = { mostrarTodas = true }
+        )
+    } else {
+        TodasLasDietasScreen(
+            dietas = uiState.dietas,
+            isLoading = false,
+            onCrearDieta = onCrearDieta,
+            onSeleccionarDieta = { dietaId ->
+                viewModel.seleccionarDieta(dietaId)
+                mostrarTodas = false
+            },
+            mostrarBack = dietaActiva != null,
+            onBack = { mostrarTodas = false }
+        )
+    }
 }

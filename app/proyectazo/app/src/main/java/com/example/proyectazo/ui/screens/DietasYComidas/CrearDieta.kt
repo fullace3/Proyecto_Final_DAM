@@ -14,23 +14,23 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.proyectazo.ui.viewmodel.DietaYComida.CrearDietaViewModel
 import com.example.proyectazo.ui.viewmodel.DietaYComida.AlimentoItem
+import com.example.proyectazo.ui.viewmodel.DietaYComida.CrearDietaViewModel
 
 @Composable
 fun CrearDietaScreen(
     onBack: () -> Unit,
     onGuardadoExitoso: () -> Unit,
-    onAñadirAlimento: (String) -> Unit = {},
+    onAñadirAlimento: (String, String) -> Unit = { _, _ -> },
     comidaAñadida: Triple<Int, String, Int>? = null,
     comidaAñadidaMacros: Triple<Int, Int, Int>? = null,
     comidaTipo: String? = null,
+    comidaDia: String? = null,
     onComidaConsumida: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -38,7 +38,7 @@ fun CrearDietaScreen(
         factory = CrearDietaViewModel.Factory(context)
     )
     val uiState by viewModel.uiState.collectAsState()
-    var diaSeleccionado by remember { mutableStateOf("Lun") }
+    var diaSeleccionado by remember { mutableStateOf(comidaDia ?: "Lun") }
     var editandoNombre by remember { mutableStateOf(false) }
 
     // Añadir comida cuando llega de DetalleComidaScreen
@@ -54,7 +54,7 @@ fun CrearDietaScreen(
                     proteinas = proteinas,
                     carbohidratos = carbos,
                     grasas = grasas,
-                    dia = diaSeleccionado,
+                    dia = comidaDia ?: diaSeleccionado,
                     tipo = comidaTipo ?: "Desayuno"
                 )
             )
@@ -120,7 +120,7 @@ fun CrearDietaScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp),
                         singleLine = true,
-                        textStyle = TextStyle(
+                        textStyle = androidx.compose.ui.text.TextStyle(
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
@@ -248,7 +248,7 @@ fun CrearDietaScreen(
                     titulo = "Desayuno",
                     alimentos = uiState.alimentos.filter { it.tipo == "Desayuno" && (it.dia == null || it.dia == diaSeleccionado) },
                     inicialmenteExpandido = true,
-                    onAgregarAlimento = { onAñadirAlimento("Desayuno") },
+                    onAgregarAlimento = { onAñadirAlimento("Desayuno", diaSeleccionado) },
                     onEliminarAlimento = { uid -> viewModel.eliminarAlimento(uid) }
                 )
 
@@ -257,7 +257,7 @@ fun CrearDietaScreen(
                     titulo = "Comida",
                     alimentos = uiState.alimentos.filter { it.tipo == "Comida" && (it.dia == null || it.dia == diaSeleccionado) },
                     inicialmenteExpandido = false,
-                    onAgregarAlimento = { onAñadirAlimento("Comida") },
+                    onAgregarAlimento = { onAñadirAlimento("Comida", diaSeleccionado) },
                     onEliminarAlimento = { uid -> viewModel.eliminarAlimento(uid) }
                 )
 
@@ -266,7 +266,7 @@ fun CrearDietaScreen(
                     titulo = "Cena",
                     alimentos = uiState.alimentos.filter { it.tipo == "Cena" && (it.dia == null || it.dia == diaSeleccionado) },
                     inicialmenteExpandido = false,
-                    onAgregarAlimento = { onAñadirAlimento("Cena") },
+                    onAgregarAlimento = { onAñadirAlimento("Cena", diaSeleccionado) },
                     onEliminarAlimento = { uid -> viewModel.eliminarAlimento(uid) }
                 )
             }

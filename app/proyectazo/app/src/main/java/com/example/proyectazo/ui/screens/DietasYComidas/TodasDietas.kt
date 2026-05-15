@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.proyectazo.ui.components.SmartFitTopBar
 import com.example.proyectazo.ui.viewmodel.DietaYComida.DietaListItem
 
 @Composable
@@ -22,9 +23,16 @@ fun TodasLasDietasScreen(
     dietas: List<DietaListItem> = emptyList(),
     isLoading: Boolean = false,
     onCrearDieta: () -> Unit,
-    onSeleccionarDieta: (Int) -> Unit
+    onSeleccionarDieta: (Int) -> Unit,
+    mostrarBack: Boolean = false,
+    onBack: () -> Unit = {}
 ) {
     Scaffold(
+        topBar = {
+            if (mostrarBack) {
+                SmartFitTopBar(titulo = "Todas las dietas", onBack = onBack)
+            }
+        },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onCrearDieta,
@@ -42,57 +50,42 @@ fun TodasLasDietasScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            item {
-                Text(
-                    "Todas las dietas",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+            if (!mostrarBack) {
+                item {
+                    Text(
+                        "Todas las dietas",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             }
 
             if (isLoading) {
                 item {
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(32.dp),
+                        modifier = Modifier.fillMaxWidth().padding(32.dp),
                         contentAlignment = Alignment.Center
                     ) { CircularProgressIndicator() }
                 }
             } else if (dietas.isEmpty()) {
                 item {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(32.dp),
+                        modifier = Modifier.fillMaxWidth().padding(32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(
-                            "No hay dietas creadas",
-                            fontSize = 16.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
+                        Text("No hay dietas creadas", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
                         Spacer(Modifier.height(8.dp))
-                        Text(
-                            "Crea una nueva para empezar",
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
+                        Text("Crea una nueva para empezar", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
                     }
                 }
             } else {
                 items(dietas) { dieta ->
-                    ItemDietaCard(
-                        dieta = dieta,
-                        onSelect = { onSeleccionarDieta(dieta.id) }
-                    )
+                    ItemDietaCard(dieta = dieta, onSelect = { onSeleccionarDieta(dieta.id) })
                 }
             }
 
@@ -112,9 +105,7 @@ private fun ItemDietaCard(dieta: DietaListItem, onSelect: () -> Unit) {
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -122,75 +113,40 @@ private fun ItemDietaCard(dieta: DietaListItem, onSelect: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        dieta.nombre,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Text(dieta.nombre, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                     if (dieta.activo) {
                         Spacer(Modifier.width(8.dp))
-                        Surface(
-                            shape = RoundedCornerShape(4.dp),
-                            color = MaterialTheme.colorScheme.primary
-                        ) {
-                            Text(
-                                "ACTIVA",
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
+                        Surface(shape = RoundedCornerShape(4.dp), color = MaterialTheme.colorScheme.primary) {
+                            Text("ACTIVA", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                         }
                     }
                 }
                 IconButton(onClick = { }, modifier = Modifier.size(32.dp)) {
-                    Icon(
-                        imageVector = Icons.Filled.MoreVert,
-                        contentDescription = "Opciones",
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Icon(Icons.Filled.MoreVert, contentDescription = "Opciones", modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
 
             Spacer(Modifier.height(12.dp))
 
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
+                modifier = Modifier.fillMaxWidth().padding(12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
                     Text("Calorías", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(
-                        "${dieta.calorias} kcal",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Text("${dieta.calorias} kcal", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                 }
-                Text(
-                    "${dieta.proteinas.toInt()}g | ${dieta.carbohidratos.toInt()}g | ${dieta.grasas.toInt()}g",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Text("${dieta.proteinas.toInt()}g | ${dieta.carbohidratos.toInt()}g | ${dieta.grasas.toInt()}g", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
-            Spacer(Modifier.height(12.dp))
-
             if (!dieta.activo) {
+                Spacer(Modifier.height(12.dp))
                 Button(
                     onClick = onSelect,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(40.dp),
+                    modifier = Modifier.fillMaxWidth().height(40.dp),
                     shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text("Seleccionar", fontSize = 14.sp)
-                }
+                ) { Text("Seleccionar", fontSize = 14.sp) }
             }
         }
     }

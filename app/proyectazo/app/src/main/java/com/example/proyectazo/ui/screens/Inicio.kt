@@ -256,6 +256,10 @@ private fun TarjetaEntreno(dia: Int, estado: EntrenoDelDia) {
 
 @Composable
 private fun TarjetaDieta(estado: DietaDelDia) {
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("smartfit_session", android.content.Context.MODE_PRIVATE) }
+    val dietaProgreso = prefs.getFloat("dieta_progreso", 0f)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -267,85 +271,41 @@ private fun TarjetaDieta(estado: DietaDelDia) {
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
-
             when (estado) {
-
                 is DietaDelDia.Cargando -> {
                     CircularProgressIndicator(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .align(Alignment.CenterHorizontally),
+                        modifier = Modifier.size(24.dp).align(Alignment.CenterHorizontally),
                         strokeWidth = 2.dp
                     )
                 }
-
                 is DietaDelDia.SinDieta -> {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Restaurant,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "Sin dieta activa",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Icon(Icons.Default.Restaurant, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Sin dieta activa", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
-
                 is DietaDelDia.ConDieta -> {
                     val dieta = estado.dieta
+                    val calRestantes = dieta.objetivo_calorico - (dieta.objetivo_calorico * dietaProgreso).toInt()
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Restaurant,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = dieta.nombre,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                        Icon(Icons.Default.Restaurant, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(dieta.nombre, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                     }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
+                    Spacer(Modifier.height(6.dp))
+                    Text("$calRestantes cal restantes", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(Modifier.height(6.dp))
                     LinearProgressIndicator(
-                        progress = { 0.4f },
-                        modifier = Modifier
-                            .fillMaxWidth(0.6f)
-                            .height(6.dp)
-                            .clip(RoundedCornerShape(50)),
+                        progress = { dietaProgreso },
+                        modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(50)),
                         color = MaterialTheme.colorScheme.primary,
                         trackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
                     )
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    Text(
-                        text = "Objetivo: ${dieta.objetivo_calorico} kcal · " +
-                                "P ${dieta.proteinas_g.toInt()}g · " +
-                                "C ${dieta.carbohidratos_g.toInt()}g · " +
-                                "G ${dieta.grasas_g.toInt()}g",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 }
-
                 is DietaDelDia.Error -> {
-                    Text(
-                        text = estado.mensaje,
-                        fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.error
-                    )
+                    Text(estado.mensaje, fontSize = 14.sp, color = MaterialTheme.colorScheme.error)
                 }
             }
         }

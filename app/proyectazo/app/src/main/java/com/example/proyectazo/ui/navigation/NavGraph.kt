@@ -17,6 +17,7 @@ import androidx.navigation.navArgument
 import com.example.proyectazo.ui.screens.RutinasYEjercicio.AñadirEjercicioScreen
 import com.example.proyectazo.ui.screens.ProgresoYRegistros.AñadirRegistroScreen
 import com.example.proyectazo.ui.screens.RutinasYEjercicio.CrearRutinaScreen
+import com.example.proyectazo.ui.screens.RutinasYEjercicio.DetalleEjercicioScreen
 import com.example.proyectazo.ui.screens.RutinasYEjercicio.DetallesRutinaScreen
 import com.example.proyectazo.ui.screens.RutinasYEjercicio.EditarRutinaScreen
 import com.example.proyectazo.ui.screens.RutinasYEjercicio.EntrenarScreen
@@ -27,16 +28,14 @@ import com.example.proyectazo.ui.screens.DietasYComidas.ListaComidasScreen
 import com.example.proyectazo.ui.screens.DietasYComidas.DetalleComidaScreen
 import com.example.proyectazo.ui.screens.PerfilYAjustes.EditarPerfilScreen
 import com.example.proyectazo.ui.screens.PerfilYAjustes.PantallaPerfil
-import com.example.proyectazo.ui.screens.PreferenciasScreen
-import com.example.proyectazo.ui.screens.TerminosCondicionesScreen
+import com.example.proyectazo.ui.screens.PerfilYAjustes.PreferenciasScreen
+import com.example.proyectazo.ui.screens.PerfilYAjustes.TerminosCondicionesScreen
 import com.example.proyectazo.ui.screens.ProgresoYRegistros.PantallaProgreso
 import com.example.proyectazo.ui.screens.RutinasYEjercicio.ResultadoEntrenamiento
 import com.example.proyectazo.ui.screens.Sesion.PantallaIncioSesion
 import com.example.proyectazo.ui.screens.PantallaInicio
 import com.example.proyectazo.ui.screens.Sesion.PantallaRegistro
 import com.example.proyectazo.ui.screens.RutinasYEjercicio.PantallaRutinas
-import com.example.proyectazo.ui.viewmodel.DietaYComida.DietaViewModel
-import com.example.proyectazo.ui.viewmodel.PerfilYAjustes.PerfilViewModel
 import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.RutinaConEjercicios
 
 @Composable
@@ -183,8 +182,8 @@ fun NavGraph(
         composable(Screen.Dieta.route) { backStackEntry ->
             val recargar = backStackEntry.savedStateHandle.get<Boolean>("recargar") ?: false
             val context = androidx.compose.ui.platform.LocalContext.current
-            val dietaViewModel: DietaViewModel = viewModel(
-                factory = DietaViewModel.Factory(context)
+            val dietaViewModel: com.example.proyectazo.ui.viewmodel.DietaYComida.DietaViewModel = viewModel(
+                factory = com.example.proyectazo.ui.viewmodel.DietaYComida.DietaViewModel.Factory(context)
             )
 
             LaunchedEffect(recargar) {
@@ -195,7 +194,8 @@ fun NavGraph(
             }
 
             DietaScreen(
-                onCrearDieta = { navController.navigate("crear_dieta") }
+                onCrearDieta = { navController.navigate("crear_dieta") },
+                onEditarDieta = { dietaId -> navController.navigate("editar_dieta/$dietaId") }
             )
         }
 
@@ -209,6 +209,7 @@ fun NavGraph(
             val comidaCarbos = savedState.get<Int>("comida_carbos")
             val comidaGrasas = savedState.get<Int>("comida_grasas")
             val comidaTipo = savedState.get<String>("comida_tipo")
+            val comidaDia = savedState.get<String>("comida_dia")
 
             CrearDietaScreen(
                 onBack = { navController.popBackStack() },
@@ -216,8 +217,9 @@ fun NavGraph(
                     navController.previousBackStackEntry?.savedStateHandle?.set("recargar", true)
                     navController.popBackStack()
                 },
-                onAñadirAlimento = { tipo ->
+                onAñadirAlimento = { tipo, dia ->
                     savedState["comida_tipo"] = tipo
+                    savedState["comida_dia"] = dia
                     navController.navigate("lista_comidas")
                 },
                 comidaAñadida = if (comidaId != null && comidaNombre != null) {
@@ -227,6 +229,7 @@ fun NavGraph(
                     Triple(comidaProteinas ?: 0, comidaCarbos ?: 0, comidaGrasas ?: 0)
                 } else null,
                 comidaTipo = comidaTipo,
+                comidaDia = comidaDia,
                 onComidaConsumida = {
                     savedState.remove<Int>("comida_id")
                     savedState.remove<String>("comida_nombre")
@@ -235,6 +238,7 @@ fun NavGraph(
                     savedState.remove<Int>("comida_carbos")
                     savedState.remove<Int>("comida_grasas")
                     savedState.remove<String>("comida_tipo")
+                    savedState.remove<String>("comida_dia")
                 }
             )
         }
@@ -291,8 +295,8 @@ fun NavGraph(
             val perfilEntry = remember {
                 navController.getBackStackEntry(Screen.Perfil.route)
             }
-            val perfilViewModel: PerfilViewModel =
-                viewModel(perfilEntry, factory = PerfilViewModel.Factory(context))
+            val perfilViewModel: com.example.proyectazo.ui.viewmodel.PerfilYAjustes.PerfilViewModel =
+                viewModel(perfilEntry, factory = com.example.proyectazo.ui.viewmodel.PerfilYAjustes.PerfilViewModel.Factory(context))
 
             PantallaPerfil(
                 viewModel = perfilViewModel,
@@ -312,8 +316,8 @@ fun NavGraph(
             val perfilEntry = remember {
                 navController.getBackStackEntry(Screen.Perfil.route)
             }
-            val perfilViewModel: PerfilViewModel =
-                viewModel(perfilEntry, factory = PerfilViewModel.Factory(context))
+            val perfilViewModel: com.example.proyectazo.ui.viewmodel.PerfilYAjustes.PerfilViewModel =
+                viewModel(perfilEntry, factory = com.example.proyectazo.ui.viewmodel.PerfilYAjustes.PerfilViewModel.Factory(context))
 
             EditarPerfilScreen(
                 onBack = { navController.popBackStack() },
