@@ -40,15 +40,14 @@ fun DietaActivaScreen(
     var comidaCheck by remember { mutableStateOf(false) }
     var cenaCheck by remember { mutableStateOf(false) }
 
-    // Calcular progreso basado en checks
-    val comidasCompletadas = listOf(desayunoCheck, comidaCheck, cenaCheck).count { it }
-    val progreso = comidasCompletadas / 3f
-    val calConsumidas = ((dieta.calorias * progreso).toInt())
-    val calRestantes = dieta.calorias - calConsumidas
-
-    val protActual = (dieta.proteinas * progreso).toInt()
-    val carbActual = (dieta.carbohidratos * progreso).toInt()
-    val grasActual = (dieta.grasas * progreso).toInt()
+    // TODO: Cargar alimentos reales de DIETA_COMIDA
+    // Por ahora todo a 0 hasta que haya comidas registradas
+    val calConsumidas = 0
+    val calRestantes = dieta.calorias
+    val progreso = 0f
+    val protActual = 0
+    val carbActual = 0
+    val grasActual = 0
 
     // Guardar progreso para que Inicio lo lea
     LaunchedEffect(progreso) {

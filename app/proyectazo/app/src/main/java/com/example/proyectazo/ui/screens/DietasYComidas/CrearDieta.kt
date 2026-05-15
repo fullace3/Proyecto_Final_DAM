@@ -19,8 +19,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.proyectazo.ui.viewmodel.DietaYComida.AlimentoItem
-import com.example.proyectazo.ui.viewmodel.DietaYComida.CrearDietaViewModel
+import com.example.proyectazo.ui.viewmodel.CrearDietaViewModel
+import com.example.proyectazo.ui.viewmodel.AlimentoItem
 
 @Composable
 fun CrearDietaScreen(
@@ -31,11 +31,12 @@ fun CrearDietaScreen(
     comidaAñadidaMacros: Triple<Int, Int, Int>? = null,
     comidaTipo: String? = null,
     comidaDia: String? = null,
-    onComidaConsumida: () -> Unit = {}
+    onComidaConsumida: () -> Unit = {},
+    dietaId: Int? = null
 ) {
     val context = LocalContext.current
     val viewModel: CrearDietaViewModel = viewModel(
-        factory = CrearDietaViewModel.Factory(context)
+        factory = CrearDietaViewModel.Factory(context, dietaId)
     )
     val uiState by viewModel.uiState.collectAsState()
     var diaSeleccionado by remember { mutableStateOf(comidaDia ?: "Lun") }

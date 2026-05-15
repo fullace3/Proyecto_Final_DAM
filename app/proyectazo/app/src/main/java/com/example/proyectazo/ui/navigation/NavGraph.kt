@@ -244,11 +244,26 @@ fun NavGraph(
         }
 
         // ── LISTA COMIDAS ────────────────────────────────────────
-        composable("lista_comidas") {
+        composable("lista_comidas") { backStackEntry ->
+            // Si volvemos de detalle_comida con datos, reenviarlos a crear/editar dieta
+            val comidaId = backStackEntry.savedStateHandle.get<Int>("comida_id")
+            if (comidaId != null) {
+                val prev = navController.previousBackStackEntry
+                prev?.savedStateHandle?.set("comida_id", comidaId)
+                prev?.savedStateHandle?.set("comida_nombre", backStackEntry.savedStateHandle.get<String>("comida_nombre"))
+                prev?.savedStateHandle?.set("comida_calorias", backStackEntry.savedStateHandle.get<Int>("comida_calorias"))
+                prev?.savedStateHandle?.set("comida_proteinas", backStackEntry.savedStateHandle.get<Int>("comida_proteinas"))
+                prev?.savedStateHandle?.set("comida_carbos", backStackEntry.savedStateHandle.get<Int>("comida_carbos"))
+                prev?.savedStateHandle?.set("comida_grasas", backStackEntry.savedStateHandle.get<Int>("comida_grasas"))
+                backStackEntry.savedStateHandle.remove<Int>("comida_id")
+                navController.popBackStack()
+                return@composable
+            }
+
             ListaComidasScreen(
                 onBack = { navController.popBackStack() },
-                onComidaSeleccionada = { comidaId ->
-                    navController.navigate("detalle_comida/$comidaId")
+                onComidaSeleccionada = { id ->
+                    navController.navigate("detalle_comida/$id")
                 }
             )
         }
@@ -263,15 +278,66 @@ fun NavGraph(
                 comidaId = comidaId,
                 onBack = { navController.popBackStack() },
                 onAñadir = { id, nombre, calorias, proteinas, carbos, grasas ->
-                    val crearDietaEntry = navController.getBackStackEntry("crear_dieta")
-                    crearDietaEntry.savedStateHandle["comida_id"] = id
-                    crearDietaEntry.savedStateHandle["comida_nombre"] = nombre
-                    crearDietaEntry.savedStateHandle["comida_calorias"] = calorias
-                    crearDietaEntry.savedStateHandle["comida_proteinas"] = proteinas
-                    crearDietaEntry.savedStateHandle["comida_carbos"] = carbos
-                    crearDietaEntry.savedStateHandle["comida_grasas"] = grasas
-                    navController.popBackStack("crear_dieta", false)
+                    navController.previousBackStackEntry?.savedStateHandle?.let { handle ->
+                        handle["comida_id"] = id
+                        handle["comida_nombre"] = nombre
+                        handle["comida_calorias"] = calorias
+                        handle["comida_proteinas"] = proteinas
+                        handle["comida_carbos"] = carbos
+                        handle["comida_grasas"] = grasas
+                    }
+                    navController.popBackStack()
                 }
+            )
+        }
+
+        // ── EDITAR DIETA ─────────────────────────────────────────
+        composable(
+            "editar_dieta/{dietaId}",
+            arguments = listOf(navArgument("dietaId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val dietaId = backStackEntry.arguments?.getInt("dietaId") ?: 0
+            val savedState = backStackEntry.savedStateHandle
+            val comidaId = savedState.get<Int>("comida_id")
+            val comidaNombre = savedState.get<String>("comida_nombre")
+            val comidaCalorias = savedState.get<Int>("comida_calorias")
+            val comidaProteinas = savedState.get<Int>("comida_proteinas")
+            val comidaCarbos = savedState.get<Int>("comida_carbos")
+            val comidaGrasas = savedState.get<Int>("comida_grasas")
+            val comidaTipo = savedState.get<String>("comida_tipo")
+            val comidaDia = savedState.get<String>("comida_dia")
+
+            // Cargar datos de la dieta existente por dietaId
+            CrearDietaScreen(
+                onBack = { navController.popBackStack() },
+                onGuardadoExitoso = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("recargar", true)
+                    navController.popBackStack()
+                },
+                onAñadirAlimento = { tipo, dia ->
+                    savedState["comida_tipo"] = tipo
+                    savedState["comida_dia"] = dia
+                    navController.navigate("lista_comidas")
+                },
+                comidaAñadida = if (comidaId != null && comidaNombre != null) {
+                    Triple(comidaId, comidaNombre, comidaCalorias ?: 0)
+                } else null,
+                comidaAñadidaMacros = if (comidaId != null) {
+                    Triple(comidaProteinas ?: 0, comidaCarbos ?: 0, comidaGrasas ?: 0)
+                } else null,
+                comidaTipo = comidaTipo,
+                comidaDia = comidaDia,
+                onComidaConsumida = {
+                    savedState.remove<Int>("comida_id")
+                    savedState.remove<String>("comida_nombre")
+                    savedState.remove<Int>("comida_calorias")
+                    savedState.remove<Int>("comida_proteinas")
+                    savedState.remove<Int>("comida_carbos")
+                    savedState.remove<Int>("comida_grasas")
+                    savedState.remove<String>("comida_tipo")
+                    savedState.remove<String>("comida_dia")
+                },
+                dietaId = dietaId
             )
         }
 
@@ -290,9 +356,9 @@ fun NavGraph(
         }
 
         // ── PERFIL ────────────────────────────────────────────────
-        composable(Screen.Perfil.route) {
+        composable(Screen.Perfil.route) { navBackStackEntry ->
             val context = androidx.compose.ui.platform.LocalContext.current
-            val perfilEntry = remember {
+            val perfilEntry = remember(navBackStackEntry) {
                 navController.getBackStackEntry(Screen.Perfil.route)
             }
             val perfilViewModel: com.example.proyectazo.ui.viewmodel.PerfilYAjustes.PerfilViewModel =
@@ -311,9 +377,9 @@ fun NavGraph(
         }
 
         // ── EDITAR PERFIL ──────────────────────────────────────────
-        composable("editar_perfil") {
+        composable("editar_perfil") { navBackStackEntry ->
             val context = androidx.compose.ui.platform.LocalContext.current
-            val perfilEntry = remember {
+            val perfilEntry = remember(navBackStackEntry) {
                 navController.getBackStackEntry(Screen.Perfil.route)
             }
             val perfilViewModel: com.example.proyectazo.ui.viewmodel.PerfilYAjustes.PerfilViewModel =

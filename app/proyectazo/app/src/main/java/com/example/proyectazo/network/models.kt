@@ -89,6 +89,23 @@ data class DietaResponse(
     val activo: Boolean = false
 )
 
+// ── DIETA-COMIDA ─────────────────────────────
+data class DietaComidaRequest(
+    val id_dieta: Int,
+    val id_comida: Int,
+    val tipo: String,
+    val dia: String
+)
+
+data class DietaComidaResponse(
+    val id: Int,
+    val id_dieta: Int,
+    val id_comida: Int,
+    val tipo: String,
+    val dia: String,
+    val comida: ComidaResponse? = null
+)
+
 // ── COMIDA ────────────────────────────────────
 data class ComidaRequest(
     val nombre: String,

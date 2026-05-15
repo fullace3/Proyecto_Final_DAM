@@ -33,14 +33,6 @@ Icono realizado por Cube29 de www.flaticon.com
 https://www.flaticon.es/autores/freepik
 Icono realizado por Freepik de www.flaticon.com
 
-Sentado icono creado por Loremm de www.flaticon.com
-
-Persona icono creado por Uniconlabs de www.flaticon.com
-
-Caminante icono creado por Trazobana de www.flaticon.com
-
-Correr icono creado por Smashicons de www.flaticon.com
-
 Datos nutricionales proporcionados por el USDA, FoodData Central.
                 """.trimIndent(),
                 fontSize = 13.sp,
