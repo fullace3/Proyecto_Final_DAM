@@ -1,5 +1,9 @@
 package com.example.proyectazo.ui.screens.DietasYComidas
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -21,6 +25,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyectazo.ui.viewmodel.CrearDietaViewModel
 import com.example.proyectazo.ui.viewmodel.AlimentoItem
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 
 @Composable
 fun CrearDietaScreen(
@@ -333,7 +340,17 @@ private fun SeccionComidaInline(
                 Text(if (expanded) "▲" else "▼", fontSize = 12.sp)
             }
         }
-        if (expanded) {
+        AnimatedVisibility(
+            visible = expanded,
+            enter = expandVertically(animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow
+            )),
+            exit = shrinkVertically(animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow
+            ))
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

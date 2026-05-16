@@ -25,6 +25,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
 import com.example.proyectazo.ui.viewmodel.DietaYComida.DietaListItem
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+
 
 @Composable
 fun DietaActivaScreen(
@@ -307,7 +312,17 @@ private fun SeccionRegistro(
         }
     }
 
-    if (expanded) {
+    AnimatedVisibility(
+        visible = expanded,
+        enter = expandVertically(animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        )),
+        exit = shrinkVertically(animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ))
+    ) {
         Text(
             "Sin alimentos registrados",
             fontSize = 12.sp,
