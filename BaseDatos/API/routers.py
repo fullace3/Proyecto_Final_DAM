@@ -63,14 +63,20 @@ def actualizar_usuario(id_usuario: int, datos: schemas.UsuarioCreate, db: Sessio
     usuario = db.query(models.Usuario).filter(models.Usuario.id_usuario == id_usuario).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    usuario.nombre        = datos.nombre
-    usuario.email         = datos.email
-    usuario.password_hash = hashear(datos.password)
+    
+    usuario.nombre = datos.nombre
+    usuario.email  = datos.email
+    
+    # Solo actualizar contraseña si se manda una no vacía
+    if datos.password and datos.password.strip():
+        usuario.password_hash = hashear(datos.password)
+    
     if datos.horario_entrenamiento:
         t = datetime.strptime(datos.horario_entrenamiento, "%H:%M:%S").time()
         usuario.horario_entrenamiento = t
     else:
         usuario.horario_entrenamiento = None
+    
     db.commit()
     db.refresh(usuario)
     return usuario
