@@ -34,12 +34,12 @@ class ConfiguracionInicialViewModel(private val context: Context) : ViewModel() 
 
     fun onPesoChange(v: String) = _uiState.update { it.copy(peso = v, errorPeso = null) }
     fun onAlturaChange(v: String) = _uiState.update { it.copy(altura = v, errorAltura = null) }
-    fun onHoraChange(hora: Int, minuto: Int) = _uiState.update { it.copy(horaEntrenamiento = Pair(hora, minuto)) }
+    fun onHoraChange(hora: Int, minuto: Int) =
+        _uiState.update { it.copy(horaEntrenamiento = Pair(hora, minuto)) }
 
     fun guardar(onExitoso: () -> Unit) {
         val state = _uiState.value
 
-        // Validaciones
         val pesoNum = state.peso.toDoubleOrNull()
         val alturaNum = state.altura.toDoubleOrNull()
         var hayError = false
@@ -57,38 +57,31 @@ class ConfiguracionInicialViewModel(private val context: Context) : ViewModel() 
         _uiState.update { it.copy(isLoading = true, error = null) }
 
         viewModelScope.launch {
+            // Intentar guardar medida pero no bloquear si falla
             try {
-                // Guardar peso y altura como medida corporal inicial
-                val resp = api.registrarMedida(
+                api.registrarMedida(
                     MedidaRequest(
                         id_usuario = userId,
                         peso_kg = pesoNum!!,
                         altura_cm = alturaNum
                     )
                 )
-
-                if (resp.isSuccessful) {
-                    // Guardar hora de entrenamiento y flag de configuración en SharedPreferences
-                    val horaStr = "%02d:%02d".format(
-                        state.horaEntrenamiento.first,
-                        state.horaEntrenamiento.second
-                    )
-                    context.getSharedPreferences("smartfit_session", Context.MODE_PRIVATE)
-                        .edit()
-                        .putBoolean("configuracion_completada", true)
-                        .putString("hora_entrenamiento", horaStr)
-                        .apply()
-
-                    _uiState.update { it.copy(isLoading = false, guardadoExitoso = true) }
-                    onExitoso()
-                } else {
-                    _uiState.update {
-                        it.copy(isLoading = false, error = "Error al guardar: ${resp.code()}")
-                    }
-                }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            } catch (_: Exception) {
             }
+
+            // Guardar flag SIEMPRE, independientemente de si la API funcionó
+            val horaStr = "%02d:%02d".format(
+                state.horaEntrenamiento.first,
+                state.horaEntrenamiento.second
+            )
+            context.getSharedPreferences("smartfit_config", Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean("configuracion_completada_$userId", true)
+                .putString("hora_entrenamiento", horaStr)
+                .apply()
+
+            _uiState.update { it.copy(isLoading = false, guardadoExitoso = true) }
+            onExitoso()
         }
     }
 

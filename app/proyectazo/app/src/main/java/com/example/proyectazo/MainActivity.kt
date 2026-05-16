@@ -1,5 +1,6 @@
 package com.example.proyectazo
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -24,11 +25,19 @@ import com.example.proyectazo.navigation.SmartFitNavigationBar
 import com.example.proyectazo.navigation.screensWithoutNav
 import com.example.proyectazo.network.SessionManager
 import com.example.proyectazo.ui.theme.ProyectazoTheme
+import com.example.proyectazo.notificaciones.NotificationHelper
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermissions(
+                arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                0
+            )
+        }
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        NotificationHelper.crearCanal(this)
         val sessionManager = SessionManager(this)
         setContent {
             ProyectazoTheme {

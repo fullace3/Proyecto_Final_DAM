@@ -22,7 +22,8 @@ val screensWithoutNav = listOf(
     "terminos_condiciones",
     "crear_dieta",
     "preferencias",
-    "terminos_condiciones"
+    "terminos_condiciones",
+    "configuracion_inicial"
 )
 
 data class NavItem(

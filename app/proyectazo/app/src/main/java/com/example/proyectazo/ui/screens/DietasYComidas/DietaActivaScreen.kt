@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
@@ -34,10 +35,11 @@ fun DietaActivaScreen(
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("smartfit_session", android.content.Context.MODE_PRIVATE) }
 
-    var fabExpanded by remember { mutableStateOf(false) }
-    var desayunoCheck by remember { mutableStateOf(false) }
-    var comidaCheck by remember { mutableStateOf(false) }
-    var cenaCheck by remember { mutableStateOf(false) }
+    var fabExpanded by rememberSaveable { mutableStateOf(false) }
+    var desayunoCheck by rememberSaveable { mutableStateOf(false) }
+    var comidaCheck by rememberSaveable { mutableStateOf(false) }
+    var cenaCheck by rememberSaveable { mutableStateOf(false) }
+
 
     // TODO: Cargar alimentos reales de DIETA_COMIDA
     // Por ahora todo a 0 hasta que haya comidas registradas
@@ -252,7 +254,7 @@ private fun SeccionRegistro(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
+    var expanded by rememberSaveable { mutableStateOf(false) }
 
     Row(
         modifier = Modifier

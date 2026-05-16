@@ -8,6 +8,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,6 +26,7 @@ import com.example.proyectazo.ui.viewmodel.PerfilYAjustes.PreferenciasViewModel
 fun PreferenciasScreen(
     onBack: () -> Unit,
     onTerminos: () -> Unit,
+    onHoraEntrenamiento: () -> Unit,
     onEliminarCuenta: () -> Unit
 ) {
     val context = LocalContext.current
@@ -33,28 +35,29 @@ fun PreferenciasScreen(
     )
     val uiState by viewModel.uiState.collectAsState()
 
+    // Leer hora guardada para mostrarla como subtítulo
+    val prefs = remember {
+        context.getSharedPreferences("smartfit_config", android.content.Context.MODE_PRIVATE)
+    }
+    val horaGuardada = prefs.getString("hora_entrenamiento", "20:00") ?: "20:00"
+
     var mostrarDialogo by remember { mutableStateOf(false) }
 
-    // ── Diálogo confirmación eliminar cuenta ──────────────────────────────
     if (mostrarDialogo) {
         AlertDialog(
             onDismissRequest = { mostrarDialogo = false },
             title = { Text("Eliminar cuenta") },
             text = { Text("¿Estás seguro? Esta acción no se puede deshacer y perderás todos tus datos.") },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        mostrarDialogo = false
-                        viewModel.eliminarCuenta(onEliminarCuenta)
-                    }
-                ) {
+                TextButton(onClick = {
+                    mostrarDialogo = false
+                    viewModel.eliminarCuenta(onEliminarCuenta)
+                }) {
                     Text("Eliminar", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { mostrarDialogo = false }) {
-                    Text("Cancelar")
-                }
+                TextButton(onClick = { mostrarDialogo = false }) { Text("Cancelar") }
             }
         )
     }
@@ -73,6 +76,56 @@ fun PreferenciasScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             Spacer(Modifier.height(16.dp))
+
+            // ── Sección Notificaciones ────────────────────────────────────
+            Text(
+                "Notificaciones",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                elevation = CardDefaults.cardElevation(0.dp)
+            ) {
+                Surface(onClick = onHoraEntrenamiento, color = MaterialTheme.colorScheme.surfaceContainer) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Filled.Notifications,
+                            null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Hora del entrenamiento", fontSize = 15.sp)
+                            Text(
+                                horaGuardada,
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Icon(
+                            Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
 
             // ── Sección Legal ─────────────────────────────────────────────
             Text(
@@ -93,32 +146,36 @@ fun PreferenciasScreen(
             ) {
                 Surface(onClick = onTerminos, color = MaterialTheme.colorScheme.surfaceContainer) {
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Filled.Description, null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+                        Icon(
+                            Icons.Filled.Description,
+                            null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                         Spacer(Modifier.width(16.dp))
                         Text("Términos y condiciones", fontSize = 15.sp, modifier = Modifier.weight(1f))
-                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Icon(
+                            Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
 
-            // ── Error ─────────────────────────────────────────────────────
             uiState.error?.let {
                 Spacer(Modifier.height(8.dp))
-                Text(
-                    it,
-                    color = MaterialTheme.colorScheme.error,
-                    fontSize = 13.sp,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
+                Text(it, color = MaterialTheme.colorScheme.error, fontSize = 13.sp, modifier = Modifier.padding(horizontal = 16.dp))
             }
         }
 
         Spacer(Modifier.height(16.dp))
 
-        // ── Botón eliminar cuenta ─────────────────────────────────────────
         Button(
             onClick = { mostrarDialogo = true },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(52.dp),

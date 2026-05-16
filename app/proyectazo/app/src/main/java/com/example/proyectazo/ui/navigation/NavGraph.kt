@@ -39,6 +39,8 @@ import com.example.proyectazo.ui.screens.RutinasYEjercicio.PantallaRutinas
 import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.RutinaConEjercicios
 import androidx.compose.runtime.collectAsState
 import com.example.proyectazo.ui.screens.Sesion.ConfiguracionInicialScreen
+import com.example.proyectazo.ui.screens.PerfilYAjustes.HoraEntrenamientoScreen
+
 
 @Composable
 fun NavGraph(
@@ -58,21 +60,32 @@ fun NavGraph(
 
         // ── LOGIN ────────────────────────────────────────────────
         composable(Screen.Login.route) {
+            val context = androidx.compose.ui.platform.LocalContext.current
             PantallaIncioSesion(
                 onLoginExitoso = {
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
+                    val userId = com.example.proyectazo.network.SessionManager(context).getUserId()
+                    val configurado = context
+                        .getSharedPreferences("smartfit_config", android.content.Context.MODE_PRIVATE)
+                        .getBoolean("configuracion_completada_$userId", false)
+                    android.util.Log.d("CONFIG_CHECK", "userId=$userId, configurado=$configurado")
+                    if (configurado) {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate("configuracion_inicial") {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
                     }
                 },
                 onRegisterClick = { navController.navigate(Screen.Register.route) }
             )
         }
-
         // ── REGISTER ─────────────────────────────────────────────
         composable(Screen.Register.route) {
             PantallaRegistro(
                 onRegistroExitoso = {
-                    navController.navigate("configuracion_inicial") {
+                    navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Register.route) { inclusive = true }
                     }
                 },
@@ -82,9 +95,9 @@ fun NavGraph(
 
         composable("configuracion_inicial") {
             ConfiguracionInicialScreen(
-                onBack = { navController.popBackStack() },
+                onBack = { /* no permite volver */ },
                 onConfigurado = {
-                    navController.navigate(Screen.Login.route) {
+                    navController.navigate(Screen.Home.route) {
                         popUpTo(0) { inclusive = true }
                     }
                 }
@@ -366,12 +379,17 @@ fun NavGraph(
             PreferenciasScreen(
                 onBack = { navController.popBackStack() },
                 onTerminos = { navController.navigate("terminos_condiciones") },
+                onHoraEntrenamiento = { navController.navigate("hora_entrenamiento") },
                 onEliminarCuenta = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
                 }
             )
+        }
+
+        composable("hora_entrenamiento") {
+            HoraEntrenamientoScreen(onBack = { navController.popBackStack() })
         }
 
         // ── TÉRMINOS Y CONDICIONES ──────────────────────────────────
