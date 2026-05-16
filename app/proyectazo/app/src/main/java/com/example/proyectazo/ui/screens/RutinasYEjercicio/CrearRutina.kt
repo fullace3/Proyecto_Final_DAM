@@ -74,7 +74,7 @@ fun CrearRutinaScreen(
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()) {
                 if (editandoNombre) {
-                    BasicTextField(value = nombreRutina, onValueChange = { nombreRutina = it },
+                    OutlinedTextField(value = nombreRutina, onValueChange = { nombreRutina = it },
                         textStyle = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.onSurface),

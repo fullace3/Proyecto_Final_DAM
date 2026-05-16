@@ -13,7 +13,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
@@ -47,7 +46,6 @@ fun PantallaIncioSesion(
     var nombre by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    // Cuando el login es exitoso navegamos
     LaunchedEffect(uiState) {
         if (uiState is LoginUiState.Success) {
             onLoginExitoso()
@@ -68,13 +66,15 @@ fun PantallaIncioSesion(
                 .wrapContentHeight()
                 .padding(vertical = 24.dp),
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 28.dp, vertical = 60.dp),
+                    .padding(horizontal = 28.dp, vertical = 32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
@@ -100,11 +100,15 @@ fun PantallaIncioSesion(
                             )) { append("SmartFit") }
                         },
                         fontSize = 16.sp,
-                        color = Color.Black
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Column(horizontalAlignment = Alignment.End) {
-                        Text(text = "¿Sin cuenta?", fontSize = 12.sp, color = Color.Gray)
+                        Text(
+                            text = "¿Sin cuenta?",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                         TextButton(
                             onClick = onRegisterClick,
                             contentPadding = PaddingValues(0.dp)
@@ -125,18 +129,17 @@ fun PantallaIncioSesion(
                     text = "Iniciar sesión",
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Start
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Campo email
                 Text(
                     text = "Correo electrónico",
                     fontSize = 14.sp,
-                    color = Color.DarkGray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(6.dp))
@@ -147,16 +150,19 @@ fun PantallaIncioSesion(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text) // Text, no Email
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Campo contraseña
                 Text(
                     text = "Contraseña",
                     fontSize = 14.sp,
-                    color = Color.DarkGray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(6.dp))
@@ -169,18 +175,21 @@ fun PantallaIncioSesion(
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary
+                    ),
                     trailingIcon = {
                         IconButton(onClick = { password = "" }) {
                             Icon(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = "Borrar contraseña",
-                                tint = Color.Gray
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
                 )
 
-                // Mensaje de error si lo hay
                 if (uiState is LoginUiState.Error) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
@@ -193,7 +202,6 @@ fun PantallaIncioSesion(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Botón — muestra spinner si está cargando
                 Button(
                     onClick = { viewModel.login(nombre, password) },
                     enabled = uiState !is LoginUiState.Loading,
@@ -206,7 +214,7 @@ fun PantallaIncioSesion(
                         CircularProgressIndicator(
                             modifier = Modifier.size(22.dp),
                             strokeWidth = 2.dp,
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                     } else {
                         Text(
