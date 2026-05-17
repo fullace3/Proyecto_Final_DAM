@@ -255,6 +255,11 @@ val unspecified_scheme = ColorFamily(
     Color.Unspecified, Color.Unspecified, Color.Unspecified, Color.Unspecified
 )
 
+/**
+ * Main theme for the SmartFit app.
+ * Supports both Light and Dark mode automatically based on system settings.
+ * All colors are defined as MaterialTheme tokens — no hardcoded values anywhere in the app.
+ */
 @Composable
 fun ProyectazoTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),

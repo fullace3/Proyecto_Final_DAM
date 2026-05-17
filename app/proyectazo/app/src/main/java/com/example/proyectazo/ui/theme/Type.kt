@@ -6,7 +6,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// Set of Material typography styles to start with
+// Typography scale for SmartFit following Material Design 3 type system.
+// All text styles in the app reference these tokens via MaterialTheme.typography
 val Typography = Typography(
     bodyLarge = TextStyle(
         fontFamily = FontFamily.Default,
