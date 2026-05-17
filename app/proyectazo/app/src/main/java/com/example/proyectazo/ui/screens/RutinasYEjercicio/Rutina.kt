@@ -28,8 +28,14 @@ import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.RutinaConEjercicios
 import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.RutinasUiState
 import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.RutinasViewModel
 
+// Maximum number of exercise thumbnails shown in the routine card preview
 private const val MAX_PREVIEW_IMAGES = 4
 
+/**
+ * Lists all workout routines for the current user.
+ * Uses a sealed state (Cargando/Error/Vacio/Exito) to render the correct UI
+ * for each loading phase without nested if/else chains.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaRutinas(
@@ -41,6 +47,8 @@ fun PantallaRutinas(
     val viewModel: RutinasViewModel = viewModel(
         factory = RutinasViewModel.Factory(context)
     )
+    // collectAsStateWithLifecycle stops collecting when the screen is in the background,
+    // saving resources compared to the standard collectAsState()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
@@ -74,6 +82,7 @@ fun PantallaRutinas(
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
                 is RutinasUiState.Error -> {
+                    // Error state includes a retry button — the user is not stuck
                     Column(modifier = Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -82,6 +91,7 @@ fun PantallaRutinas(
                     }
                 }
                 is RutinasUiState.Vacio -> {
+                    // Empty state guides the user to create their first routine
                     Column(modifier = Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -101,6 +111,7 @@ fun PantallaRutinas(
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
+                        // Stable key prevents unnecessary recompositions when the list updates
                         items(items = state.rutinas, key = { it.rutina.id_rutina }) { rutinaConEj ->
                             TarjetaRutina(
                                 rutinaConEj = rutinaConEj,
@@ -108,6 +119,7 @@ fun PantallaRutinas(
                                 onEliminar = { viewModel.eliminarRutina(rutinaConEj.rutina.id_rutina) }
                             )
                         }
+                        // Extra bottom padding so the FAB does not overlap the last card
                         item { Spacer(Modifier.height(72.dp)) }
                     }
                 }
@@ -116,18 +128,23 @@ fun PantallaRutinas(
     }
 }
 
+/**
+ * Routine card showing the name, a thumbnail preview of up to 4 exercises,
+ * and a "+N" badge if there are more exercises than the preview limit.
+ * Delete is behind a three-dot menu and a confirmation dialog to prevent accidents.
+ */
 @Composable
 private fun TarjetaRutina(
     rutinaConEj: RutinaConEjercicios,
     onClick: () -> Unit,
     onEliminar: () -> Unit
 ) {
-    var menuVisible by remember { mutableStateOf(false) }
+    var menuVisible         by remember { mutableStateOf(false) }
     var mostrarDialogoEliminar by remember { mutableStateOf(false) }
 
     val ejercicios  = rutinaConEj.ejercicios
     val preview     = ejercicios.take(MAX_PREVIEW_IMAGES)
-    val extrasCount = ejercicios.size - preview.size
+    val extrasCount = ejercicios.size - preview.size  // Number of exercises beyond the preview limit
 
     if (mostrarDialogoEliminar) {
         AlertDialog(
@@ -154,8 +171,8 @@ private fun TarjetaRutina(
     ) {
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
 
-            // ── Título + menú (solo Eliminar)
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                // weight(1f) lets the name take all space, pushing the menu icon to the right
                 Text(
                     text = rutinaConEj.rutina.nombre,
                     fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
@@ -163,6 +180,7 @@ private fun TarjetaRutina(
                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
                 )
+                // Three-dot menu — keeps the card clean while still allowing deletion
                 Box {
                     IconButton(onClick = { menuVisible = true }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "Opciones",
@@ -181,7 +199,6 @@ private fun TarjetaRutina(
 
             Spacer(Modifier.height(12.dp))
 
-            // ── Imágenes preview
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically) {
                 preview.forEach { ejercicio ->
@@ -195,6 +212,7 @@ private fun TarjetaRutina(
                             .background(MaterialTheme.colorScheme.surfaceVariant)
                     )
                 }
+                // "+N" badge shown when the routine has more exercises than the preview limit
                 if (extrasCount > 0) {
                     Box(modifier = Modifier.size(68.dp).clip(RoundedCornerShape(10.dp))
                         .background(MaterialTheme.colorScheme.primaryContainer),

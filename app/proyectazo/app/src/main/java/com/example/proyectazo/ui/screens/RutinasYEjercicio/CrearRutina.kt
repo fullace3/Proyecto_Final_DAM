@@ -29,6 +29,11 @@ import com.example.proyectazo.ui.components.SmartFitTopBar
 import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.CrearRutinaUiState
 import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.RutinaViewModel
 
+/**
+ * Screen for creating a new workout routine.
+ * The flow is: enter a name → create the routine via API → navigate to exercise picker.
+ * The routine is created in the backend before adding exercises so it has an ID to link them to.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CrearRutinaScreen(
@@ -44,14 +49,16 @@ fun CrearRutinaScreen(
         )
     )
     val uiState by viewModel.uiState.collectAsState()
+    // rememberSaveable keeps the name and edit mode across device rotation
     var nombreRutina by rememberSaveable { mutableStateOf("") }
     var editandoNombre by rememberSaveable { mutableStateOf(false) }
 
+    // When the API returns the new routine ID, reset the state and navigate to the exercise picker
     LaunchedEffect(uiState) {
         if (uiState is CrearRutinaUiState.RutinaCreada) {
             val rutinaId = (uiState as CrearRutinaUiState.RutinaCreada).rutinaId
             viewModel.resetState()
-            onAnadirEjercicio(rutinaId)
+            onAnadirEjercicio(rutinaId) // Pass the real ID so exercises can be linked to it
         }
     }
 
@@ -69,7 +76,7 @@ fun CrearRutinaScreen(
         ) {
             Spacer(Modifier.height(8.dp))
 
-            // ── Nombre
+            // Inline name editor — toggles between read and edit mode on the pencil icon
             Row(verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()) {
@@ -80,6 +87,7 @@ fun CrearRutinaScreen(
                             color = MaterialTheme.colorScheme.onSurface),
                         modifier = Modifier.weight(1f), singleLine = true)
                 } else {
+                    // Dimmed placeholder text when no name has been entered yet
                     Text(text = nombreRutina.ifEmpty { "Añade un nombre" },
                         style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold,
                         color = if (nombreRutina.isEmpty())
@@ -93,6 +101,7 @@ fun CrearRutinaScreen(
                 }
             }
 
+            // Inline error message from the ViewModel — shown below the name field
             if (uiState is CrearRutinaUiState.Error) {
                 Text(text = (uiState as CrearRutinaUiState.Error).mensaje,
                     color = MaterialTheme.colorScheme.error,
@@ -102,7 +111,7 @@ fun CrearRutinaScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            // ── Lista ejercicios ─────────────────────────────────
+            // Empty state guides the user toward the next action
             if (ejercicios.isEmpty()) {
                 Column(modifier = Modifier.weight(1f).fillMaxWidth(),
                     verticalArrangement = Arrangement.Center,
@@ -120,6 +129,7 @@ fun CrearRutinaScreen(
                         textAlign = TextAlign.Center)
                 }
             } else {
+                // LazyColumn takes remaining space via weight(1f) — exercises scroll independently
                 LazyColumn(modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     items(ejercicios, key = { it.id }) { ejercicio ->
@@ -127,7 +137,7 @@ fun CrearRutinaScreen(
                             verticalAlignment = Alignment.CenterVertically) {
                             AsyncImage(model = ejercicio.imagenUrl,
                                 contentDescription = ejercicio.nombre,
-                                contentScale = ContentScale.Crop,
+                                contentScale = ContentScale.Crop,  // Fills the thumbnail without distortion
                                 modifier = Modifier.size(64.dp).clip(RoundedCornerShape(8.dp))
                                     .background(MaterialTheme.colorScheme.surfaceVariant))
                             Spacer(Modifier.width(16.dp))
@@ -145,6 +155,7 @@ fun CrearRutinaScreen(
 
             Spacer(Modifier.height(12.dp))
 
+            // Creates the routine via API if not yet created, then navigates to exercise picker
             OutlinedButton(
                 onClick = { viewModel.crearONavegar(nombreRutina) },
                 enabled = uiState !is CrearRutinaUiState.Loading,
@@ -164,6 +175,7 @@ fun CrearRutinaScreen(
 
             Spacer(Modifier.height(12.dp))
 
+            // Save button only enabled when the routine has a name and at least one exercise
             Button(
                 onClick = onNavigateBack,
                 enabled = ejercicios.isNotEmpty() && nombreRutina.isNotBlank(),

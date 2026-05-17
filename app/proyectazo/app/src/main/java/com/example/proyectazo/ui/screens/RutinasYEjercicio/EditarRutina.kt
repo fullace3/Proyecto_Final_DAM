@@ -33,6 +33,11 @@ import com.example.proyectazo.network.EjercicioRutina
 import com.example.proyectazo.ui.components.SmartFitTopBar
 import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.EditarRutinaViewModel
 
+/**
+ * Screen for editing an existing routine — rename it, add or remove exercises.
+ * Reloads the routine every time the screen returns to the foreground so that
+ * exercises added in AñadirEjercicioScreen appear immediately without a manual refresh.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditarRutinaScreen(
@@ -45,32 +50,35 @@ fun EditarRutinaScreen(
         factory = EditarRutinaViewModel.Factory(rutinaId, context)
     )
     val uiState by viewModel.uiState.collectAsState()
-
     val lifecycleOwner = LocalLifecycleOwner.current
+
+    // DisposableEffect used instead of LaunchedEffect because we need to both
+    // add and remove the observer — LaunchedEffect has no cleanup mechanism
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.cargarRutina()
+                viewModel.cargarRutina()  // Reloads when returning from AñadirEjercicioScreen
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }  // Prevent memory leaks
     }
 
+    // rememberSaveable persists the edit mode across device rotation
     var editandoNombre by rememberSaveable { mutableStateOf(false) }
 
+    // Navigate back once the ViewModel confirms changes were saved successfully
     LaunchedEffect(uiState.guardado) {
         if (uiState.guardado) {
-            viewModel.onGuardadoConsumed()
+            viewModel.onGuardadoConsumed()  // Reset the flag to avoid re-triggering
             onNavigateBack()
         }
     }
 
     Scaffold(
-        topBar = {
-            SmartFitTopBar(titulo = "Editar rutina", onBack = onNavigateBack)
-        }
+        topBar = { SmartFitTopBar(titulo = "Editar rutina", onBack = onNavigateBack) }
     ) { innerPadding ->
+        // Early return while loading — avoids rendering an empty layout
         if (uiState.isLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
@@ -84,21 +92,33 @@ fun EditarRutinaScreen(
         ) {
             Spacer(Modifier.height(8.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically,
+            // Inline name editor — same pattern as CrearRutinaScreen
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()) {
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 if (editandoNombre) {
-                    BasicTextField(value = uiState.nombre, onValueChange = viewModel::onNombreChange,
+                    BasicTextField(
+                        value = uiState.nombre,
+                        onValueChange = viewModel::onNombreChange,
                         textStyle = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.onSurface),
-                        modifier = Modifier.weight(1f), singleLine = true)
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurface
+                        ),
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
                 } else {
-                    Text(text = uiState.nombre.ifEmpty { "Sin nombre" },
-                        style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold,
+                    Text(
+                        text = uiState.nombre.ifEmpty { "Sin nombre" },
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
                         color = if (uiState.nombre.isEmpty())
                             MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                        else MaterialTheme.colorScheme.onSurface)
+                        else MaterialTheme.colorScheme.onSurface
+                    )
                 }
                 Spacer(Modifier.width(6.dp))
                 IconButton(onClick = { editandoNombre = !editandoNombre }) {
@@ -107,6 +127,7 @@ fun EditarRutinaScreen(
                 }
             }
 
+            // Inline error message from the ViewModel
             uiState.error?.let {
                 Text(it, color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
@@ -116,9 +137,12 @@ fun EditarRutinaScreen(
             Spacer(Modifier.height(8.dp))
 
             if (uiState.ejercicios.isEmpty()) {
-                Column(modifier = Modifier.weight(1f).fillMaxWidth(),
+                // Empty state centered in the remaining space via weight(1f)
+                Column(
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
                     verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally) {
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Icon(Icons.Default.FitnessCenter, contentDescription = null,
                         modifier = Modifier.size(56.dp),
                         tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f))
@@ -127,11 +151,16 @@ fun EditarRutinaScreen(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
                 }
             } else {
-                LazyColumn(modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                // Exercise list takes all remaining space, buttons stay fixed at the bottom
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
                     items(uiState.ejercicios, key = { it.id }) { ejercicio ->
-                        EjercicioEditItem(ejercicio = ejercicio,
-                            onEliminar = { viewModel.eliminarEjercicio(ejercicio.id) })
+                        EjercicioEditItem(
+                            ejercicio = ejercicio,
+                            onEliminar = { viewModel.eliminarEjercicio(ejercicio.id) }
+                        )
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     }
                 }
@@ -139,11 +168,14 @@ fun EditarRutinaScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            OutlinedButton(onClick = { onAnadirEjercicio(rutinaId) },
+            OutlinedButton(
+                onClick = { onAnadirEjercicio(rutinaId) },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f))) {
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
+                )
+            ) {
                 Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text("Añadir ejercicio", style = MaterialTheme.typography.bodyLarge)
@@ -151,8 +183,13 @@ fun EditarRutinaScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            Button(onClick = viewModel::guardarCambios, enabled = uiState.nombre.isNotBlank(),
-                modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(12.dp)) {
+            // Save disabled if the routine name is empty — prevents saving an unnamed routine
+            Button(
+                onClick = viewModel::guardarCambios,
+                enabled = uiState.nombre.isNotBlank(),
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
                 Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text("Guardar cambios", style = MaterialTheme.typography.bodyLarge,
@@ -164,13 +201,19 @@ fun EditarRutinaScreen(
     }
 }
 
+/**
+ * Single exercise row in the edit list.
+ * Delete is hidden behind a three-dot menu and a confirmation dialog
+ * to prevent accidental removal.
+ */
 @Composable
 private fun EjercicioEditItem(ejercicio: EjercicioRutina, onEliminar: () -> Unit) {
-    var menuVisible by remember { mutableStateOf(false) }
+    var menuVisible    by remember { mutableStateOf(false) }
     var mostrarDialogo by remember { mutableStateOf(false) }
 
     if (mostrarDialogo) {
-        AlertDialog(onDismissRequest = { mostrarDialogo = false },
+        AlertDialog(
+            onDismissRequest = { mostrarDialogo = false },
             title = { Text("Eliminar ejercicio") },
             text = { Text("¿Quitar \"${ejercicio.nombre}\" de la rutina?") },
             confirmButton = {
@@ -178,22 +221,34 @@ private fun EjercicioEditItem(ejercicio: EjercicioRutina, onEliminar: () -> Unit
                     Text("Eliminar", color = MaterialTheme.colorScheme.error)
                 }
             },
-            dismissButton = { TextButton(onClick = { mostrarDialogo = false }) { Text("Cancelar") } })
+            dismissButton = {
+                TextButton(onClick = { mostrarDialogo = false }) { Text("Cancelar") }
+            }
+        )
     }
 
-    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically) {
-        AsyncImage(model = ejercicio.imagenUrl, contentDescription = ejercicio.nombre,
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AsyncImage(
+            model = ejercicio.imagenUrl,
+            contentDescription = ejercicio.nombre,
             contentScale = ContentScale.Crop,
-            modifier = Modifier.size(56.dp).clip(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant))
+            modifier = Modifier
+                .size(56.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+        )
         Spacer(Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(ejercicio.nombre, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+            Text(ejercicio.nombre, style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium)
             Text("${ejercicio.series} series × ${ejercicio.repeticiones} repeticiones",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
+        // Three-dot menu keeps the row clean — delete only appears on explicit interaction
         Box {
             IconButton(onClick = { menuVisible = true }) {
                 Icon(Icons.Default.MoreVert, contentDescription = "Opciones",
@@ -203,7 +258,8 @@ private fun EjercicioEditItem(ejercicio: EjercicioRutina, onEliminar: () -> Unit
                 DropdownMenuItem(
                     text = { Text("Eliminar de rutina", color = MaterialTheme.colorScheme.error) },
                     leadingIcon = { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error) },
-                    onClick = { menuVisible = false; mostrarDialogo = true })
+                    onClick = { menuVisible = false; mostrarDialogo = true }
+                )
             }
         }
     }

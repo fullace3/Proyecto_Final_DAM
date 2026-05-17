@@ -18,22 +18,27 @@ import coil.compose.AsyncImage
 import com.example.proyectazo.network.EjercicioResponse
 import com.example.proyectazo.ui.components.SmartFitTopBar
 
+/**
+ * Shows the full details of an exercise — image, muscle group, equipment and description.
+ * The "Añadir" button is pinned to the bottom bar so it is always visible without scrolling.
+ */
 @Composable
 fun DetalleEjercicioScreen(
     ejercicio: EjercicioResponse,
     onBack: () -> Unit,
-    onAnadir: (EjercicioResponse) -> Unit
+    onAnadir: (EjercicioResponse) -> Unit  // Passes the full object back to AñadirEjercicioScreen
 ) {
     Scaffold(
-        topBar = {
-            SmartFitTopBar(titulo = ejercicio.nombre, onBack = onBack)
-        },
+        topBar = { SmartFitTopBar(titulo = ejercicio.nombre, onBack = onBack) },
         bottomBar = {
+            // Elevated surface ensures the button stands out from the scrollable content below
             Surface(shadowElevation = 8.dp) {
                 Button(
                     onClick = { onAnadir(ejercicio) },
-                    modifier = Modifier.fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp).height(52.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                        .height(52.dp),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text("Añadir ejercicio", style = MaterialTheme.typography.bodyLarge,
@@ -43,29 +48,45 @@ fun DetalleEjercicioScreen(
         }
     ) { innerPadding ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(innerPadding)
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
             Box(
-                modifier = Modifier.fillMaxWidth().padding(16.dp).height(240.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .height(240.dp)
                     .clip(RoundedCornerShape(16.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
                 if (ejercicio.imagen != null) {
-                    AsyncImage(model = ejercicio.imagen, contentDescription = ejercicio.nombre,
-                        contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
+                    // ContentScale.Fit keeps the full exercise image visible without cropping
+                    AsyncImage(
+                        model = ejercicio.imagen,
+                        contentDescription = ejercicio.nombre,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.fillMaxSize()
+                    )
                 } else {
-                    Text(text = ejercicio.nombre.take(1).uppercase(),
+                    // Fallback: show the first letter of the exercise name as a placeholder
+                    Text(
+                        text = ejercicio.nombre.take(1).uppercase(),
                         style = MaterialTheme.typography.displayMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
 
             Spacer(Modifier.height(20.dp))
 
-            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            // Chips only rendered if the values are present — nullable fields handled with let
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 ejercicio.grupo_muscular?.let {
                     InfoChip(label = "Músculo", valor = it, modifier = Modifier.weight(1f))
                 }
@@ -74,11 +95,16 @@ fun DetalleEjercicioScreen(
                 }
             }
 
+            // Description only shown if the exercise has one
             ejercicio.descripcion?.let { desc ->
                 Spacer(Modifier.height(20.dp))
-                Text(text = desc, style = MaterialTheme.typography.bodyMedium,
+                Text(
+                    text = desc,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = 22.sp, modifier = Modifier.padding(horizontal = 16.dp))
+                    lineHeight = 22.sp,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
             }
 
             Spacer(Modifier.height(16.dp))
@@ -86,10 +112,12 @@ fun DetalleEjercicioScreen(
     }
 }
 
+// Pill-shaped info card showing a label and its value — used for muscle group and equipment
 @Composable
 private fun InfoChip(label: String, valor: String, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.clip(RoundedCornerShape(12.dp))
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
             .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f))
             .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally

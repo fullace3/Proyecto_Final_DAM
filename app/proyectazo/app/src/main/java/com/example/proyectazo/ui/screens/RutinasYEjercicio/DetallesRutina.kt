@@ -21,18 +21,23 @@ import coil.compose.AsyncImage
 import com.example.proyectazo.ui.components.SmartFitTopBar
 import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.RutinaConEjercicios
 
+kotlinpackage com.example.proyectazo.ui.screens.RutinasYEjercicio
+
+/**
+ * Shows the exercises in a routine before the user starts training.
+ * Two actions are pinned to the bottom bar: edit the routine or start the workout.
+ */
 @Composable
 fun DetallesRutinaScreen(
-    rutinaConEjercicios: RutinaConEjercicios,
+    rutinaConEjercicios: RutinaConEjercicios,  // Passed in-memory from NavGraph — not a route argument
     onBack: () -> Unit,
     onEditar: () -> Unit,
     onEmpezar: () -> Unit
 ) {
     Scaffold(
-        topBar = {
-            SmartFitTopBar(titulo = "Detalles rutina", onBack = onBack)
-        },
+        topBar = { SmartFitTopBar(titulo = "Detalles rutina", onBack = onBack) },
         bottomBar = {
+            // Both actions share equal space via weight(1f)
             Surface(shadowElevation = 8.dp) {
                 Row(
                     modifier = Modifier
@@ -70,32 +75,51 @@ fun DetallesRutinaScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
-                Text(text = rutinaConEjercicios.rutina.nombre,
+                Text(
+                    text = rutinaConEjercicios.rutina.nombre,
                     style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold, fontSize = 22.sp))
+                        fontWeight = FontWeight.Bold, fontSize = 22.sp
+                    )
+                )
                 Spacer(Modifier.height(8.dp))
             }
+
+            // itemsIndexed used instead of items to have the index available if needed later
             itemsIndexed(
                 items = rutinaConEjercicios.ejercicios,
-                key = { _, ej -> ej.id_ejercicio }
+                key = { _, ej -> ej.id_ejercicio }  // Stable key prevents unnecessary recompositions
             ) { _, ejercicio ->
-                Row(modifier = Modifier.fillMaxWidth(),
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    AsyncImage(model = ejercicio.imagen, contentDescription = ejercicio.nombre,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.size(64.dp).clip(RoundedCornerShape(10.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant))
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    AsyncImage(
+                        model = ejercicio.imagen,
+                        contentDescription = ejercicio.nombre,
+                        contentScale = ContentScale.Crop,  // Fills the thumbnail without distortion
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                    )
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(text = ejercicio.nombre,
-                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium))
-                        Text(text = "3 series x 10 repeticiones",
+                        Text(
+                            text = ejercicio.nombre,
+                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
+                        )
+                        // TODO: Replace hardcoded values with actual series/reps from RutinaEjercicio
+                        Text(
+                            text = "3 series x 10 repeticiones",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
-                HorizontalDivider(modifier = Modifier.padding(top = 12.dp),
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                HorizontalDivider(
+                    modifier = Modifier.padding(top = 12.dp),
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                )
             }
         }
     }

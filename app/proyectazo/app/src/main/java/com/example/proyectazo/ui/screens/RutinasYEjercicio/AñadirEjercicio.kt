@@ -7,6 +7,14 @@ import com.example.proyectazo.network.RetrofitClient
 import com.example.proyectazo.screens.ListaEjerciciosScreen
 import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.AñadirEjercicioViewModel
 
+/**
+ * Coordinator screen for adding an exercise to a routine.
+ * Manages two sub-screens in-memory without separate routes:
+ * - ListaEjerciciosScreen — browse and filter exercises
+ * - DetalleEjercicioScreen — view details and confirm the selection
+ *
+ * Navigates back automatically once the exercise has been added to the routine.
+ */
 @Composable
 fun AñadirEjercicioScreen(
     rutinaId: Int,
@@ -19,37 +27,36 @@ fun AñadirEjercicioScreen(
         )
     )
     val uiState by viewModel.uiState.collectAsState()
-
-    // Ejercicio seleccionado para mostrar su detalle
+    // Holds the exercise the user tapped — null means the list is shown, non-null shows the detail
     var ejercicioDetalle by remember { mutableStateOf<EjercicioResponse?>(null) }
 
-    // Cuando se agrega con éxito, volvemos atrás
+    // Once the ViewModel confirms the exercise was added, consume the event and go back
     LaunchedEffect(uiState.ejercicioAgregado) {
         if (uiState.ejercicioAgregado) {
-            viewModel.onEjercicioAgregadoConsumed()
+            viewModel.onEjercicioAgregadoConsumed() // Reset the flag to avoid re-triggering
             onBack()
         }
     }
 
     if (ejercicioDetalle != null) {
-        // ── Pantalla de detalle ──────────────────────────────────
+        // Show the detail screen for the selected exercise
         DetalleEjercicioScreen(
             ejercicio = ejercicioDetalle!!,
-            onBack = { ejercicioDetalle = null },
+            onBack = { ejercicioDetalle = null }, // Return to the list without adding
             onAnadir = { ejercicio ->
                 viewModel.onEjercicioSeleccionado(ejercicio)
                 ejercicioDetalle = null
             }
         )
     } else {
-        // ── Lista de ejercicios ──────────────────────────────────
+        // Show the full exercise list with search and filters
         ListaEjerciciosScreen(
             uiState = uiState,
             onBack = onBack,
             onSearchQueryChange = viewModel::onSearchQueryChange,
             onFiltroTipoChange  = viewModel::onFiltroTipoChange,
             onFiltroValorChange = viewModel::onFiltroValorChange,
-            onEjercicioClick    = { ejercicioDetalle = it }
+            onEjercicioClick    = { ejercicioDetalle = it } // Tapping an exercise opens its detail
         )
     }
 }

@@ -22,9 +22,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.FinalizarEntrenamientoViewModel
 import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.GuardarUiState
 
+/**
+ * Summary screen shown after the user finishes a workout.
+ * Calculates session stats from the in-memory ResultadoEntrenamiento object
+ * and lets the user save or discard the session.
+ */
 @Composable
 fun FinalizarEntrenamientoScreen(
-    resultado: ResultadoEntrenamiento,
+    resultado: ResultadoEntrenamiento,  // Built in EntrenarScreen and passed via NavGraph memory
     onGuardado: () -> Unit,
     onEliminar: () -> Unit
 ) {
@@ -34,12 +39,14 @@ fun FinalizarEntrenamientoScreen(
     )
     val state by viewModel.state.collectAsState()
 
+    // Navigate to Home once the API confirms the workout was saved successfully
     LaunchedEffect(state) {
         if (state is GuardarUiState.Guardado) onGuardado()
     }
 
     val tiempoMin = resultado.tiempoSegundos / 60
 
+    // Volume = sum of (weight × reps) for every completed set across all exercises
     val volumenTotal = resultado.ejercicios.sumOf { ej ->
         ej.series.filter { it.completada }.sumOf { s ->
             val p = s.peso.toFloatOrNull() ?: 0f
@@ -48,12 +55,15 @@ fun FinalizarEntrenamientoScreen(
         }
     }
 
+    // An exercise counts as completed if at least one of its sets was marked done
     val ejerciciosCompletados = resultado.ejercicios.count { ej ->
         ej.series.any { it.completada }
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -73,16 +83,16 @@ fun FinalizarEntrenamientoScreen(
 
         Spacer(Modifier.height(32.dp))
 
-        StatRow(icon = Icons.Default.Timer, label = "Tiempo total:", valor = "$tiempoMin min")
+        // Three summary stats — each reuses the same StatRow composable
+        StatRow(Icons.Default.Timer,       "Tiempo total:",   "$tiempoMin min")
         Spacer(Modifier.height(12.dp))
-        StatRow(icon = Icons.Default.FitnessCenter, label = "Volumen total:",
-            valor = "${"%.1f".format(volumenTotal)} kg")
+        StatRow(Icons.Default.FitnessCenter, "Volumen total:", "${"%.1f".format(volumenTotal)} kg")
         Spacer(Modifier.height(12.dp))
-        StatRow(icon = Icons.Default.CheckCircle, label = "Ejercicios:",
-            valor = "$ejerciciosCompletados completados")
+        StatRow(Icons.Default.CheckCircle, "Ejercicios:",     "$ejerciciosCompletados completados")
 
         Spacer(Modifier.height(40.dp))
 
+        // Error message shown inline if the save API call fails
         if (state is GuardarUiState.Error) {
             Text((state as GuardarUiState.Error).msg,
                 color = MaterialTheme.colorScheme.error,
@@ -90,6 +100,7 @@ fun FinalizarEntrenamientoScreen(
                 modifier = Modifier.padding(bottom = 8.dp))
         }
 
+        // Save button disabled while the request is in progress to prevent duplicate submissions
         Button(
             onClick = { viewModel.guardarEntrenamiento(resultado) },
             enabled = state !is GuardarUiState.Guardando,
@@ -108,6 +119,7 @@ fun FinalizarEntrenamientoScreen(
 
         Spacer(Modifier.height(16.dp))
 
+        // TextButton instead of Button — lower visual weight signals this is a secondary action
         TextButton(onClick = onEliminar) {
             Text("Eliminar entrenamiento", color = MaterialTheme.colorScheme.error,
                 fontWeight = FontWeight.Medium)
@@ -115,10 +127,12 @@ fun FinalizarEntrenamientoScreen(
     }
 }
 
+// Stat card with icon, label and value — reused for time, volume and exercise count
 @Composable
 private fun StatRow(icon: ImageVector, label: String, valor: String) {
     Row(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surfaceContainerHighest, RoundedCornerShape(16.dp))
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
