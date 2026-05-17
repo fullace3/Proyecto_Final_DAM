@@ -24,6 +24,11 @@ import com.example.proyectazo.ui.components.SmartFitTopBar
 import com.example.proyectazo.ui.viewmodel.ProgresoYRegistro.AñadirRegistroViewModel
 import com.example.proyectazo.ui.viewmodel.ProgresoYRegistro.GuardarEstado
 
+/**
+ * Screen for recording a new body measurement entry.
+ * Allows the user to log weight, height and body measurements for a specific date.
+ * Navigates back automatically after a successful save.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AñadirRegistroScreen(onBack: () -> Unit) {
@@ -35,7 +40,7 @@ fun AñadirRegistroScreen(onBack: () -> Unit) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Navegar atrás cuando se guarda con éxito
+    // Reacts to save result — navigates back on success, shows error message on failure
     LaunchedEffect(uiState.guardarEstado) {
         when (val estado = uiState.guardarEstado) {
             is GuardarEstado.Exito -> {
@@ -66,7 +71,8 @@ fun AñadirRegistroScreen(onBack: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
 
-            // ── Fecha ────────────────────────────────────────────────
+            // Date input split into three separate fields (DD / MM / YYYY)
+            // so the user controls each part independently without a date picker
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     text = "Introduce el día",
@@ -78,7 +84,7 @@ fun AñadirRegistroScreen(onBack: () -> Unit) {
                         valor = uiState.dia,
                         placeholder = "DD",
                         maxLength = 2,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f), // Proportional widths via weight
                         onValorChange = viewModel::onDiaChange
                     )
                     CampoDia(
@@ -92,10 +98,11 @@ fun AñadirRegistroScreen(onBack: () -> Unit) {
                         valor = uiState.anio,
                         placeholder = "YYYY",
                         maxLength = 4,
-                        modifier = Modifier.weight(2f),
+                        modifier = Modifier.weight(2f), // Year field is twice as wide as day/month
                         onValorChange = viewModel::onAnioChange
                     )
                 }
+                // Validation error shown inline below the date fieldss
                 if (uiState.fechaError != null) {
                     Text(
                         text = uiState.fechaError!!,
@@ -105,7 +112,7 @@ fun AñadirRegistroScreen(onBack: () -> Unit) {
                 }
             }
 
-            // ── Slider peso ──────────────────────────────────────────
+            // Weight slider — range 30–200 kg covers all realistic user values
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -117,6 +124,7 @@ fun AñadirRegistroScreen(onBack: () -> Unit) {
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurface
                     )
+                    // Live value display updates as the slider moves
                     Text(
                         text = "${uiState.pesoKg.toInt()} kg",
                         style = MaterialTheme.typography.labelLarge,
@@ -132,7 +140,7 @@ fun AñadirRegistroScreen(onBack: () -> Unit) {
                 )
             }
 
-            // ── Medidas corporales ───────────────────────────────────
+            // Optional body measurements — each field has a clear button for quick reset
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
                     text = "Medidas actuales",
@@ -165,7 +173,7 @@ fun AñadirRegistroScreen(onBack: () -> Unit) {
                 )
             }
 
-            // ── Slider altura ────────────────────────────────────────
+            // Height slider — optional, range 100–250 cm
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -194,7 +202,7 @@ fun AñadirRegistroScreen(onBack: () -> Unit) {
 
             Spacer(Modifier.height(4.dp))
 
-            // ── Botón guardar ────────────────────────────────────────
+            // Save button — disabled while the API call is in progress to prevent duplicate submissions
             Button(
                 onClick = { viewModel.guardar(userId) },
                 enabled = !uiState.cargando,
@@ -229,7 +237,8 @@ fun AñadirRegistroScreen(onBack: () -> Unit) {
     }
 }
 
-// ── Campo de fecha individual ────────────────────────────────────────────────
+// Date field — only accepts digits up to maxLength characters
+// Validation is done inline to prevent invalid input from reaching the ViewModel
 @Composable
 private fun CampoDia(
     valor: String,
@@ -240,6 +249,7 @@ private fun CampoDia(
 ) {
     OutlinedTextField(
         value = valor,
+        // Filter: reject input that exceeds maxLength or contains non-digit characters
         onValueChange = { if (it.length <= maxLength && it.all { c -> c.isDigit() }) onValorChange(it) },
         placeholder = {
             Text(
@@ -261,7 +271,8 @@ private fun CampoDia(
     )
 }
 
-// ── Campo de medida con botón limpiar ────────────────────────────────────────
+// Measurement field — accepts up to 3 digits and 1 decimal place (e.g. "99.9")
+// Clear button appears only when the field has content
 @Composable
 private fun CampoMedida(
     label: String,
@@ -272,12 +283,13 @@ private fun CampoMedida(
     OutlinedTextField(
         value = valor,
         onValueChange = { new ->
-            // Solo números y un punto decimal
+            // Regex allows formats like "0", "99", "99.9" — rejects anything else
             if (new.matches(Regex("^\\d{0,3}(\\.\\d{0,1})?\$"))) onValorChange(new)
         },
         label = { Text(label) },
         placeholder = { Text("Introduce el tamaño en cm") },
         trailingIcon = {
+            // Only show the clear button when there is text to clear
             if (valor.isNotEmpty()) {
                 IconButton(onClick = onLimpiar) {
                     Icon(

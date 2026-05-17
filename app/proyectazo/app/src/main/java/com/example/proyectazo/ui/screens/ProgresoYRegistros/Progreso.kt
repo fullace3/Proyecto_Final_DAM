@@ -26,6 +26,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyectazo.network.SessionManager
 import com.example.proyectazo.ui.viewmodel.ProgresoYRegistro.ProgresoViewModel
 
+/**
+ * Progress screen showing weight stats, training volume chart and body measurements table.
+ * Reloads data every time the screen returns to the foreground — this ensures fresh data
+ * after the user adds a new measurement in AñadirRegistroScreen.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaProgreso(onAñadirRegistro: () -> Unit) {
@@ -37,14 +42,16 @@ fun PantallaProgreso(onAñadirRegistro: () -> Unit) {
     val uiState by viewModel.uiState.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // Recarga cada vez que la pantalla vuelve a estar en primer plano
-    // (incluye la vuelta desde AñadirRegistroScreen)
+    // repeatOnLifecycle(RESUMED) re-runs the block every time the screen comes to the foreground.
+    // This triggers a reload when the user returns from AñadirRegistroScreen without
+    // needing savedStateHandle or manual refresh calls.
     LaunchedEffect(lifecycleOwner) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             viewModel.recargar()
         }
     }
 
+    // rememberSaveable persists the selected chart filter across device rotation
     var filtroSeleccionado by rememberSaveable { mutableStateOf(0) }
 
     Column(
@@ -53,12 +60,12 @@ fun PantallaProgreso(onAñadirRegistro: () -> Unit) {
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
     ) {
-        // ── Indicador de carga ────────────────────────────────────
+        // Thin loading bar at the top — less intrusive than a full-screen spinner
         if (uiState.isLoading) {
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }
 
-        // ── Cards de peso ─────────────────────────────────────────
+        // Weight stats row — four equal cards via Modifier.weight(1f)
         Card(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 12.dp),
             shape = RoundedCornerShape(16.dp),
@@ -76,7 +83,7 @@ fun PantallaProgreso(onAñadirRegistro: () -> Unit) {
             }
         }
 
-        // ── Gráfica volumen ───────────────────────────────────────
+        // Training volume chart card
         Card(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
             shape = RoundedCornerShape(16.dp),
@@ -91,6 +98,7 @@ fun PantallaProgreso(onAñadirRegistro: () -> Unit) {
 
                 Spacer(Modifier.height(12.dp))
 
+                // Custom segmented control — no ripple effect to feel like a toggle, not a button
                 Row(modifier = Modifier.fillMaxWidth()) {
                     listOf("Semana", "Mes", "Año").forEachIndexed { i, label ->
                         Box(
@@ -118,6 +126,7 @@ fun PantallaProgreso(onAñadirRegistro: () -> Unit) {
 
                 Spacer(Modifier.height(16.dp))
 
+                // Switch the dataset based on the selected time filter
                 val datos = when (filtroSeleccionado) {
                     0 -> uiState.volumenSemana
                     1 -> uiState.volumenMes
@@ -139,7 +148,7 @@ fun PantallaProgreso(onAñadirRegistro: () -> Unit) {
 
         Spacer(Modifier.height(16.dp))
 
-        // ── Medidas corporales ────────────────────────────────────
+        // Body measurements table — shows the 6 most recent entries
         Card(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
             shape = RoundedCornerShape(16.dp),
@@ -153,7 +162,7 @@ fun PantallaProgreso(onAñadirRegistro: () -> Unit) {
                 )
 
                 Spacer(Modifier.height(12.dp))
-
+                // Table header — each column takes equal space via weight(1f)
                 Row(modifier = Modifier.fillMaxWidth()) {
                     listOf("Fecha", "Brazo", "Pecho", "Pierna", "Altura").forEach { col ->
                         Text(
@@ -174,8 +183,10 @@ fun PantallaProgreso(onAñadirRegistro: () -> Unit) {
                         textAlign = TextAlign.Center
                     )
                 } else {
+                    // Limited to 6 rows to keep the card compact — not a scrollable table
                     uiState.medidas.take(6).forEach { medida ->
                         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                            // Reformat ISO date "2025-08-17" → "17/08" for compact display
                             val fecha = medida.fecha.take(10).let {
                                 val parts = it.split("-")
                                 if (parts.size == 3) "${parts[2]}/${parts[1]}" else it
@@ -209,6 +220,7 @@ fun PantallaProgreso(onAñadirRegistro: () -> Unit) {
     }
 }
 
+// Small stat card used in the weight row — label above value, centered
 @Composable
 private fun PesoCard(label: String, valor: String, modifier: Modifier) {
     Card(
@@ -224,6 +236,11 @@ private fun PesoCard(label: String, valor: String, modifier: Modifier) {
     }
 }
 
+/**
+ * Custom bar chart drawn with Compose layout primitives (no external chart library).
+ * Bar heights are proportional to the maximum value in the dataset.
+ * A minimum fraction of 0.02f ensures zero-value bars remain visible as a thin line.
+ */
 @Composable
 private fun GraficaBarras(datos: List<Pair<String, Double>>, filtro: Int) {
     val maxValor = datos.maxOfOrNull { it.second } ?: 1.0
@@ -247,7 +264,7 @@ private fun GraficaBarras(datos: List<Pair<String, Double>>, filtro: Int) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth(0.6f)
-                            .fillMaxHeight(fraccion.coerceAtLeast(0.02f))
+                            .fillMaxHeight(fraccion.coerceAtLeast(0.02f)) // Never fully invisible
                             .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
                             .background(MaterialTheme.colorScheme.primary)
                             .align(Alignment.CenterHorizontally)
@@ -259,6 +276,7 @@ private fun GraficaBarras(datos: List<Pair<String, Double>>, filtro: Int) {
         HorizontalDivider()
         Spacer(Modifier.height(4.dp))
 
+        // X-axis labels aligned below each bar using matching weight(1f)
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             datos.forEach { (label, _) ->
                 Text(
@@ -271,6 +289,8 @@ private fun GraficaBarras(datos: List<Pair<String, Double>>, filtro: Int) {
     }
 }
 
+// Custom clickable modifier that suppresses the ripple effect —
+// used on the segmented control tabs where a ripple would look out of place
 @Composable
 private fun Modifier.clickableNoRipple(onClick: () -> Unit): Modifier {
     val interactionSource = remember { MutableInteractionSource() }
