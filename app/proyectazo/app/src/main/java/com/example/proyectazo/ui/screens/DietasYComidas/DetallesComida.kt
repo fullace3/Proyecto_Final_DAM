@@ -21,10 +21,15 @@ import coil.request.ImageRequest
 import com.example.proyectazo.ui.components.SmartFitTopBar
 import com.example.proyectazo.ui.viewmodel.DietaYComida.DetalleComidaViewModel
 
+/**
+ * Shows the nutritional details of a food item and allows the user to add it to their diet.
+ * Navigates back to CrearDietaScreen passing the food data via savedStateHandle.
+ */
 @Composable
 fun DetalleComidaScreen(
     comidaId: Int,
     onBack: () -> Unit,
+    // All nutritional values passed back at once to avoid multiple savedStateHandle writes
     onAñadir: (id: Int, nombre: String, calorias: Int, proteinas: Int, carbos: Int, grasas: Int) -> Unit
 ) {
     val context = LocalContext.current
@@ -40,7 +45,7 @@ fun DetalleComidaScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(innerPadding) // Prevents content from rendering behind the TopBar
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -65,25 +70,26 @@ fun DetalleComidaScreen(
                 // ── Imagen
                 val imagenUrl = uiState.imagen
                 if (!imagenUrl.isNullOrEmpty()) {
+                    // Build the full S3 URL if the stored value is just a filename
                     val url = if (imagenUrl.startsWith("http")) imagenUrl
                     else "https://smartfit-imagenes-dam.s3.us-east-1.amazonaws.com/$imagenUrl"
 
                     AsyncImage(
                         model = ImageRequest.Builder(context)
                             .data(url)
-                            .crossfade(true)
+                            .crossfade(true) // Smooth fade-in while the image loads from the network
                             .build(),
                         contentDescription = uiState.nombre,
                         modifier = Modifier
                             .size(180.dp)
                             .clip(RoundedCornerShape(16.dp)),
-                        contentScale = ContentScale.Crop
+                        contentScale = ContentScale.Crop // Fills the bounds without distorting the image
                     )
 
                     Spacer(Modifier.height(24.dp))
                 }
 
-                // ── Card valor nutricional ────────────────────────────────
+                // ── Card valor nutricional
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -110,7 +116,7 @@ fun DetalleComidaScreen(
                             color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
-
+                        // Each nutrient row is separated by a divider for readability
                         Divider(color = MaterialTheme.colorScheme.outlineVariant)
                         NutrienteRow("Kcal", "${uiState.calorias100g} Kcal")
 
@@ -127,7 +133,7 @@ fun DetalleComidaScreen(
 
                 Spacer(Modifier.height(24.dp))
 
-                // ── Botón añadir ──────────────────────────────────────────
+                // ── Botón añadir 
                 Button(
                     onClick = {
                         onAñadir(
@@ -154,6 +160,7 @@ fun DetalleComidaScreen(
     }
 }
 
+// Displays a single nutrient label and its value in a horizontal row
 @Composable
 private fun NutrienteRow(label: String, valor: String) {
     Row(

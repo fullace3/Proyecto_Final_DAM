@@ -25,10 +25,15 @@ import com.example.proyectazo.ui.components.SmartFitTopBar
 import com.example.proyectazo.ui.viewmodel.DietaYComida.ComidaListItem
 import com.example.proyectazo.ui.viewmodel.DietaYComida.ListaComidasViewModel
 
+/**
+ * Displays a searchable, filterable list of food items.
+ * The user arrives here from CrearDietaScreen to pick a food to add to their diet.
+ * Selection navigates to DetalleComidaScreen where the food can be confirmed.
+ */
 @Composable
 fun ListaComidasScreen(
     onBack: () -> Unit,
-    onComidaSeleccionada: (Int) -> Unit
+    onComidaSeleccionada: (Int) -> Unit // Passes the selected food ID to the NavGraph
 ) {
     val context = LocalContext.current
     val viewModel: ListaComidasViewModel = viewModel(
@@ -48,6 +53,7 @@ fun ListaComidasScreen(
                 .padding(innerPadding)
         ) {
             // ── Buscador
+            // triggers filtering in the ViewModel on every keystroke
             OutlinedTextField(
                 value = uiState.busqueda,
                 onValueChange = viewModel::onBusquedaChange,
@@ -70,6 +76,7 @@ fun ListaComidasScreen(
             )
 
             // ── Chips de filtro
+            // only one can be active at a time, handled by the ViewModel
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -96,7 +103,7 @@ fun ListaComidasScreen(
                 color = MaterialTheme.colorScheme.outlineVariant
             )
 
-            // ── Lista de comidas ──────────────────────────────────────────
+            // ── Lista de comidas
             if (uiState.isLoading) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -105,6 +112,7 @@ fun ListaComidasScreen(
                     CircularProgressIndicator()
                 }
             } else {
+                // LazyColumn only renders visible items — efficient for long food lists
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(vertical = 8.dp)
@@ -130,7 +138,8 @@ private fun ComidaRow(comida: ComidaListItem, onClick: () -> Unit) {
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // ── Imagen ────────────────────────────────────────────────────
+        // ── Imagen
+        // Build the full S3 URL if the stored value is just a filename
         if (!comida.imagen.isNullOrEmpty()) {
             val url = if (comida.imagen.startsWith("http")) comida.imagen
             else "https://smartfit-imagenes-dam.s3.us-east-1.amazonaws.com/${comida.imagen}"
@@ -144,9 +153,10 @@ private fun ComidaRow(comida: ComidaListItem, onClick: () -> Unit) {
                 modifier = Modifier
                     .size(56.dp)
                     .clip(CircleShape),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop // Fills the circle without distorting the image
             )
         } else {
+            // Fallback placeholder shown when the food has no image
             Surface(
                 modifier = Modifier.size(56.dp),
                 shape = CircleShape,
@@ -160,7 +170,7 @@ private fun ComidaRow(comida: ComidaListItem, onClick: () -> Unit) {
 
         Spacer(Modifier.width(16.dp))
 
-        // ── Nombre y calorías ─────────────────────────────────────────
+        // ── Nombre y calorías
         Column {
             Text(
                 comida.nombre,

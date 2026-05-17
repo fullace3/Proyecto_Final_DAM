@@ -30,7 +30,13 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 
-
+/**
+ * Shows the currently active diet with a calorie ring, macro progress bars
+ * and a daily meal checklist.
+ *
+ * FAB expands to reveal two options: create a new diet or switch to another existing one.
+ * Meal check states and FAB state survive device rotation via rememberSaveable.
+ */
 @Composable
 fun DietaActivaScreen(
     dieta: DietaListItem,
@@ -38,16 +44,18 @@ fun DietaActivaScreen(
     onCambiar: () -> Unit
 ) {
     val context = LocalContext.current
+    // Uses smartfit_session (not smartfit_config) because this data is session-dependent
     val prefs = remember { context.getSharedPreferences("smartfit_session", android.content.Context.MODE_PRIVATE) }
 
+    // rememberSaveable persists these states across recompositions and device rotation
     var fabExpanded by rememberSaveable { mutableStateOf(false) }
     var desayunoCheck by rememberSaveable { mutableStateOf(false) }
     var comidaCheck by rememberSaveable { mutableStateOf(false) }
     var cenaCheck by rememberSaveable { mutableStateOf(false) }
 
 
-    // TODO: Cargar alimentos reales de DIETA_COMIDA
-    // Por ahora todo a 0 hasta que haya comidas registradas
+    // TODO: Load real food data from DIETA_COMIDA endpoint
+    // All values are hardcoded to 0 until the endpoint integration is implemented
     val calConsumidas = 0
     val calRestantes = dieta.calorias
     val progreso = 0f
@@ -55,7 +63,8 @@ fun DietaActivaScreen(
     val carbActual = 0
     val grasActual = 0
 
-    // Guardar progreso para que Inicio lo lea
+    // Write diet data to SharedPreferences so the Home screen can read
+    // the progress ring without making an extra API call
     LaunchedEffect(progreso) {
         prefs.edit()
             .putFloat("dieta_progreso", progreso)
@@ -69,6 +78,7 @@ fun DietaActivaScreen(
 
     Scaffold(
         floatingActionButton = {
+            // Secondary FABs slide in when the main FAB is tapped
             Column(horizontalAlignment = Alignment.End) {
                 AnimatedVisibility(visible = fabExpanded) {
                     Column(
@@ -106,6 +116,7 @@ fun DietaActivaScreen(
                         }
                     }
                 }
+                // Main FAB — toggles the expanded menu
                 FloatingActionButton(
                     onClick = { fabExpanded = !fabExpanded },
                     shape = RoundedCornerShape(16.dp),
@@ -150,16 +161,19 @@ fun DietaActivaScreen(
 
                     Spacer(Modifier.height(24.dp))
 
-                    // ── Gráfico circular ──────────────────────────────
+                    // ── Gráfico circular
+                    // Two arcs: a static track and a filled arc proportional to progress
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.size(160.dp)) {
                         val primaryColor = MaterialTheme.colorScheme.primary
                         val trackColor = MaterialTheme.colorScheme.surfaceContainerHigh
 
                         Canvas(modifier = Modifier.size(140.dp)) {
+                            // Background track — always full 360°
                             drawArc(
                                 color = trackColor, startAngle = -90f, sweepAngle = 360f,
                                 useCenter = false, style = Stroke(width = 14f, cap = StrokeCap.Round)
                             )
+                            // Progress arc — only drawn if there is actual progress
                             if (progreso > 0f) {
                                 drawArc(
                                     color = primaryColor, startAngle = -90f,
@@ -176,7 +190,6 @@ fun DietaActivaScreen(
                     }
 
                     Spacer(Modifier.height(24.dp))
-
                     MacroBarRow("Proteína", protActual, dieta.proteinas.toInt())
                     Spacer(Modifier.height(8.dp))
                     MacroBarRow("Carbohidratos", carbActual, dieta.carbohidratos.toInt())
@@ -187,7 +200,7 @@ fun DietaActivaScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // ── Registro Diario ───────────────────────────────────────
+            // ── Registro Diario
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -206,6 +219,7 @@ fun DietaActivaScreen(
                     )
                     Spacer(Modifier.height(12.dp))
 
+                    // Each meal section has an independent check and expand state
                     SeccionRegistro(
                         titulo = "Desayuno",
                         checked = desayunoCheck,
@@ -227,12 +241,16 @@ fun DietaActivaScreen(
                     )
                 }
             }
-
+            // Extra bottom padding so the FAB does not overlap the last card
             Spacer(Modifier.height(80.dp))
         }
     }
 }
 
+/**
+ * Displays a macro label, current vs target values and a linear progress bar.
+ * Progress is clamped to [0, 1] to prevent the bar from overflowing.
+ */
 @Composable
 private fun MacroBarRow(label: String, actual: Int, meta: Int) {
     val progreso = if (meta > 0) (actual.toFloat() / meta).coerceIn(0f, 1f) else 0f
@@ -253,6 +271,11 @@ private fun MacroBarRow(label: String, actual: Int, meta: Int) {
     }
 }
 
+/**
+ * Expandable meal section with an independent circular check button.
+ * Both expanded and checked states use rememberSaveable to survive rotation.
+ * Spring animation gives the expand/collapse a natural bouncy feel.
+ */
 @Composable
 private fun SeccionRegistro(
     titulo: String,
@@ -267,7 +290,8 @@ private fun SeccionRegistro(
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // ── Tick circular ─────────────────────────────────────────
+        // ── Tick circular
+        // Circular check button — color changes when the meal is marked as done
         Surface(
             onClick = { onCheckedChange(!checked) },
             modifier = Modifier.size(28.dp),
@@ -290,7 +314,8 @@ private fun SeccionRegistro(
 
         Spacer(Modifier.width(12.dp))
 
-        // ── Título ────────────────────────────────────────────────
+        // ── Título
+        // Tapping the title row toggles the expanded state independently of the check
         Surface(
             onClick = { expanded = !expanded },
             color = MaterialTheme.colorScheme.background,
@@ -311,7 +336,7 @@ private fun SeccionRegistro(
             }
         }
     }
-
+    // Spring animation — same DampingRatioMediumBouncy used across the app for consistency
     AnimatedVisibility(
         visible = expanded,
         enter = expandVertically(animationSpec = spring(

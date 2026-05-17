@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.Key.Companion.Three
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -20,6 +21,12 @@ import androidx.compose.ui.unit.sp
 import com.example.proyectazo.ui.components.SmartFitTopBar
 import com.example.proyectazo.ui.viewmodel.DietaYComida.DietaListItem
 
+/**
+ * Shows all diets created by the user.
+ * Can be reached from DietaScreen when the user wants to switch diets,
+ * or directly when no active diet exists yet.
+ * @param mostrarBack Controls whether a back button and TopBar are shown — hidden when there is no active diet to return to.
+ */
 @Composable
 fun TodasLasDietasScreen(
     dietas: List<DietaListItem> = emptyList(),
@@ -32,6 +39,7 @@ fun TodasLasDietasScreen(
 ) {
     Scaffold(
         topBar = {
+            // TopBar only shown when navigating from an active diet — not on first access
             if (mostrarBack) {
                 SmartFitTopBar(titulo = "Todas las dietas", onBack = onBack)
             }
@@ -53,6 +61,7 @@ fun TodasLasDietasScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+            // Title rendered as a list item so it scrolls with the content
             if (!mostrarBack) {
                 item {
                     Text(
@@ -69,6 +78,7 @@ fun TodasLasDietasScreen(
             }
 
             if (isLoading) {
+                // Empty state — guides the user to create their first diet
                 item {
                     Box(
                         modifier = Modifier
@@ -109,18 +119,25 @@ fun TodasLasDietasScreen(
                     )
                 }
             }
-
+            // Extra padding so the FAB does not overlap the last card
             item { Spacer(Modifier.height(80.dp)) }
         }
     }
 }
 
+/**
+ * Card representing a single diet in the list.
+ * Shows an "ACTIVA" badge if this is the currently active diet.
+ * Inactive diets show a "Seleccionar" button — active ones do not,
+ * since selecting an already active diet would have no effect.
+ */
 @Composable
 private fun ItemDietaCard(
     dieta: DietaListItem,
     onSelect: () -> Unit,
     onBorrar: () -> Unit
 ) {
+    // Controls the visibility of the three-dot dropdown menu
     var menuExpandido by remember { mutableStateOf(false) }
 
     Card(
@@ -149,6 +166,7 @@ private fun ItemDietaCard(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     if (dieta.activo) {
+                        // Small badge to visually identify the active diet at a glance
                         Spacer(Modifier.width(8.dp))
                         Surface(
                             shape = RoundedCornerShape(4.dp),
@@ -166,8 +184,12 @@ private fun ItemDietaCard(
                 }
 
                 // Menú desplegable en lugar del botón simple
+                // delete is inside a dropdown to prevent accidental taps
                 Box {
-                    IconButton(onClick = { menuExpandido = true }, modifier = Modifier.size(32.dp)) {
+                    IconButton(
+                        onClick = { menuExpandido = true },
+                        modifier = Modifier.size(32.dp)
+                    ) {
                         Icon(
                             Icons.Filled.MoreVert,
                             contentDescription = "Opciones",
@@ -185,14 +207,21 @@ private fun ItemDietaCard(
                                 menuExpandido = false
                                 onBorrar()
                             },
-                            leadingIcon = { Icon(Icons.Default.Delete, null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error) }
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    null,
+                                    modifier = Modifier.size(18.dp),
+                                    tint = MaterialTheme.colorScheme.error // Red signals a destructive action
+                                )
+                            }
                         )
                     }
                 }
             }
 
             Spacer(Modifier.height(12.dp))
-
+            // Macro summary: proteins | carbs | fats in a single compact row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -219,7 +248,7 @@ private fun ItemDietaCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-
+            // "Seleccionar" button only shown for inactive diets
             if (!dieta.activo) {
                 Spacer(Modifier.height(12.dp))
                 Button(
