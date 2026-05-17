@@ -127,7 +127,7 @@ fun DietaActivaScreen(
         ) {
             Spacer(Modifier.height(24.dp))
 
-            // ── Card principal ────────────────────────────────────────
+            // ── Card principal
             Card(
                 modifier = Modifier
                     .fillMaxWidth()

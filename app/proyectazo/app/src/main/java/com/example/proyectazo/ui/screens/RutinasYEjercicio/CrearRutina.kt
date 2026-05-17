@@ -69,7 +69,7 @@ fun CrearRutinaScreen(
         ) {
             Spacer(Modifier.height(8.dp))
 
-            // ── Nombre ───────────────────────────────────────────
+            // ── Nombre
             Row(verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()) {

@@ -45,7 +45,7 @@ fun ConfiguracionInicialScreen(
         if (uiState.guardadoExitoso) onConfigurado()
     }
 
-    // ── Diálogo TimePicker ────────────────────────────────────────────────
+    // ── Diálogo TimePicker
     if (mostrarTimePicker) {
         Dialog(onDismissRequest = { mostrarTimePicker = false }) {
             Card(

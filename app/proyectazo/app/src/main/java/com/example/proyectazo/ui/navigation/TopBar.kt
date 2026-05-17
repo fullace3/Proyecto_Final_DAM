@@ -7,6 +7,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 
+/**
+ * Reusable top app bar used across all secondary screens in SmartFit.
+ * Displays a centered title and a back button on the left.
+ * A divider is added below to visually separate the bar from the screen content.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SmartFitTopBar(
@@ -16,6 +21,7 @@ fun SmartFitTopBar(
     Column {
         CenterAlignedTopAppBar(
             title = {
+                // Uses the typography token instead of a hardcoded font size
                 Text(
                     text = titulo,
                     style = MaterialTheme.typography.titleMedium
@@ -23,6 +29,7 @@ fun SmartFitTopBar(
             },
             navigationIcon = {
                 IconButton(onClick = onBack) {
+                    // AutoMirrored flips the arrow automatically in right-to-left languages
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Volver"
@@ -30,7 +37,7 @@ fun SmartFitTopBar(
                 }
             },
             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                containerColor = MaterialTheme.colorScheme.surface
+                containerColor = MaterialTheme.colorScheme.surface // No hardcoded colors
             )
         )
         HorizontalDivider(

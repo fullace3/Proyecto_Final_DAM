@@ -70,7 +70,7 @@ fun EditarPerfilScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit) {
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // ── Avatar ───────────────────────────────────────────────────────
+            // ── Avatar
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -96,7 +96,7 @@ fun EditarPerfilScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit) {
 
             Spacer(Modifier.height(16.dp))
 
-            // ── Datos de cuenta (Solo Lectura) ──────────────────────────────
+            // ── Datos de cuenta (Solo Lectura)
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

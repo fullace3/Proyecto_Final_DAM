@@ -77,7 +77,7 @@ fun PreferenciasScreen(
         ) {
             Spacer(Modifier.height(16.dp))
 
-            // ── Sección Notificaciones ────────────────────────────────────
+            // ── Sección Notificaciones
             Text(
                 "Notificaciones",
                 fontSize = 14.sp,
@@ -127,7 +127,7 @@ fun PreferenciasScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // ── Sección Legal ─────────────────────────────────────────────
+            // ── Sección Legal
             Text(
                 "Legal",
                 fontSize = 14.sp,

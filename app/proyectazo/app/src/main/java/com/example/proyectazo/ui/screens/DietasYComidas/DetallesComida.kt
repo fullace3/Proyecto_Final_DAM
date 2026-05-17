@@ -52,7 +52,7 @@ fun DetalleComidaScreen(
             } else {
                 Spacer(Modifier.height(16.dp))
 
-                // ── Nombre ────────────────────────────────────────────────
+                // ── Nombre
                 Text(
                     uiState.nombre,
                     fontSize = 24.sp,
@@ -62,7 +62,7 @@ fun DetalleComidaScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                // ── Imagen ────────────────────────────────────────────────
+                // ── Imagen
                 val imagenUrl = uiState.imagen
                 if (!imagenUrl.isNullOrEmpty()) {
                     val url = if (imagenUrl.startsWith("http")) imagenUrl

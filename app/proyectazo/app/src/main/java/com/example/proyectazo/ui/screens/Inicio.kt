@@ -57,7 +57,7 @@ fun PantallaInicio(usuario: String) {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
 
-        // ── Saludo ─────────────────────────────────────────────
+        // ── Saludo
         item {
             Text(
                 text = "Bienvenido, $usuario",
@@ -68,7 +68,7 @@ fun PantallaInicio(usuario: String) {
             )
         }
 
-        // ── DatePicker inline ──────────────────────────────────
+        // ── DatePicker inline
         item {
             Card(
                 modifier = Modifier

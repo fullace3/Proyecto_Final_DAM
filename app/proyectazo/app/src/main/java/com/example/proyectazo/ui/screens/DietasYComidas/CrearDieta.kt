@@ -34,12 +34,12 @@ fun CrearDietaScreen(
     onBack: () -> Unit,
     onGuardadoExitoso: () -> Unit,
     onAñadirAlimento: (String, String) -> Unit = { _, _ -> },
-    comidaAñadida: Triple<Int, String, Int>? = null,
-    comidaAñadidaMacros: Triple<Int, Int, Int>? = null,
-    comidaTipo: String? = null,
-    comidaDia: String? = null,
-    onComidaConsumida: () -> Unit = {},
-    dietaId: Int? = null
+    comidaAñadida: Triple<Int, String, Int>? = null, // Food item returned from DetalleComidaScreen
+    comidaAñadidaMacros: Triple<Int, Int, Int>? = null, // Macros (protein, carbs, fat) of the added food
+    comidaTipo: String? = null, // Meal type selected before navigating to food picker
+    comidaDia: String? = null, // Day selected before navigating to food picker
+    onComidaConsumida: () -> Unit = {}, // Clears the pending food after it has been processed
+    dietaId: Int? = null // Null when creating a new diet, non-null when editing an existing one
 ) {
     val context = LocalContext.current
     val viewModel: CrearDietaViewModel = viewModel(
@@ -47,9 +47,11 @@ fun CrearDietaScreen(
     )
     val uiState by viewModel.uiState.collectAsState()
     var diaSeleccionado by remember { mutableStateOf(comidaDia ?: "Lun") }
+    // rememberSaveable not needed here — editandoNombre resets intentionally on recomposition
     var editandoNombre by remember { mutableStateOf(false) }
 
-    // Añadir comida cuando llega de DetalleComidaScreen
+    // Triggered when the user returns from DetalleComidaScreen with a selected food item.
+    // LaunchedEffect re-runs only when comidaAñadida changes, avoiding duplicate additions.
     LaunchedEffect(comidaAñadida) {
         if (comidaAñadida != null && comidaAñadidaMacros != null) {
             val (id, nombre, calorias) = comidaAñadida
@@ -66,7 +68,7 @@ fun CrearDietaScreen(
                     tipo = comidaTipo ?: "Desayuno"
                 )
             )
-            onComidaConsumida()
+            onComidaConsumida() // Reset so the same food is not added again on recomposition
         }
     }
 
@@ -80,7 +82,7 @@ fun CrearDietaScreen(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        // ── Header X cerrar ───────────────────────────────────────────────
+        // ── Header X cerrar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -98,7 +100,7 @@ fun CrearDietaScreen(
 
         Spacer(Modifier.height(8.dp))
 
-        // ── Card principal ────────────────────────────────────────────────
+        // ── Card principal
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -119,7 +121,7 @@ fun CrearDietaScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // ── Nombre centrado + editar ──────────────────────────────
+                // ── Nombre centrado + editar
                 if (editandoNombre) {
                     OutlinedTextField(
                         value = uiState.nombreDieta,
@@ -162,7 +164,7 @@ fun CrearDietaScreen(
                     }
                 }
 
-                // ── Dropdown objetivo ─────────────────────────────────────
+                // ── Dropdown objetivo
                 Text(
                     "Editar objetivos",
                     fontSize = 13.sp,
@@ -179,7 +181,7 @@ fun CrearDietaScreen(
 
                 Divider(modifier = Modifier.fillMaxWidth())
 
-                // ── Macros ────────────────────────────────────────────────
+                // ── Macros
                 MacroRow("Proteína", "${uiState.proteinas}g")
                 MacroRow("Carbohidratos", "${uiState.carbohidratos}g")
                 MacroRow("Grasas", "${uiState.grasas}g")
@@ -188,7 +190,7 @@ fun CrearDietaScreen(
 
         Spacer(Modifier.height(24.dp))
 
-        // ── Registro semanal ──────────────────────────────────────────────
+        // ── Registro semanal
         Text(
             "Registro semanal",
             fontSize = 16.sp,
@@ -201,7 +203,7 @@ fun CrearDietaScreen(
 
         Spacer(Modifier.height(12.dp))
 
-        // ── Card única: días + Desayuno + Comida + Cena ───────────────────
+        // ── Card única: días + Desayuno + Comida + Cena
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -216,7 +218,7 @@ fun CrearDietaScreen(
             elevation = CardDefaults.cardElevation(0.dp)
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
-                // ── Días ──────────────────────────────────────────────────
+                // ── Días
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -251,7 +253,7 @@ fun CrearDietaScreen(
                     }
                 }
 
-                // ── Desayuno ──────────────────────────────────────────────
+                // ── Desayuno
                 SeccionComidaInline(
                     titulo = "Desayuno",
                     alimentos = uiState.alimentos.filter { it.tipo == "Desayuno" && (it.dia == null || it.dia == diaSeleccionado) },
@@ -260,7 +262,7 @@ fun CrearDietaScreen(
                     onEliminarAlimento = { uid -> viewModel.eliminarAlimento(uid) }
                 )
 
-                // ── Comida ────────────────────────────────────────────────
+                // ── Comida
                 SeccionComidaInline(
                     titulo = "Comida",
                     alimentos = uiState.alimentos.filter { it.tipo == "Comida" && (it.dia == null || it.dia == diaSeleccionado) },
@@ -269,7 +271,7 @@ fun CrearDietaScreen(
                     onEliminarAlimento = { uid -> viewModel.eliminarAlimento(uid) }
                 )
 
-                // ── Cena ──────────────────────────────────────────────────
+                // ── Cena
                 SeccionComidaInline(
                     titulo = "Cena",
                     alimentos = uiState.alimentos.filter { it.tipo == "Cena" && (it.dia == null || it.dia == diaSeleccionado) },
@@ -282,7 +284,7 @@ fun CrearDietaScreen(
 
         Spacer(Modifier.height(24.dp))
 
-        // ── Botón guardar ─────────────────────────────────────────────────
+        // ── Botón guardar
         Button(
             onClick = { viewModel.guardar(onGuardadoExitoso) },
             modifier = Modifier
@@ -313,7 +315,7 @@ fun CrearDietaScreen(
     }
 }
 
-// ── Sección inline dentro de la card ──────────────────────────────────────
+// ── Sección inline dentro de la card
 @Composable
 private fun SeccionComidaInline(
     titulo: String,
@@ -325,6 +327,7 @@ private fun SeccionComidaInline(
     var expanded by remember { mutableStateOf(inicialmenteExpandido) }
     Column(modifier = Modifier.fillMaxWidth()) {
         Divider(color = MaterialTheme.colorScheme.outlineVariant)
+        // Tapping the header toggles the section open or closed
         Surface(
             onClick = { expanded = !expanded },
             color = MaterialTheme.colorScheme.background
@@ -340,6 +343,8 @@ private fun SeccionComidaInline(
                 Text(if (expanded) "▲" else "▼", fontSize = 12.sp)
             }
         }
+        // Spring animation gives the expand/collapse a natural bouncy feel
+        // DampingRatioMediumBouncy and StiffnessLow produce a smooth, physical response
         AnimatedVisibility(
             visible = expanded,
             enter = expandVertically(animationSpec = spring(
@@ -367,6 +372,7 @@ private fun SeccionComidaInline(
                         .fillMaxWidth()
                         .height(36.dp),
                     shape = RoundedCornerShape(8.dp),
+                    // Subtle tinted background to distinguish from primary action buttons
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                     )
@@ -378,7 +384,7 @@ private fun SeccionComidaInline(
     }
 }
 
-// ── Fila de macronutriente ────────────────────────────────────────────────
+// Displays a single macronutrient label and its value in a horizontal row
 @Composable
 private fun MacroRow(label: String, valor: String) {
     Row(
@@ -393,7 +399,7 @@ private fun MacroRow(label: String, valor: String) {
     }
 }
 
-// ── Row de alimento con botón eliminar ────────────────────────────────────
+// Displays a food item row with its calorie count and a delete button
 @Composable
 private fun AlimentoItemRow(alimento: AlimentoItem, onEliminar: () -> Unit = {}) {
     Row(
@@ -407,7 +413,7 @@ private fun AlimentoItemRow(alimento: AlimentoItem, onEliminar: () -> Unit = {})
             alimento.nombre,
             fontSize = 12.sp,
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f)  // Takes remaining space, pushing calories and button to the right
         )
         Text(
             "${alimento.calorias} Kcal",
@@ -423,13 +429,17 @@ private fun AlimentoItemRow(alimento: AlimentoItem, onEliminar: () -> Unit = {})
                 imageVector = Icons.Filled.Close,
                 contentDescription = "Eliminar",
                 modifier = Modifier.size(16.dp),
-                tint = MaterialTheme.colorScheme.error
+                tint = MaterialTheme.colorScheme.error // Red tint signals a destructive action
             )
         }
     }
 }
 
-// ── Dropdown genérico ─────────────────────────────────────────────────────
+// ── Dropdown genérico
+/**
+ * Generic reusable dropdown field built with ExposedDropdownMenuBox.
+ * readOnly = true prevents the keyboard from opening — selection only via the dropdown.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DropdownCampo(
@@ -448,12 +458,12 @@ private fun DropdownCampo(
         OutlinedTextField(
             value = valor,
             onValueChange = {},
-            readOnly = true,
+            readOnly = true,  // Prevents keyboard — user selects from the dropdown only
             placeholder = { Text(placeholder, color = MaterialTheme.colorScheme.onSurfaceVariant) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandido) },
             modifier = Modifier
                 .fillMaxWidth()
-                .menuAnchor(),
+                .menuAnchor(), // Required by M3 to anchor the dropdown to this field
             shape = RoundedCornerShape(10.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
@@ -469,7 +479,7 @@ private fun DropdownCampo(
                     text = { Text(opcion) },
                     onClick = {
                         onSeleccion(opcion)
-                        expandido = false
+                        expandido = false // Close the dropdown after selection
                     }
                 )
             }

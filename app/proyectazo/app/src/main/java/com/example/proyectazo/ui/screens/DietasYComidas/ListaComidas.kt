@@ -47,7 +47,7 @@ fun ListaComidasScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // ── Buscador ──────────────────────────────────────────────────
+            // ── Buscador
             OutlinedTextField(
                 value = uiState.busqueda,
                 onValueChange = viewModel::onBusquedaChange,
@@ -69,7 +69,7 @@ fun ListaComidasScreen(
                 )
             )
 
-            // ── Chips de filtro ───────────────────────────────────────────
+            // ── Chips de filtro
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

@@ -36,7 +36,7 @@ fun PantallaPerfil(
     val uiState by viewModel.uiState.collectAsState()
     var mostrarDialogo by remember { mutableStateOf(false) }
 
-    // ── Diálogo confirmación cerrar sesión ────────────────────────────────────
+    // ── Diálogo confirmación cerrar sesión
     if (mostrarDialogo) {
         AlertDialog(
             onDismissRequest = { mostrarDialogo = false },
@@ -65,7 +65,7 @@ fun PantallaPerfil(
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
     ) {
-        // ── Cabecera con avatar ───────────────────────────────────────────────
+        // ── Cabecera con avatar
         Column(
             modifier = Modifier
                 .fillMaxWidth()

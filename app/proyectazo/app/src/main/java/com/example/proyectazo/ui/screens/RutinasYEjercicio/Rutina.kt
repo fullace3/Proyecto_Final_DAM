@@ -154,7 +154,7 @@ private fun TarjetaRutina(
     ) {
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
 
-            // ── Título + menú (solo Eliminar) ──────────────────
+            // ── Título + menú (solo Eliminar)
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = rutinaConEj.rutina.nombre,
@@ -181,7 +181,7 @@ private fun TarjetaRutina(
 
             Spacer(Modifier.height(12.dp))
 
-            // ── Imágenes preview ───────────────────────────────
+            // ── Imágenes preview
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically) {
                 preview.forEach { ejercicio ->
