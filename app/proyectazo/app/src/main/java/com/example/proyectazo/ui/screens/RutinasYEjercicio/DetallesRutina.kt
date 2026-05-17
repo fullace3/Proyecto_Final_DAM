@@ -21,8 +21,6 @@ import coil.compose.AsyncImage
 import com.example.proyectazo.ui.components.SmartFitTopBar
 import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.RutinaConEjercicios
 
-kotlinpackage com.example.proyectazo.ui.screens.RutinasYEjercicio
-
 /**
  * Shows the exercises in a routine before the user starts training.
  * Two actions are pinned to the bottom bar: edit the routine or start the workout.
