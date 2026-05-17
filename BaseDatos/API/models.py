@@ -1,25 +1,34 @@
-# Entry point for the SmartFit FastAPI application.
-# Handles database configuration, session management and modeels registration.
+# ORM model definitions for the SmartFit database.
+# Each class maps to a MySQL table declared in the RDS instance.
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Boolean, Time
 from sqlalchemy.orm import relationship
 from main import Base
 from datetime import datetime
 
 class Usuario(Base):
+    """
+    Represents a registered user in the SmartFit application.
+    Maps to the USUARIO table in the database.
+    """
     __tablename__ = "USUARIO"
 
     id_usuario    = Column(Integer, primary_key=True, index=True)
     nombre        = Column(String(100), nullable=False)
-    email         = Column(String(100), unique=True, nullable=False)
-    password_hash = Column(String(255), nullable=False)
-    horario_entrenamiento = Column(Time, nullable=True)
-    fecha_registro = Column(DateTime, default=datetime.utcnow)
+    email         = Column(String(100), unique=True, nullable=False) # Used as login identifier
+    password_hash = Column(String(255), nullable=False) # Hashed with bcrypt, never stored in plain text
+    horario_entrenamiento = Column(Time, nullable=True) # Used to schedule workout notifications
+    fecha_registro = Column(DateTime, default=datetime.utcnow)  # Set automatically on account creation
 
+    # Cascaded relationships: deleting a user removes all their associated data
     rutinas = relationship("Rutina", back_populates="usuario", cascade="all, delete")
     dietas  = relationship("Dieta",  back_populates="usuario", cascade="all, delete")
     medidas = relationship("MedidaCorporal", back_populates="usuario", cascade="all, delete")
 
 class Rutina(Base):
+    """
+    Represents a workout routine created by a user.
+    Maps to the RUTINA table.
+    """
     __tablename__ = "RUTINA"
 
     id_rutina   = Column(Integer, primary_key=True, index=True)
@@ -30,6 +39,11 @@ class Rutina(Base):
     ejercicios = relationship("RutinaEjercicio", back_populates="rutina", cascade="all, delete")
 
 class Ejercicio(Base):
+    """
+    Represents an exercise available in the app catalog.
+    Exercises are shared across users and assigned to routines via RutinaEjercicio.
+    Maps to the EJERCICIO table.
+    """
     __tablename__ = "EJERCICIO"
 
     id_ejercicio      = Column(Integer, primary_key=True, index=True)
@@ -40,6 +54,11 @@ class Ejercicio(Base):
     imagen            = Column(String(255))
 
 class RutinaEjercicio(Base):
+    """
+    Junction table linking routines and exercises (many-to-many).
+    Also stores exercise-specific config: sets, reps and display order.
+    Maps to the RUTINA_EJERCICIO table.
+    """
     __tablename__ = "RUTINA_EJERCICIO"
 
     id_rutina    = Column(Integer, ForeignKey("RUTINA.id_rutina",       ondelete="CASCADE"), primary_key=True)
@@ -52,6 +71,11 @@ class RutinaEjercicio(Base):
     ejercicio = relationship("Ejercicio")
 
 class Dieta(Base):
+    """
+    Represents a diet plan available in the app catalog.
+    Meals are shared across users and assigned to routines via DietaComida.
+    Maps to the DIETA table.
+    """
     __tablename__ = "DIETA"
 
     id_dieta          = Column(Integer, primary_key=True, index=True)
@@ -69,6 +93,11 @@ class Dieta(Base):
     comidas_rel = relationship("DietaComida", back_populates="dieta", cascade="all, delete")
 
 class Comida(Base):
+    """
+    Represents a meal available in the app catalog.
+    Meals are shared across users and assigned to diet plans via DietaComida.
+    Maps to the COMIDA table.
+    """
     __tablename__ = "COMIDA"
 
     id_comida          = Column(Integer, primary_key=True, index=True)
@@ -84,6 +113,11 @@ class Comida(Base):
     dietas_rel = relationship("DietaComida", back_populates="comida")
 
 class DietaComida(Base):
+    """
+    Junction table linking diet plans and meals (many-to-many).
+    Also stores meal-specific config: Macros and display order.
+    Maps to the DIETA_COMIDA table.
+    """
     __tablename__ = "DIETA_COMIDA"
     id         = Column(Integer, primary_key=True, index=True)
     id_dieta   = Column(Integer, ForeignKey("DIETA.id_dieta", ondelete="CASCADE"))
@@ -95,6 +129,11 @@ class DietaComida(Base):
     comida = relationship("Comida", back_populates="dietas_rel")
 
 class MedidaCorporal(Base):
+    """
+    Represents a body measurement available in the app catalog.
+    Measurements are shared across users and assigned to diet plans via DietaComida.
+    Maps to the MEDIDA_CORPORAL table.
+    """
     __tablename__ = "MEDIDA_CORPORAL"
 
     id_medida          = Column(Integer, primary_key=True, index=True)
@@ -112,6 +151,11 @@ class MedidaCorporal(Base):
     usuario = relationship("Usuario", back_populates="medidas")
 
 class HistorialEntrenamiento(Base):
+    """
+    Represents a training session available in the app catalog.
+    Sessions are shared across users and assigned to routines via RutinaEjercicio.
+    Maps to the HISTORIAL_ENTRENAMIENTO table.
+    """
     __tablename__ = "HISTORIAL_ENTRENAMIENTO"
 
     id_registro      = Column(Integer, primary_key=True, index=True)

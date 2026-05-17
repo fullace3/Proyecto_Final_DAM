@@ -113,25 +113,33 @@ fun EditarPerfilScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit) {
                 CampoInformativo(label = "Nombre de usuario", valor = uiState.nombre)
                 CampoInformativo(label = "Correo electrónico", valor = uiState.email)
             }
+            Spacer(Modifier.height(24.dp))
 
-            // ── Datos físicos ─────────────────────────────────────────────────
+            // ── Datos físicos ─────────────────────────────────────────────────────────────
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-
+                Text(
+                    text = "Datos físicos",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
                 CampoEdicion(
+                    label = "Altura (cm)",          // ← etiqueta visible
                     valor = uiState.alturaCm,
-                    placeholder = "Altura (cm)",
+                    placeholder = "Ej: 175",
                     keyboardType = KeyboardType.Decimal,
                     onValorChange = viewModel::onAlturaChange
                 )
-
                 CampoEdicion(
+                    label = "Peso (kg)",            // ← etiqueta visible
                     valor = uiState.pesoKg,
-                    placeholder = "Peso (kg)",
+                    placeholder = "Ej: 70",
                     keyboardType = KeyboardType.Decimal,
                     onValorChange = viewModel::onPesoChange
                 )
@@ -213,26 +221,35 @@ fun EditarPerfilScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit) {
 // ── TextField genérico ────────────────────────────────────────────────────────
 @Composable
 private fun CampoEdicion(
+    label: String,          // ← nuevo parámetro
     valor: String,
     placeholder: String,
     keyboardType: KeyboardType = KeyboardType.Text,
     onValorChange: (String) -> Unit
 ) {
-    OutlinedTextField(
-        value = valor,
-        onValueChange = onValorChange,
-        placeholder = { Text(placeholder, color = MaterialTheme.colorScheme.onSurfaceVariant) },
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(10.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-            focusedBorderColor = MaterialTheme.colorScheme.primary
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = label,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
         )
-    )
+        OutlinedTextField(
+            value = valor,
+            onValueChange = onValorChange,
+            placeholder = { Text(placeholder, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(10.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                focusedBorderColor = MaterialTheme.colorScheme.primary
+            )
+        )
+    }
 }
-
 // ── Dropdown genérico ─────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

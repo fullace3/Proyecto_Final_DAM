@@ -35,18 +35,18 @@ import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.AñadirEjercicioUiSt
 enum class FiltroTipo { MUSCULO, EQUIPAMIENTO }
 
 private val musculoImagenes: Map<String, Int> = mapOf(
-    "Antebrazos"    to R.drawable.img_002_atrs,
-    "Trapecio"      to R.drawable.img_003_atrs_1,
-    "Bíceps"        to R.drawable.img_002_bceps,
-    "Espalda"       to R.drawable.img_002_dorsal,
-    "Cuádriceps"    to R.drawable.img_001_gluteo,
-    "Isquiosurales" to R.drawable.img_002_frente,
-    "Gemelos"       to R.drawable.img_001_msculos,
-    "Glúteos"       to R.drawable.img_003_ms_bajo,
-    "Hombros"       to R.drawable.img_003_hombro,
-    "Abdominales"   to R.drawable.img_003_culturismo,
-    "Pecho"         to R.drawable.img_001_gimnasia,
-    "Tríceps"       to R.drawable.img_001_triceps,
+    "Abdominales" to R.drawable.img_003_ms_bajo,
+    "Trapecio" to R.drawable.img_003_atrs_1,
+    "Bíceps"  to R.drawable.img_002_bceps,
+    "Espalda"  to R.drawable.img_002_dorsal,
+    "Cuádriceps" to R.drawable.img_002_frente,
+    "Isquiosurales" to R.drawable.img_002_atrs,
+    "Gemelos" to R.drawable.img_001_msculos,
+    "Glúteos" to R.drawable.img_001_gluteo,
+    "Hombros" to R.drawable.img_003_hombro,
+    "Antebrazo" to R.drawable.img_003_culturismo,
+    "Pecho" to R.drawable.img_001_gimnasia,
+    "Tríceps" to R.drawable.img_001_triceps,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)

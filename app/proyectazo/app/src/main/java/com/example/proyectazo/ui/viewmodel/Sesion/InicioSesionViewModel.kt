@@ -39,9 +39,15 @@ class LoginViewModel(private val context: Context) : ViewModel() {
                 val respuesta = RetrofitClient.instance.login(LoginRequest(nombre, password))
 
                 if (respuesta.isSuccessful && respuesta.body() != null) {
+                    val tokenResponse = respuesta.body()!!
+
+                    // Obtenemos el nombre del usuario
+                    val usuarioResponse = RetrofitClient.instance.getUsuario(tokenResponse.id_usuario).body()
+
                     sessionManager.guardarSesion(
-                        respuesta.body()!!.access_token,
-                        respuesta.body()!!.id_usuario
+                        token = tokenResponse.access_token,
+                        userId = tokenResponse.id_usuario,
+                        nombre = usuarioResponse?.nombre ?: "Usuario"
                     )
                     _uiState.value = LoginUiState.Success
                 } else if (respuesta.code() == 401) {

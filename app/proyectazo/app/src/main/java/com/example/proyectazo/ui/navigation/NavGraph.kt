@@ -38,6 +38,7 @@ import com.example.proyectazo.ui.screens.Sesion.PantallaRegistro
 import com.example.proyectazo.ui.screens.RutinasYEjercicio.PantallaRutinas
 import com.example.proyectazo.ui.viewmodel.RutinaYEjercicio.RutinaConEjercicios
 import androidx.compose.runtime.collectAsState
+import com.example.proyectazo.network.SessionManager
 import com.example.proyectazo.ui.screens.Sesion.ConfiguracionInicialScreen
 import com.example.proyectazo.ui.screens.PerfilYAjustes.HoraEntrenamientoScreen
 
@@ -106,7 +107,9 @@ fun NavGraph(
 
         // ── HOME ──────────────────────────────────────────────────
         composable(Screen.Home.route) {
-            PantallaInicio(usuario = "usuario")
+            val context = androidx.compose.ui.platform.LocalContext.current
+            val sessionManager = remember { com.example.proyectazo.network.SessionManager(context) }
+            PantallaInicio(usuario = sessionManager.getUserNombre())
         }
 
         // ── RUTINAS ───────────────────────────────────────────────
