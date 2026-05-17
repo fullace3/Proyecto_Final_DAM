@@ -5,18 +5,22 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 
 /**
- * Worker que se ejecuta en un hilo secundario (hilo de background).
- * WorkManager gestiona automáticamente el ciclo de vida del hilo,
- * garantizando que la tarea se ejecuta fuera del hilo principal (Main Thread).
+ * Background worker responsible for triggering the workout reminder notification.
+ * Extends CoroutineWorker to support Kotlin coroutines inside the task.
  *
- * CoroutineWorker permite usar coroutines de Kotlin para operaciones asíncronas.
+ * WorkManager automatically manages the thread lifecycle, ensuring doWork()
+ * always runs off the main thread — preventing UI freezes or ANR errors.
  */
 class EntrenamientoWorker(
     private val context: Context,
     workerParams: WorkerParameters
 ) : CoroutineWorker(context, workerParams) {
-
-    // doWork() se ejecuta siempre en un hilo secundario (Dispatchers.Default)
+    /**
+     * Entry point called by WorkManager when the scheduled task fires.
+     * Always runs on Dispatchers.Default (background thread) — never on the main thread.
+     * Returns Result.success() if the notification was shown, Result.failure() otherwise.
+     * WorkManager can use Result.retry() to reschedule if needed.
+     */
     override suspend fun doWork(): Result {
         return try {
             NotificationHelper.mostrarNotificacion(context)
