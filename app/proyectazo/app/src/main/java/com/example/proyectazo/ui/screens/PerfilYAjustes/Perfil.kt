@@ -25,18 +25,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.proyectazo.ui.viewmodel.PerfilYAjustes.PerfilViewModel
 
+/**
+ * Profile screen showing user stats, fitness goal and navigation options.
+ * Receives the ViewModel from the NavGraph so it shares the same instance
+ * as EditarPerfilScreen — changes made there reflect here immediately on return.
+ */
 @Composable
 fun PantallaPerfil(
-    viewModel: PerfilViewModel,
+    viewModel: PerfilViewModel, // Shared instance scoped to the Perfil back stack entry
     onEditarPerfil: () -> Unit,
     onPreferencias: () -> Unit,
     onCerrarSesion: () -> Unit
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
+    // Controls the logout confirmation dialog — prevents accidental session termination
     var mostrarDialogo by remember { mutableStateOf(false) }
 
-    // ── Diálogo confirmación cerrar sesión
     if (mostrarDialogo) {
         AlertDialog(
             onDismissRequest = { mostrarDialogo = false },
@@ -45,8 +50,8 @@ fun PantallaPerfil(
             confirmButton = {
                 TextButton(onClick = {
                     mostrarDialogo = false
-                    viewModel.cerrarSesion()
-                    onCerrarSesion()
+                    viewModel.cerrarSesion() // Clears SharedPreferences (smartfit_session)
+                    onCerrarSesion() // NavGraph pops to Login clearing the back stack
                 }) {
                     Text("Sí", color = MaterialTheme.colorScheme.error)
                 }
@@ -65,7 +70,7 @@ fun PantallaPerfil(
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
     ) {
-        // ── Cabecera con avatar
+        // Header with avatar placeholder and user name/email
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -90,6 +95,7 @@ fun PantallaPerfil(
 
             Spacer(Modifier.height(12.dp))
 
+            // Show a spinner while profile data is loading from the API
             if (uiState.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
             } else {
@@ -109,14 +115,14 @@ fun PantallaPerfil(
 
         Spacer(Modifier.height(16.dp))
 
-        // ── Fila de stats + objetivo ──────────────────────────────────────────
+        // Stats and goal side by side — Modifier.weight distributes space proportionally
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Card datos personales
+            // Physical stats card — weight(1.2f) gives it slightly more space than the goal card
             Card(
                 modifier = Modifier.weight(1.2f),
                 shape = RoundedCornerShape(16.dp),
@@ -129,7 +135,7 @@ fun PantallaPerfil(
                 }
             }
 
-            // Card objetivo
+            // Fitness goal card
             Card(
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(16.dp),
@@ -169,7 +175,7 @@ fun PantallaPerfil(
 
         Spacer(Modifier.height(20.dp))
 
-        // ── Menú de opciones ─────────────────────────────────────────────────
+        // Navigation menu grouped in a single card for visual consistency
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -195,7 +201,7 @@ fun PantallaPerfil(
 
         Spacer(Modifier.height(24.dp))
 
-        // ── Botón cerrar sesión ───────────────────────────────────────────────
+        // Logout button uses error color to signal it is a destructive action
         Button(
             onClick = { mostrarDialogo = true },
             modifier = Modifier
@@ -215,7 +221,7 @@ fun PantallaPerfil(
     }
 }
 
-// ── Fila de dato en el card de stats ─────────────────────────────────────────
+// Displays a single label-value pair in the stats card
 @Composable
 private fun StatRow(label: String, valor: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -233,7 +239,7 @@ private fun StatRow(label: String, valor: String) {
     }
 }
 
-// ── Fila de opción del menú ───────────────────────────────────────────────────
+// Reusable tappable row for the profile menu — icon, label and trailing arrow
 @Composable
 private fun MenuOpcion(icono: ImageVector, texto: String, onClick: () -> Unit) {
     Surface(
@@ -259,6 +265,7 @@ private fun MenuOpcion(icono: ImageVector, texto: String, onClick: () -> Unit) {
                 modifier = Modifier.weight(1f),
                 color = MaterialTheme.colorScheme.onSurface
             )
+            // AutoMirrored flips the arrow in right-to-left languages automatically
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,

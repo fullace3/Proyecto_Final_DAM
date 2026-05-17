@@ -11,6 +11,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.proyectazo.ui.components.SmartFitTopBar
 
+/**
+ * Displays legal attributions for third-party resources used in the app:
+ * icon authors (Flaticon) and nutritional data source (USDA FoodData Central).
+ */
 @Composable
 fun TerminosCondicionesScreen(onBack: () -> Unit) {
     Column(

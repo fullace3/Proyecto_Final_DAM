@@ -27,6 +27,11 @@ import com.example.proyectazo.ui.components.SmartFitTopBar
 import com.example.proyectazo.ui.viewmodel.PerfilYAjustes.EditarGuardarEstado
 import com.example.proyectazo.ui.viewmodel.PerfilYAjustes.EditarPerfilViewModel
 
+/**
+ * Screen that allows the user to edit their physical data and fitness goal.
+ * Account fields (username, email) are displayed as read-only — they cannot be changed here.
+ * Shows a Snackbar on success or error after saving.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditarPerfilScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit) {
@@ -43,12 +48,13 @@ fun EditarPerfilScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit) {
         "Mantenimiento", "Fuerza", "Resistencia"
     )
 
+    // Reacts to state changes after the save attempt — shows feedback and navigates back on success
     LaunchedEffect(uiState.guardarEstado) {
         when (val estado = uiState.guardarEstado) {
             is EditarGuardarEstado.Exito -> {
                 snackbarHostState.showSnackbar("Perfil actualizado correctamente")
                 viewModel.resetEstado()
-                onGuardadoExitoso()
+                onGuardadoExitoso() // Triggers perfilViewModel.recargar() in the NavGraph
             }
             is EditarGuardarEstado.Error -> {
                 snackbarHostState.showSnackbar(estado.mensaje)
@@ -71,6 +77,7 @@ fun EditarPerfilScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // ── Avatar
+            // no image upload implemented, icon used as fallback
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -96,7 +103,8 @@ fun EditarPerfilScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit) {
 
             Spacer(Modifier.height(16.dp))
 
-            // ── Datos de cuenta (Solo Lectura)
+            // ── Datos de cuenta
+            // Read-only — username and email cannot be changed from this screen
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -115,7 +123,8 @@ fun EditarPerfilScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit) {
             }
             Spacer(Modifier.height(24.dp))
 
-            // ── Datos físicos ─────────────────────────────────────────────────────────────
+            // ── Datos físicos
+            // Editable physical data — used for progress tracking and calorie calculations
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -130,14 +139,14 @@ fun EditarPerfilScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit) {
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
                 CampoEdicion(
-                    label = "Altura (cm)",          // ← etiqueta visible
+                    label = "Altura (cm)",
                     valor = uiState.alturaCm,
                     placeholder = "Ej: 175",
                     keyboardType = KeyboardType.Decimal,
                     onValorChange = viewModel::onAlturaChange
                 )
                 CampoEdicion(
-                    label = "Peso (kg)",            // ← etiqueta visible
+                    label = "Peso (kg)",
                     valor = uiState.pesoKg,
                     placeholder = "Ej: 70",
                     keyboardType = KeyboardType.Decimal,
@@ -147,7 +156,7 @@ fun EditarPerfilScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit) {
 
             Spacer(Modifier.height(16.dp))
 
-            // ── Objetivo ──────────────────────────────────────────────────────
+            // ── Objetivo
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -185,7 +194,8 @@ fun EditarPerfilScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit) {
 
             Spacer(Modifier.height(24.dp))
 
-            // ── Botón guardar ─────────────────────────────────────────────────
+            // ── Botón guardar
+            // Save button is disabled while a request is in progress to prevent duplicate submissions
             Button(
                 onClick = { viewModel.guardar() },
                 enabled = !uiState.isLoading &&
@@ -196,6 +206,7 @@ fun EditarPerfilScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit) {
                     .height(52.dp),
                 shape = RoundedCornerShape(14.dp)
             ) {
+                // Show a spinner inside the button while saving — replaces the label
                 if (uiState.guardarEstado is EditarGuardarEstado.Cargando) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(20.dp),
@@ -218,10 +229,11 @@ fun EditarPerfilScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit) {
     }
 }
 
-// ── TextField genérico ────────────────────────────────────────────────────────
+// ── TextField genérico
+// Generic labeled text field with configurable keyboard type
 @Composable
 private fun CampoEdicion(
-    label: String,          // ← nuevo parámetro
+    label: String,
     valor: String,
     placeholder: String,
     keyboardType: KeyboardType = KeyboardType.Text,
@@ -250,7 +262,8 @@ private fun CampoEdicion(
         )
     }
 }
-// ── Dropdown genérico ─────────────────────────────────────────────────────────
+// ── Dropdown genérico
+// Generic dropdown using ExposedDropdownMenuBox — readOnly prevents keyboard from opening
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DropdownCampo(
@@ -259,6 +272,7 @@ private fun DropdownCampo(
     opciones: List<String>,
     onSeleccion: (String) -> Unit
 ) {
+    // rememberSaveable keeps the dropdown open after device rotation
     var expandido by rememberSaveable { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(
@@ -269,12 +283,12 @@ private fun DropdownCampo(
         OutlinedTextField(
             value = valor,
             onValueChange = {},
-            readOnly = true,
+            readOnly = true, // Selection only — keyboard must not appear
             placeholder = { Text(placeholder, color = MaterialTheme.colorScheme.onSurfaceVariant) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandido) },
             modifier = Modifier
                 .fillMaxWidth()
-                .menuAnchor(),
+                .menuAnchor(), // Required by M3 to anchor the dropdown
             shape = RoundedCornerShape(10.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
@@ -297,6 +311,8 @@ private fun DropdownCampo(
         }
     }
 }
+
+// Read-only field displaying account data that cannot be edited from this screen
 @Composable
 private fun CampoInformativo(label: String, valor: String) {
     Column(
@@ -311,6 +327,7 @@ private fun CampoInformativo(label: String, valor: String) {
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+        // Falls back to "No configurado" if the value is empty
         Spacer(Modifier.height(2.dp))
         Text(
             text = valor.ifEmpty { "No configurado" },

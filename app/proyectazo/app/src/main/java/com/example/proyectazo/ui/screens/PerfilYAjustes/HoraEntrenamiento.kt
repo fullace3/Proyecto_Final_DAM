@@ -13,27 +13,36 @@ import androidx.compose.ui.unit.sp
 import com.example.proyectazo.notificaciones.NotificationScheduler
 import com.example.proyectazo.ui.components.SmartFitTopBar
 
+/**
+ * Lets the user pick their daily workout time using a 24-hour clock.
+ * Saving the time persists it to SharedPreferences and reschedules
+ * the WorkManager notification for 30 minutes before the new time.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HoraEntrenamientoScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    // Read from smartfit_config — separate from smartfit_session so it survives logout
     val prefs = remember {
         context.getSharedPreferences("smartfit_config", android.content.Context.MODE_PRIVATE)
     }
 
+    // Load the previously saved time, falling back to 20:00 if none exists
     val horaGuardada = prefs.getString("hora_entrenamiento", "20:00") ?: "20:00"
     val partes = horaGuardada.split(":")
     val horaInicial = partes.getOrNull(0)?.toIntOrNull() ?: 20
     val minutoInicial = partes.getOrNull(1)?.toIntOrNull() ?: 0
 
+    // Initialize the time picker with the saved values so the user sees their current setting
     val timePickerState = rememberTimePickerState(
         initialHour = horaInicial,
         initialMinute = minutoInicial,
         is24Hour = true
     )
 
+    // Tracks whether the user has saved in this session — shows a confirmation message
     var guardado by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -68,6 +77,7 @@ fun HoraEntrenamientoScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
+            // Confirmation message — only visible after the user saves
             if (guardado) {
                 Spacer(Modifier.height(12.dp))
                 Text(
@@ -78,20 +88,22 @@ fun HoraEntrenamientoScreen(
                 )
             }
 
+            // Pushes the button to the bottom of the screen
             Spacer(Modifier.weight(1f))
 
             Button(
                 onClick = {
+                    // Format as "HH:MM" with leading zeros (e.g. "08:05" not "8:5")
                     val horaStr = "%02d:%02d".format(
                         timePickerState.hour,
                         timePickerState.minute
                     )
-                    // Guardar en SharedPreferences
+                    // Persist the time so it survives app restarts and logout
                     prefs.edit()
                         .putString("hora_entrenamiento", horaStr)
                         .apply()
 
-                    // Programar notificación en hilo secundario via WorkManager
+                    // Cancel any existing reminder and schedule a new one with the updated time
                     NotificationScheduler.programar(context, horaStr)
 
                     guardado = true
