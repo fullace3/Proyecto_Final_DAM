@@ -96,27 +96,23 @@ fun EditarPerfilScreen(onBack: () -> Unit, onGuardadoExitoso: () -> Unit) {
 
             Spacer(Modifier.height(16.dp))
 
-            // ── Datos de cuenta ──────────────────────────────────────────────
+            // ── Datos de cuenta (Solo Lectura) ──────────────────────────────
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                CampoEdicion(
-                    valor = uiState.nombre,
-                    placeholder = "Usuario",
-                    onValorChange = viewModel::onNombreChange
+                Text(
+                    text = "Información de la cuenta",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(bottom = 4.dp)
                 )
-                CampoEdicion(
-                    valor = uiState.email,
-                    placeholder = "Correo",
-                    keyboardType = KeyboardType.Email,
-                    onValorChange = viewModel::onEmailChange
-                )
+                CampoInformativo(label = "Nombre de usuario", valor = uiState.nombre)
+                CampoInformativo(label = "Correo electrónico", valor = uiState.email)
             }
-
-            Spacer(Modifier.height(12.dp))
 
             // ── Datos físicos ─────────────────────────────────────────────────
             Column(
@@ -282,5 +278,28 @@ private fun DropdownCampo(
                 )
             }
         }
+    }
+}
+@Composable
+private fun CampoInformativo(label: String, valor: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f), RoundedCornerShape(10.dp))
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Text(
+            text = label,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(Modifier.height(2.dp))
+        Text(
+            text = valor.ifEmpty { "No configurado" },
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Normal,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }
