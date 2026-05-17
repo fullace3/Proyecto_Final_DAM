@@ -1,38 +1,45 @@
 package com.example.proyectazo.network
 
+/**
+ * Data Transfer Objects (DTOs) for the SmartFit API.
+ * Request classes define what the app sends to the server.
+ * Response classes define what the app receives and maps to UI state.
+ * All fields use snake_case to match the FastAPI JSON field names directly.
+ */
+
 // ── USUARIO ───────────────────────────────────
 data class LoginRequest(
     val nombre: String,
-    val password: String
+    val password: String // Plain text — transmitted over HTTPS, never stored locally
 )
 
 data class UsuarioRequest(
     val nombre: String,
     val email: String,
-    val password: String
+    val password: String // Sent as plain text, hashed by the API before storing
 )
 
 data class UsuarioResponse(
     val id_usuario: Int,
     val nombre: String,
     val email: String,
-    val fecha_registro: String
+    val fecha_registro: String // International standard format string (ISO 8601) — parsed to Date only if required by the UI.
 )
 
 data class TokenResponse(
-    val access_token: String,
-    val token_type: String,
-    val id_usuario: Int
+    val access_token: String, // JWT token stored in SharedPreferences (smartfit_session)
+    val token_type: String, // Always "bearer" — required by the OAuth2 standard
+    val id_usuario: Int // Stored locally so the app can make user-specific requests
 )
 
 // ── EJERCICIO ─────────────────────────────────
 data class EjercicioResponse(
     val id_ejercicio: Int,
     val nombre: String,
-    val grupo_muscular: String?,
-    val equipamiento: String?,
+    val grupo_muscular: String?, // Nullable — used for filtering, may not be set for all exercises
+    val equipamiento: String?, // Nullable — used for filtering by required equipment
     val descripcion: String?,
-    val imagen: String?
+    val imagen: String? // URL pointing to the image stored in S3
 )
 
 // ── RUTINA ────────────────────────────────────
@@ -51,9 +58,9 @@ data class RutinaResponse(
 data class RutinaEjercicioRequest(
     val id_rutina: Int,
     val id_ejercicio: Int,
-    val series: Int = 3,
+    val series: Int = 3, // Default values match the API defaults
     val repeticiones: Int = 10,
-    val orden: Int
+    val orden: Int // Controls the display order within the routine
 )
 
 data class RutinaEjercicioResponse(
@@ -71,7 +78,7 @@ data class DietaRequest(
     val proteinas_g: Double,
     val carbohidratos_g: Double,
     val grasas_g: Double,
-    val fecha_inicio: String,       // Formato "2025-01-01T00:00:00"
+    val fecha_inicio: String,       // ISO 8601 (International Standard) format: "2025-01-01T00:00:00"
     val fecha_fin: String? = null,
     val id_usuario: Int
 )
@@ -86,15 +93,15 @@ data class DietaResponse(
     val fecha_inicio: String,
     val fecha_fin: String?,
     val id_usuario: Int,
-    val activo: Boolean = false
+    val activo: Boolean = false // Only one diet per user can be active at a time
 )
 
 // ── DIETA-COMIDA ─────────────────────────────
 data class DietaComidaRequest(
     val id_dieta: Int,
     val id_comida: Int,
-    val tipo: String,
-    val dia: String
+    val tipo: String, // Expected values: "Desayuno", "Comida" or "Cena"
+    val dia: String // Expected values: "Lunes", "Martes", etc.
 )
 
 data class DietaComidaResponse(
@@ -103,18 +110,18 @@ data class DietaComidaResponse(
     val id_comida: Int,
     val tipo: String,
     val dia: String,
-    val comida: ComidaResponse? = null
+    val comida: ComidaResponse? = null  // Nested object returned by the API — avoids a second request
 )
 
 // ── COMIDA ────────────────────────────────────
 data class ComidaRequest(
     val nombre: String,
-    val calorias_100g: Int,
+    val calorias_100g: Int, // All nutritional values are per 100g for consistency
     val proteinas_100g: Int,
     val carbohidratos_100g: Int,
     val grasas_100g: Int,
     val id_usuario: Int,
-    val imagen: String? = null
+    val imagen: String? = null // Optional URL — not all food items have an image
 )
 
 data class ComidaResponse(
@@ -124,9 +131,9 @@ data class ComidaResponse(
     val proteinas_100g: Int,
     val carbohidratos_100g: Int,
     val grasas_100g: Int,
-    val id_usuario: Int?,
+    val id_usuario: Int?, // Nullable — global foods (not user-created) have no owner
     val imagen: String?,
-    val dia: String? = null
+    val dia: String? = null // Only populated when returned inside a DietaComidaResponse
 )
 
 // ── MEDIDAS ───────────────────────────────────
@@ -139,13 +146,13 @@ data class MedidaRequest(
     val brazo_cm: Double? = null,
     val grasa_corporal_pct: Double? = null,
     val edad: Int? = null,
-    val sexo: String? = null
+    val sexo: String? = null // Expected values: "M" or "F"
 )
 
 data class MedidaResponse(
     val id_medida: Int,
     val id_usuario: Int,
-    val fecha: String,
+    val fecha: String, // Set automatically by the server on creation
     val peso_kg: Double,
     val altura_cm: Double?,
     val pecho_cm: Double?,
@@ -158,8 +165,8 @@ data class MedidaResponse(
 
 // ── PROGRESO ──────────────────────────────────
 data class ProgresoResponse(
-    val fecha: String,
-    val volumen: Double
+    val fecha: String, // Format: "YYYY-MM-DD"
+    val volumen: Double // Calculated by the API: weight × reps × sets
 )
 
 // ── Historial ──────────────────────────────────
@@ -170,22 +177,27 @@ data class HistorialRequest(
     val peso_kg: Double,
     val repeticiones: Int,
     val series: Int,
-    val duracion_minutos: Int = 0
+    val duracion_minutos: Int = 0 // Defaults to 0 if the user does not track session duration
 )
 
 data class HistorialDetalleResponse(
     val id_registro: Int,
     val id_ejercicio: Int,
     val id_rutina: Int,
-    val nombre_ejercicio: String,
+    val nombre_ejercicio: String, // Joined from the Ejercicio table by the API — not stored in history
     val peso_kg: Double,
     val repeticiones: Int,
     val series: Int,
     val duracion_minutos: Int,
-    val fecha: String   // "2025-08-17T..."
+    val fecha: String   // ISO 8601 (International Standard) format: "2025-01-01T00:00:00"
 )
 
 // ── UI MODELS ─────────────────────────────────
+/**
+ * Local UI model used to display exercises within a routine.
+ * Not sent to or received from the API — only used internally by the app.
+ * Combines data from EjercicioResponse and RutinaEjercicioResponse into a single object.
+ */
 data class EjercicioRutina(
     val id: Int,
     val nombre: String,
