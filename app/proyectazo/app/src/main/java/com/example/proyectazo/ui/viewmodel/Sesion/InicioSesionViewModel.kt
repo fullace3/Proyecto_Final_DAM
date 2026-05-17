@@ -11,14 +11,25 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-// Los estados posibles de la pantalla de login
+/**
+ * Sealed class representing the possible states of the login screen.
+ * Using a sealed class avoids multiple boolean flags (isLoading, isError, isSuccess)
+ * and makes the when() expression in the composable exhaustive.
+ */
 sealed class LoginUiState {
-    object Idle : LoginUiState()        // Estado inicial, no ha pasado nada
-    object Loading : LoginUiState()     // Esperando respuesta de la API
-    object Success : LoginUiState()     // Login correcto
-    data class Error(val mensaje: String) : LoginUiState()  // Algo salió mal
+    object Idle    : LoginUiState()  // Initial state — no action taken yet
+    object Loading : LoginUiState()  // Waiting for the API response — button is disabled
+    object Success : LoginUiState()  // Login confirmed — screen navigates away
+    data class Error(val mensaje: String) : LoginUiState()  // Login failed — message shown
 }
 
+/**
+ * ViewModel for PantallaIncioSesion.
+ * Validates credentials locally before making the API call,
+ * then stores the JWT token and user data in SessionManager on success.
+ * The 401 case is handled separately to show a user-friendly message
+ * instead of a generic server error.
+ */
 class LoginViewModel(private val context: Context) : ViewModel() {
 
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
@@ -26,8 +37,14 @@ class LoginViewModel(private val context: Context) : ViewModel() {
 
     private val sessionManager = SessionManager(context)
 
+    /**
+     * Attempts to log in with the provided credentials.
+     * On success, fetches the user profile to get the display name,
+     * then stores the full session (token + userId + name) in SharedPreferences.
+     * On 401, shows a deliberately vague message — does not reveal which field is wrong.
+     */
     fun login(nombre: String, password: String) {
-
+        // Local validation — avoids a round trip for obviously empty fields
         if (nombre.isBlank() || password.isBlank()) {
             _uiState.value = LoginUiState.Error("Rellena todos los campos")
             return
@@ -41,16 +58,20 @@ class LoginViewModel(private val context: Context) : ViewModel() {
                 if (respuesta.isSuccessful && respuesta.body() != null) {
                     val tokenResponse = respuesta.body()!!
 
-                    // Obtenemos el nombre del usuario
-                    val usuarioResponse = RetrofitClient.instance.getUsuario(tokenResponse.id_usuario).body()
+                    // Fetch the user profile to get the display name for the session
+                    val usuarioResponse = RetrofitClient.instance
+                        .getUsuario(tokenResponse.id_usuario).body()
 
+                    // Persist token, userId and name so all screens can access them
                     sessionManager.guardarSesion(
-                        token = tokenResponse.access_token,
+                        token  = tokenResponse.access_token,
                         userId = tokenResponse.id_usuario,
                         nombre = usuarioResponse?.nombre ?: "Usuario"
                     )
                     _uiState.value = LoginUiState.Success
+
                 } else if (respuesta.code() == 401) {
+                    // 401 = wrong credentials — intentionally vague to prevent user enumeration
                     _uiState.value = LoginUiState.Error("Usuario o contraseña incorrectos")
                 } else {
                     _uiState.value = LoginUiState.Error("Error del servidor: ${respuesta.code()}")
@@ -61,11 +82,13 @@ class LoginViewModel(private val context: Context) : ViewModel() {
         }
     }
 
+    // Resets to Idle after the screen has consumed the Success or Error state
     fun resetState() {
         _uiState.value = LoginUiState.Idle
     }
 }
 
+// Factory defined as a top-level class since LoginViewModel takes a Context parameter
 class LoginViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return LoginViewModel(context) as T

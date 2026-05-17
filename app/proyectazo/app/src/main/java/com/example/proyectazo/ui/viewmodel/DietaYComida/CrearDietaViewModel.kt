@@ -15,6 +15,13 @@ import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+/**
+ * Represents a single food item added to a diet plan.
+ * uid is generated from System.nanoTime() to uniquely identify each entry
+ * even if the same food is added multiple times to different days.
+ * dietaComidaId is only set for items loaded from the API (edit mode) —
+ * null means the item is new and needs to be POSTed.
+ */
 data class AlimentoItem(
     val id: Int,
     val nombre: String,
@@ -24,10 +31,15 @@ data class AlimentoItem(
     val grasas: Int = 0,
     val dia: String? = null,
     val tipo: String = "Desayuno",
-    val uid: Long = System.nanoTime(),
-    val dietaComidaId: Int? = null // ID en tabla DIETA_COMIDA (para edición)
+    val uid: Long = System.nanoTime(),     // Local unique key — not persisted in the database
+    val dietaComidaId: Int? = null         // ID in DIETA_COMIDA table — null for new items
 )
 
+/**
+ * UI state for the diet creation/editing screen.
+ * Macro totals are computed properties derived from the food list —
+ * they update automatically whenever alimentos changes.
+ */
 data class CrearDietaUiState(
     val nombreDieta: String = "",
     val objetivo: String = "",
@@ -35,15 +47,21 @@ data class CrearDietaUiState(
     val isLoading: Boolean = false,
     val guardadoExitoso: Boolean = false,
     val error: String? = null,
-    val editando: Boolean = false,
+    val editando: Boolean = false,    // True when editing an existing diet, false when creating
     val dietaId: Int? = null
 ) {
+    // Computed totals — recalculated on every recomposition from the current food list
     val proteinas: Int get() = alimentos.sumOf { it.proteinas }
     val carbohidratos: Int get() = alimentos.sumOf { it.carbohidratos }
     val grasas: Int get() = alimentos.sumOf { it.grasas }
     val calorasTotales: Int get() = alimentos.sumOf { it.calorias }
 }
 
+/**
+ * ViewModel for CrearDietaScreen — handles both creation and editing of diet plans.
+ * When dietaIdEditar is provided, the ViewModel loads the existing diet and switches
+ * to edit mode, where save performs a PUT instead of a POST.
+ */
 class CrearDietaViewModel(
     private val context: Context,
     private val dietaIdEditar: Int? = null
@@ -55,26 +73,31 @@ class CrearDietaViewModel(
     private val _uiState = MutableStateFlow(CrearDietaUiState())
     val uiState: StateFlow<CrearDietaUiState> = _uiState
 
-    // Guardamos los alimentos originales para detectar cuáles se han eliminado
+    // Snapshot of the original food list loaded from the API.
+    // Used in edit mode to detect which items were removed by the user.
     private var alimentosOriginales: List<AlimentoItem> = emptyList()
 
     init {
+        // Load existing diet data immediately if in edit mode
         if (dietaIdEditar != null) cargarDietaExistente(dietaIdEditar)
     }
 
+    /**
+     * Loads an existing diet and its food items from the API.
+     * Populates alimentosOriginales so deleted items can be detected on save.
+     */
     private fun cargarDietaExistente(dietaId: Int) {
         _uiState.update { it.copy(isLoading = true, editando = true, dietaId = dietaId) }
         viewModelScope.launch {
             try {
-                // Cargar datos de la dieta
+                // Load diet metadata to get the name
                 val dietasResp = api.getDietasUsuario(userId)
                 val dieta = dietasResp.body()?.find { it.id_dieta == dietaId }
-
                 if (dieta != null) {
                     _uiState.update { it.copy(nombreDieta = dieta.nombre) }
                 }
 
-                // Cargar comidas de la dieta
+                // Load the food items linked to this diet
                 val comidasResp = api.getComidasDeDieta(dietaId)
                 if (comidasResp.isSuccessful) {
                     val dietaComidas = comidasResp.body() ?: emptyList()
@@ -90,12 +113,11 @@ class CrearDietaViewModel(
                                 grasas = comida.grasas_100g,
                                 dia = dc.dia,
                                 tipo = dc.tipo,
-                                dietaComidaId = dc.id
+                                dietaComidaId = dc.id  // Store the junction table ID for deletion
                             )
                         } else null
                     }
-                    // Guardamos copia de los originales para comparar al guardar
-                    alimentosOriginales = alimentos
+                    alimentosOriginales = alimentos  // Snapshot for edit comparison
                     _uiState.update { it.copy(alimentos = alimentos, isLoading = false) }
                 } else {
                     _uiState.update { it.copy(isLoading = false) }
@@ -109,27 +131,32 @@ class CrearDietaViewModel(
     fun onNombreDietaChange(v: String) = _uiState.update { it.copy(nombreDieta = v) }
     fun onObjetivoChange(v: String) = _uiState.update { it.copy(objetivo = v) }
 
+    // Append a new food item to the list — uid ensures uniqueness even for duplicates
     fun agregarAlimento(alimento: AlimentoItem) {
         _uiState.update { it.copy(alimentos = it.alimentos + alimento) }
     }
 
+    // Remove a food item by its local uid — not by id, since the same food can appear multiple times
     fun eliminarAlimento(uid: Long) {
         _uiState.update { it.copy(alimentos = it.alimentos.filter { a -> a.uid != uid }) }
     }
 
+    /**
+     * Routes to the correct save strategy based on whether we are creating or editing.
+     */
     fun guardar(onExitoso: () -> Unit) {
         val state = _uiState.value
-
         if (state.editando && state.dietaId != null) {
-            // ── MODO EDICIÓN ──────────────────────────────────────────────
             guardarEdicion(state, state.dietaId, onExitoso)
         } else {
-            // ── MODO CREACIÓN ─────────────────────────────────────────────
             crearNueva(state, onExitoso)
         }
     }
 
-    // ── Crear dieta nueva ─────────────────────────────────────────────────
+    /**
+     * Creates a new diet via POST, then links each food item to it via DIETA_COMIDA.
+     * Macro totals are calculated from the food list at the moment of saving.
+     */
     private fun crearNueva(state: CrearDietaUiState, onExitoso: () -> Unit) {
         val nombre = state.nombreDieta.ifBlank { "Nueva dieta" }
         _uiState.update { it.copy(isLoading = true, error = null) }
@@ -150,6 +177,7 @@ class CrearDietaViewModel(
                 if (resp.isSuccessful) {
                     val dietaCreada = resp.body()
                     if (dietaCreada != null) {
+                        // Link each food to the newly created diet
                         state.alimentos.forEach { alimento ->
                             api.añadirComidaADieta(
                                 DietaComidaRequest(
@@ -175,14 +203,19 @@ class CrearDietaViewModel(
         }
     }
 
-    // ── Editar dieta existente ────────────────────────────────────────────
+    /**
+     * Updates an existing diet using a three-step strategy:
+     * 1. PUT the diet metadata (name, macros).
+     * 2. DELETE food items that were in the original list but are no longer in the current list.
+     * 3. POST food items that are new (no dietaComidaId means they were added in this session).
+     */
     private fun guardarEdicion(state: CrearDietaUiState, dietaId: Int, onExitoso: () -> Unit) {
         val nombre = state.nombreDieta.ifBlank { "Nueva dieta" }
         _uiState.update { it.copy(isLoading = true, error = null) }
 
         viewModelScope.launch {
             try {
-                // 1. Actualizar los datos básicos de la dieta
+                // Step 1 — update diet metadata
                 val request = DietaRequest(
                     nombre = nombre,
                     objetivo_calorico = state.calorasTotales,
@@ -193,7 +226,6 @@ class CrearDietaViewModel(
                     id_usuario = userId
                 )
                 val respActualizar = api.actualizarDieta(dietaId, request)
-
                 if (!respActualizar.isSuccessful) {
                     val errorBody = respActualizar.errorBody()?.string() ?: "Error ${respActualizar.code()}"
                     _uiState.update { it.copy(isLoading = false, error = errorBody) }
@@ -201,20 +233,18 @@ class CrearDietaViewModel(
                     return@launch
                 }
 
-                // 2. Detectar alimentos eliminados (estaban antes y ya no están)
+                // Step 2 — delete removed items by comparing uids against the original snapshot
                 val uidsActuales = state.alimentos.map { it.uid }.toSet()
-                val alimentosEliminados = alimentosOriginales.filter { original ->
-                    original.uid !in uidsActuales
-                }
+                val alimentosEliminados = alimentosOriginales.filter { it.uid !in uidsActuales }
                 alimentosEliminados.forEach { eliminado ->
                     if (eliminado.dietaComidaId != null) {
                         try {
                             api.eliminarComidaDeDieta(eliminado.dietaComidaId)
-                        } catch (_: Exception) { /* ignorar errores individuales */ }
+                        } catch (_: Exception) { /* ignore individual failures */ }
                     }
                 }
 
-                // 3. Añadir alimentos nuevos (los que no tienen dietaComidaId)
+                // Step 3 — add new items (those without a dietaComidaId were added in this session)
                 val alimentosNuevos = state.alimentos.filter { it.dietaComidaId == null }
                 alimentosNuevos.forEach { alimento ->
                     try {
@@ -226,7 +256,7 @@ class CrearDietaViewModel(
                                 dia = alimento.dia ?: "Lun"
                             )
                         )
-                    } catch (_: Exception) { /* ignorar errores individuales */ }
+                    } catch (_: Exception) { /* ignore individual failures */ }
                 }
 
                 _uiState.update { it.copy(isLoading = false, guardadoExitoso = true) }
@@ -239,6 +269,10 @@ class CrearDietaViewModel(
         }
     }
 
+    /**
+     * Factory that passes the optional dietaId to the ViewModel.
+     * null = create mode, non-null = edit mode.
+     */
     class Factory(private val context: Context, private val dietaId: Int? = null) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =

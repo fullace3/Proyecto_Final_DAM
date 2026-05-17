@@ -14,14 +14,25 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/**
+ * UI state for the routine editing screen.
+ * guardado is a one-shot event flag — set to true when the save succeeds
+ * and consumed immediately by the screen via onGuardadoConsumed().
+ */
 data class EditarRutinaUiState(
     val nombre: String = "",
     val ejercicios: List<EjercicioRutina> = emptyList(),
     val isLoading: Boolean = true,
-    val guardado: Boolean = false,
+    val guardado: Boolean = false,  // One-shot event — triggers navigation back on true
     val error: String? = null
 )
 
+/**
+ * ViewModel for EditarRutinaScreen.
+ * cargarRutina() is public so the screen can call it via DisposableEffect
+ * every time it returns to the foreground (e.g. after adding an exercise).
+ * Exercise deletion updates the local list immediately without a full reload.
+ */
 class EditarRutinaViewModel(
     private val rutinaId: Int,
     private val context: Context
@@ -35,6 +46,12 @@ class EditarRutinaViewModel(
 
     init { cargarRutina() }
 
+    /**
+     * Loads the routine name and its exercises from the API.
+     * Requires three calls: getRutinas (for the name), getEjerciciosDeRutina (for the links)
+     * and getEjercicios (for the full exercise details).
+     * The exercise catalog is converted to a map for O(1) lookup by ID.
+     */
     fun cargarRutina() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
@@ -42,20 +59,22 @@ class EditarRutinaViewModel(
                 val rutinasResp = api.getRutinas(userId)
                 val rutina = rutinasResp.body()?.find { it.id_rutina == rutinaId }
 
-                val relResp = api.getEjerciciosDeRutina(rutinaId)
+                val relResp       = api.getEjerciciosDeRutina(rutinaId)
                 val ejerciciosResp = api.getEjercicios()
+
+                // Map by ID for O(1) lookup when joining with the routine-exercise relations
                 val ejerciciosMap = ejerciciosResp.body()?.associateBy { it.id_ejercicio } ?: emptyMap()
 
                 val ejercicios = relResp.body()
-                    ?.sortedBy { it.orden }
+                    ?.sortedBy { it.orden }  // Preserve the display order defined by the user
                     ?.mapNotNull { rel ->
                         ejerciciosMap[rel.id_ejercicio]?.let { ej ->
                             EjercicioRutina(
-                                id = ej.id_ejercicio,
-                                nombre = ej.nombre,
-                                series = rel.series,
+                                id           = ej.id_ejercicio,
+                                nombre       = ej.nombre,
+                                series       = rel.series,
                                 repeticiones = rel.repeticiones,
-                                imagenUrl = ej.imagen ?: ""
+                                imagenUrl    = ej.imagen ?: ""
                             )
                         }
                     } ?: emptyList()
@@ -73,11 +92,15 @@ class EditarRutinaViewModel(
         _uiState.update { it.copy(nombre = nombre) }
     }
 
+    /**
+     * Removes an exercise from the routine via the API and updates the local list immediately.
+     * Avoids a full reload — the local state is the source of truth after a successful deletion.
+     */
     fun eliminarEjercicio(ejercicioId: Int) {
         viewModelScope.launch {
             try {
                 api.quitarEjercicioDeRutina(rutinaId, ejercicioId)
-                // Quitar de la lista local sin recargar
+                // Update local list immediately instead of reloading from the API
                 _uiState.update { state ->
                     state.copy(ejercicios = state.ejercicios.filter { it.id != ejercicioId })
                 }
@@ -87,6 +110,10 @@ class EditarRutinaViewModel(
         }
     }
 
+    /**
+     * Saves the updated routine name via PUT.
+     * Only the name is editable here — exercises are managed via add/remove operations.
+     */
     fun guardarCambios() {
         val nombre = _uiState.value.nombre
         if (nombre.isBlank()) {
@@ -103,6 +130,7 @@ class EditarRutinaViewModel(
         }
     }
 
+    // Resets the one-shot guardado flag after the screen has navigated back
     fun onGuardadoConsumed() { _uiState.update { it.copy(guardado = false) } }
 
     class Factory(private val rutinaId: Int, private val context: Context) : ViewModelProvider.Factory {

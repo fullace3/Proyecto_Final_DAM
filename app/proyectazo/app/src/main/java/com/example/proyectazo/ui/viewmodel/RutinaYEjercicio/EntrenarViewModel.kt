@@ -11,18 +11,32 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-// Holds the previous performance data for a single exercise
+/**
+ * Holds the previous session's performance for a single exercise.
+ * Used as a reference display in EntrenarScreen so the user knows
+ * what weight and reps they achieved last time.
+ */
 data class SeriePrevia(
-    val peso: String,
+    val peso: String,  // Formatted as a string for direct display — "-" if no history exists
     val reps: String
 )
 
+/**
+ * UI state for EntrenarScreen.
+ * previasPorEjercicio maps each ejercicioId to its most recent logged performance.
+ * The map is keyed by ID so the screen can look up any exercise in O(1).
+ */
 data class EntrenarUiState(
-    // Map of ejercicioId -> previous best serie (most recent from historial)
     val previasPorEjercicio: Map<Int, SeriePrevia> = emptyMap(),
     val isLoading: Boolean = true
 )
 
+/**
+ * ViewModel for EntrenarScreen.
+ * Responsible only for loading the previous session data —
+ * the live workout state (sets, reps, weight) is managed directly
+ * in the composable since it does not need to survive recomposition beyond the session.
+ */
 class EntrenarViewModel(private val context: Context) : ViewModel() {
 
     private val api = RetrofitClient.instance
@@ -31,7 +45,12 @@ class EntrenarViewModel(private val context: Context) : ViewModel() {
     private val _uiState = MutableStateFlow(EntrenarUiState())
     val uiState: StateFlow<EntrenarUiState> = _uiState
 
-    // Load historial and extract the most recent entry per exercise
+    /**
+     * Loads the full training history and extracts the most recent entry
+     * for each exercise in the current routine.
+     * Uses a single API call for all exercises to avoid N separate requests.
+     * Exercises with no history get a placeholder SeriePrevia("-", "-").
+     */
     fun cargarPrevias(ejercicioIds: List<Int>) {
         viewModelScope.launch {
             try {
@@ -39,18 +58,19 @@ class EntrenarViewModel(private val context: Context) : ViewModel() {
                 if (resp.isSuccessful) {
                     val historial = resp.body() ?: emptyList()
 
-                    // Group by ejercicioId and take the most recent entry
+                    // For each exercise, find the most recent entry by date
                     val previas = ejercicioIds.associateWith { id ->
                         val entrada = historial
                             .filter { it.id_ejercicio == id }
-                            .maxByOrNull { it.fecha }
+                            .maxByOrNull { it.fecha }  // Most recent by ISO date string
+
                         if (entrada != null) {
                             SeriePrevia(
                                 peso = "${entrada.peso_kg}",
                                 reps = "${entrada.repeticiones}"
                             )
                         } else {
-                            SeriePrevia(peso = "-", reps = "-")
+                            SeriePrevia(peso = "-", reps = "-")  // No history for this exercise
                         }
                     }
                     _uiState.update { it.copy(previasPorEjercicio = previas, isLoading = false) }

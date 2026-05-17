@@ -160,8 +160,6 @@ fun DietaActivaScreen(
                     )
 
                     Spacer(Modifier.height(24.dp))
-
-                    // ── Gráfico circular
                     // Two arcs: a static track and a filled arc proportional to progress
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.size(160.dp)) {
                         val primaryColor = MaterialTheme.colorScheme.primary

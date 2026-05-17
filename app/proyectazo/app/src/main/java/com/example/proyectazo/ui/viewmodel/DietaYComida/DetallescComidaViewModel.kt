@@ -10,16 +10,26 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/**
+ * UI state for the food detail screen.
+ * All nutritional values are per 100g, matching the database storage format.
+ * isLoading starts as true so the screen shows a spinner before the first API response.
+ */
 data class DetalleComidaUiState(
     val nombre: String = "",
     val calorias100g: Int = 0,
     val proteinas100g: Int = 0,
     val carbohidratos100g: Int = 0,
     val grasas100g: Int = 0,
-    val imagen: String? = null,
+    val imagen: String? = null,  // Filename or full URL — the screen builds the S3 URL if needed
     val isLoading: Boolean = true
 )
 
+/**
+ * ViewModel for DetalleComidaScreen.
+ * Loads a single food item by ID and exposes its nutritional data to the UI.
+ * The comidaId is passed at construction time and the load starts immediately in init.
+ */
 class DetalleComidaViewModel(context: Context, private val comidaId: Int) : ViewModel() {
 
     private val api = RetrofitClient.instance
@@ -29,6 +39,10 @@ class DetalleComidaViewModel(context: Context, private val comidaId: Int) : View
 
     init { cargar() }
 
+    /**
+     * Fetches the food item from the API and updates the UI state.
+     * On failure, isLoading is set to false so the screen stops showing the spinner.
+     */
     private fun cargar() {
         viewModelScope.launch {
             try {
@@ -55,6 +69,7 @@ class DetalleComidaViewModel(context: Context, private val comidaId: Int) : View
         }
     }
 
+    // Factory passes comidaId at construction — the ViewModel cannot be reused for a different food
     class Factory(private val context: Context, private val comidaId: Int) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =

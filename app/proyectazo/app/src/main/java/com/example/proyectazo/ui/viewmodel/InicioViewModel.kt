@@ -16,27 +16,29 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-// ─────────────────────────────────────────────────────────────────
-//  Estado del entreno para el día seleccionado
-// ─────────────────────────────────────────────────────────────────
-
+/**
+ * Sealed class representing the workout state for the selected day.
+ * ConEntreno carries the full exercise list and session summary so the
+ * home screen can display chips without additional API calls.
+ */
 sealed class EntrenoDelDia {
-    object Cargando : EntrenoDelDia()
+    object Cargando   : EntrenoDelDia()
     object SinEntreno : EntrenoDelDia()
     data class ConEntreno(
         val ejercicios: List<HistorialDetalleResponse>,
         val series: Int,
-        val duracionEstimadaMin: Int,
+        val duracionEstimadaMin: Int,  // maxOf all exercises — they share the same session duration
         val rutinaId: Int,
-        val rutinaNombre: String?
+        val rutinaNombre: String?      // Resolved from the routines list — null if routine was deleted
     ) : EntrenoDelDia()
     data class Error(val mensaje: String) : EntrenoDelDia()
 }
 
-// ─────────────────────────────────────────────────────────────────
-//  Estado de la dieta
-// ─────────────────────────────────────────────────────────────────
-
+/**
+ * Sealed class representing the diet state for the home screen.
+ * 404 is mapped to SinDieta instead of Error so the UI shows
+ * a friendly empty state rather than an error message.
+ */
 sealed class DietaDelDia {
     object Cargando : DietaDelDia()
     object SinDieta : DietaDelDia()
@@ -44,19 +46,21 @@ sealed class DietaDelDia {
     data class Error(val mensaje: String) : DietaDelDia()
 }
 
-// ─────────────────────────────────────────────────────────────────
-//  ViewModel
-// ─────────────────────────────────────────────────────────────────
-
+/**
+ * ViewModel for PantallaInicio.
+ * Loads the full training history and routine list once on init,
+ * then filters locally when the user selects a different day in the DatePicker.
+ * This avoids an API call on every date change — filtering is instant.
+ */
 class InicioViewModel(context: Context) : ViewModel() {
 
     private val session = SessionManager(context)
     private val userId get() = session.getUserId()
 
+    // Full history and routines cached in memory — filtered locally per selected day
     private var historialCompleto: List<HistorialDetalleResponse> = emptyList()
     private var rutinas: List<RutinaResponse> = emptyList()
 
-    // Día actualmente seleccionado en el DatePicker
     private val _diaSeleccionado = MutableStateFlow(LocalDate.now())
     val diaSeleccionado: StateFlow<LocalDate> = _diaSeleccionado
 
@@ -66,26 +70,28 @@ class InicioViewModel(context: Context) : ViewModel() {
     private val _dietaDelDia = MutableStateFlow<DietaDelDia>(DietaDelDia.Cargando)
     val dietaDelDia: StateFlow<DietaDelDia> = _dietaDelDia
 
-    init {
-        cargarDatos()
-    }
-
-    // ── Carga inicial ──────────────────────────────────────────
+    init { cargarDatos() }
 
     private fun cargarDatos() {
         cargarHistorial()
         cargarDieta()
     }
 
+    /**
+     * Loads the full training history and the routine list in a single coroutine.
+     * Routines are loaded alongside history so exercise entries can be joined
+     * with their routine name without a second API call per entry.
+     */
     private fun cargarHistorial() {
         viewModelScope.launch {
             try {
                 val histResp = RetrofitClient.instance.getHistorial(userId)
                 val rutResp  = RetrofitClient.instance.getRutinas(userId)
+
                 if (histResp.isSuccessful && histResp.body() != null) {
                     historialCompleto = histResp.body()!!
                     rutinas = if (rutResp.isSuccessful) rutResp.body() ?: emptyList() else emptyList()
-                    filtrarEntrenoPorDia(_diaSeleccionado.value)
+                    filtrarEntrenoPorDia(_diaSeleccionado.value)  // Show today's workout immediately
                 } else {
                     _entrenoDelDia.value = EntrenoDelDia.Error("No se pudo cargar el historial")
                 }
@@ -95,6 +101,10 @@ class InicioViewModel(context: Context) : ViewModel() {
         }
     }
 
+    /**
+     * Loads the most recently created diet for the home screen summary.
+     * 404 means no diet exists — mapped to SinDieta, not Error.
+     */
     private fun cargarDieta() {
         viewModelScope.launch {
             try {
@@ -102,7 +112,7 @@ class InicioViewModel(context: Context) : ViewModel() {
                 if (respuesta.isSuccessful && respuesta.body() != null) {
                     _dietaDelDia.value = DietaDelDia.ConDieta(respuesta.body()!!)
                 } else if (respuesta.code() == 404) {
-                    _dietaDelDia.value = DietaDelDia.SinDieta
+                    _dietaDelDia.value = DietaDelDia.SinDieta  // No diet created yet
                 } else {
                     _dietaDelDia.value = DietaDelDia.Error("Error al cargar la dieta")
                 }
@@ -112,43 +122,41 @@ class InicioViewModel(context: Context) : ViewModel() {
         }
     }
 
-    // ── Cambio de día desde el DatePicker ─────────────────────
-
+    // Called by the screen when the user taps a different day in the DatePicker
     fun seleccionarDia(nuevoDia: LocalDate) {
         _diaSeleccionado.value = nuevoDia
         filtrarEntrenoPorDia(nuevoDia)
     }
 
-    // ── Filtrado del historial por fecha ──────────────────────
-
+    /**
+     * Filters the cached history for the selected day without an API call.
+     * History dates arrive as ISO 8601 strings ("2025-08-17T10:30:00") —
+     * only the first 10 characters are compared to match the date portion.
+     * duracionEstimadaMin uses maxOf because all exercises in a session
+     * share the same total duration — summing would multiply it incorrectly.
+     */
     private fun filtrarEntrenoPorDia(dia: LocalDate) {
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
-        // Las fechas del historial vienen como "2025-08-17T10:30:00"
-        // Comparamos solo la parte de la fecha (primeros 10 caracteres)
         val ejerciciosDelDia = historialCompleto.filter { registro ->
-            registro.fecha.take(10) == dia.format(formatter)
+            registro.fecha.take(10) == dia.format(formatter)  // Compare date part only
         }
-        val rutinaId = ejerciciosDelDia.firstOrNull()?.id_rutina
-        Log.d("DEBUG", "rutinaId=$rutinaId, rutinas=${rutinas.map { it.id_rutina to it.nombre }}")
 
         _entrenoDelDia.value = if (ejerciciosDelDia.isEmpty()) {
             EntrenoDelDia.SinEntreno
         } else {
-            val totalSeries = ejerciciosDelDia.sumOf { it.series }
-            val rutinaId = ejerciciosDelDia.first().id_rutina
+            val totalSeries  = ejerciciosDelDia.sumOf { it.series }
+            val rutinaId     = ejerciciosDelDia.first().id_rutina
             val rutinaNombre = rutinas.find { it.id_rutina == rutinaId }?.nombre
             EntrenoDelDia.ConEntreno(
-                ejercicios = ejerciciosDelDia,
-                series = totalSeries,
+                ejercicios          = ejerciciosDelDia,
+                series              = totalSeries,
                 duracionEstimadaMin = ejerciciosDelDia.maxOf { it.duracion_minutos },
-                rutinaId = rutinaId,
-                rutinaNombre = rutinaNombre
+                rutinaId            = rutinaId,
+                rutinaNombre        = rutinaNombre
             )
         }
     }
-
-    // ── Factory ───────────────────────────────────────────────
 
     class Factory(private val context: Context) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
