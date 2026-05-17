@@ -1,3 +1,5 @@
+# Entry point for the SmartFit FastAPI application.
+# Handles database configuration, session management and modeels registration.
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Boolean, Time
 from sqlalchemy.orm import relationship
 from main import Base

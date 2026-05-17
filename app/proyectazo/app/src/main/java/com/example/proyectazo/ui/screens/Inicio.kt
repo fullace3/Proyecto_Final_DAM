@@ -287,7 +287,6 @@ private fun TarjetaDieta(estado: DietaDelDia) {
                 }
                 is DietaDelDia.ConDieta -> {
                     val dieta = estado.dieta
-                    val calRestantes = dieta.objetivo_calorico - (dieta.objetivo_calorico * dietaProgreso).toInt()
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Restaurant, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
@@ -295,7 +294,7 @@ private fun TarjetaDieta(estado: DietaDelDia) {
                         Text(dieta.nombre, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                     }
                     Spacer(Modifier.height(6.dp))
-                    Text("$calRestantes cal restantes", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("${dieta.objetivo_calorico} kcal objetivo", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.height(6.dp))
                     LinearProgressIndicator(
                         progress = { dietaProgreso },
