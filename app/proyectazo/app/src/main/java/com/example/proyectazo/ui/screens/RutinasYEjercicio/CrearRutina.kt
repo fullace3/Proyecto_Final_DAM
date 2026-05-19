@@ -178,7 +178,7 @@ fun CrearRutinaScreen(
             // Save button only enabled when the routine has a name and at least one exercise
             Button(
                 onClick = onNavigateBack,
-                enabled = ejercicios.isNotEmpty() && nombreRutina.isNotBlank(),
+                enabled = uiState is CrearRutinaUiState.RutinaCreada && nombreRutina.isNotBlank(),
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(12.dp)
             ) {
